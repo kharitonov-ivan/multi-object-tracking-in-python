@@ -1,0 +1,46 @@
+[tool.poetry]
+name = "mot"
+version = "0.1.0"
+description = "Multi object tracking course in python"
+authors = ["Ivan Kharitonov <ipkharitonov@gmail.com>"]
+license = "Apache 2"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+numpy = "^1.20.0"
+scipy = "^1.6.0"
+jupyter = "^1.0.0"
+matplotlib = "^3.3.4"
+ipython = "^7.19.0"
+ipdb = "^0.13.4"
+debug = "^0.3.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.2"
+flake8 = "^3.8.4"
+black = "^20.8b1"
+flake8-bandit = "^2.1.2"
+flake8-black = "^0.2.1"
+flake8-bugbear = "^20.11.1"
+flake8-import-order = "^0.18.1"
+mypy = "^0.800"
+ipdb = "^0.13.4"
+coverage = "^5.4"
+pytest-cov = "^2.11.1"
+yapf = "^0.30.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.paths]
+source = ["src", "*/site-packages"]
+
+[tool.coverage.run]
+branch = true
+source = ["mot"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.pytest.ini_options]
