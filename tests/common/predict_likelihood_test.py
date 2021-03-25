@@ -5,7 +5,7 @@ from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.configs import GroundTruthConfig, Object, SensorModelConfig
 from mot.motion_models import ConstantVelocityMotionModel
 from mot.simulator.object_data_generator import ObjectData
-from mot.common.state import State
+from mot.common.state import Gaussian
 
 TOL = 1e-4
 
@@ -15,7 +15,7 @@ def test_predict_likelihood():
     total_time = 10
     objects = [
         Object(
-            initial=State(x=np.array([0.0, 0.0, 5.0, 5.0]), P=np.eye(4)),
+            initial=Gaussian(x=np.array([0.0, 0.0, 5.0, 5.0]), P=np.eye(4)),
             t_birth=0,
             t_death=10,
         )
@@ -58,7 +58,7 @@ def test_predict_likelihood():
     )
     for timestep in range(grount_truth_config.total_time):
 
-        state = State(
+        state = Gaussian(
             x=np.array(object_data.X[timestep][0].x), P=np.eye(motion_model.d)
         )
 

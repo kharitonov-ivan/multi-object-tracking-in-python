@@ -1,10 +1,9 @@
 import unittest
-from unittest.main import main
 
 import numpy as np
 import pytest
 from mot.configs import GroundTruthConfig, Object
-from mot.common.state import State
+from mot.common.state import Gaussian
 
 TOL = 1e-4
 
@@ -15,7 +14,7 @@ class Test_GroundTruthConfig(unittest.TestCase):
         test_total_time = 10
         test_objects = [
             Object(
-                initial=State(x=np.array([0.0, 1.0]), P=np.eye(2)),
+                initial=Gaussian(x=np.array([0.0, 1.0]), P=np.eye(2)),
                 t_birth=0,
                 t_death=10,
             )
@@ -26,14 +25,13 @@ class Test_GroundTruthConfig(unittest.TestCase):
             object_configs=test_objects,
             total_time=test_total_time,
         )
-        print(got_ground_truth_config)
 
     def test_ground_truth_config_type(self):
         test_n_birth = "str"
         test_total_time = 10
         test_objects = [
             Object(
-                initial=State(x=np.array([0.0, 1.0]), P=np.eye(2)),
+                initial=Gaussian(x=np.array([0.0, 1.0]), P=np.eye(2)),
                 t_birth=0,
                 t_death=10,
             )
@@ -44,5 +42,3 @@ class Test_GroundTruthConfig(unittest.TestCase):
                 object_configs=test_objects,
                 total_time=test_total_time,
             )
-            print(got_ground_truth_config)
-

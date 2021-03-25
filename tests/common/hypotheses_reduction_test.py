@@ -1,6 +1,4 @@
-import numpy as np
 import unittest
-from mot.common.hypothesis_reduction import Hypothesisreduction
 
 TOL = 1e-4
 

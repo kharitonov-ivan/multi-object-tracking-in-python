@@ -1,7 +1,6 @@
 import numpy as np
-import scipy
 from mot.common.gaussian_density import GaussianDensity
-from mot.common.state import State
+from mot.common.state import Gaussian
 from mot.configs import GroundTruthConfig, Object, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
@@ -17,7 +16,7 @@ def test_ellipsoidal_gating():
     total_time = 10
     objects = [
         Object(
-            initial=State(x=np.array([0.0, 0.0, 5.0, 5.0]), P=np.eye(4)),
+            initial=Gaussian(x=np.array([0.0, 0.0, 5.0, 5.0]), P=np.eye(4)),
             t_birth=0,
             t_death=10,
         )
@@ -47,14 +46,13 @@ def test_ellipsoidal_gating():
     )
 
     gating_size = chi2.ppf(0.99, df=meas_model.d)
-    print(f"Gating size = {gating_size}")
 
     states = [None for i in range(grount_truth_config.total_time)]
     for timestep in range(0, grount_truth_config.total_time):
-        states[timestep] = State(
+        states[timestep] = Gaussian(
             x=np.array(object_data.X[timestep][0].x), P=np.eye(motion_model.d)
         )
-        print(states)
+
         if timestep == 0:
             continue
         [z_ingate, meas_in_gate] = GaussianDensity.ellipsoidal_gating(

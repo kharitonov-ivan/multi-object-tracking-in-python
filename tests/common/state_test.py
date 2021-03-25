@@ -1,32 +1,31 @@
 import numpy as np
 import pytest
 import unittest
-from mot.common.state import State
+from mot.common.state import Gaussian
 
 TOL = 1e-4
 
 
-class Test_State(unittest.TestCase):
+class Test_Gaussian(unittest.TestCase):
     def test_create_state(self):
-        state = State(x=np.array([0, 0]), P=np.eye(2))
-        print(state)
+        state = Gaussian(x=np.array([0, 0]), P=np.eye(2))
 
     def test_wrong_x_type(self):
         with pytest.raises(Exception) as e_info:
-            state = State(x=0, P=np.eye(2))
+            state = Gaussian(x=0, P=np.eye(2))
         assert str(e_info.value) == "Argument of wrong type!"
 
     def test_wrong_P_type(self):
         with pytest.raises(Exception) as e_info:
-            state = State(x=np.array([0]), P=0)
+            state = Gaussian(x=np.array([0]), P=0)
         assert str(e_info.value) == "Argument of wrong type!"
 
     def test_wrong_P_dim(self):
         with pytest.raises(Exception) as e_info:
-            state = State(x=np.array([0, 0]), P=np.array([[0, 1], [0, 1], [0, 1]]))
+            state = Gaussian(x=np.array([0, 0]), P=np.array([[0, 1], [0, 1], [0, 1]]))
         assert str(e_info.value) == "Covariance matrix should be square!"
 
     def test_diffrenet_dims(self):
         with pytest.raises(Exception) as e_info:
-            state = State(x=np.array([0, 0, 0]), P=np.eye(2))
+            state = Gaussian(x=np.array([0, 0, 0]), P=np.eye(2))
         assert str(e_info.value) == "size of vector should be equal P column size!"

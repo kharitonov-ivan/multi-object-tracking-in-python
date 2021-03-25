@@ -24,8 +24,6 @@ class Test_SensorModelConfig(unittest.TestCase):
             P_D=test_P_D, lambda_c=test_lambda_c, range_c=test_range_c
         )
 
-        print(sensor_model)
-
         assert abs(sensor_model.pdf_c - expected_pdf_c) < TOL, (
             f"The value of clutter pdf 2D case: "
             f"Expected {expected_pdf_c} "
@@ -49,8 +47,6 @@ class Test_SensorModelConfig(unittest.TestCase):
         sensor_model = SensorModelConfig(
             P_D=test_P_D, lambda_c=test_lambda_c, range_c=test_range_c
         )
-
-        print(sensor_model)
 
         assert abs(sensor_model.pdf_c - expected_pdf_c) < TOL, (
             f"The value of clutter pdf 2D case: "

@@ -16,6 +16,3 @@ class Test_normalize_log_weights(unittest.TestCase):
         assert np.abs(actual_log_sum - expected_log_sum) > eps, (
             f"check log sum calculation: " f"actual_log_sum = {actual_log_sum}"
         )
-
-    def test_normalize_log_weights_list(self):
-        pass
