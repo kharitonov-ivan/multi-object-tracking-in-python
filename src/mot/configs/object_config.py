@@ -1,17 +1,21 @@
 import itertools
 
-from mot.common.state import State
+from mot.common.state import Gaussian
 
 
 class Object:
     new_id = itertools.count(start=0, step=1)
 
-    def __init__(self, initial: State, t_birth: int, t_death: int, *args, **kwargs):
+    @staticmethod
+    def restart(cls):
+        cls.new_id = itertools.count(start=0, step=1)
+
+    def __init__(self, initial: Gaussian, t_birth: int, t_death: int, *args, **kwargs):
         """Construct object configuration for ground truth config
 
         Parameters
         ----------
-        initial_state : State
+        initial_state : Gaussian
             objects initial state
         t_birth : int
              object birth (appearing time)
@@ -23,7 +27,7 @@ class Object:
         id : int
             unique id of object
         """
-        assert isinstance(initial, State), "Argument of wrong type!"
+        assert isinstance(initial, Gaussian), "Argument of wrong type!"
         assert isinstance(t_birth, int), "Argument of wrong type!"
         assert t_birth >= 0, "object birth should be positive!"
         assert isinstance(t_death, int), "Argument of wrong type!"
