@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from mot.motion_models import ConstantVelocityMotionModel
-from mot.common.state import State
+from mot.common.state import Gaussian
 
 
 class Test_MotionModels(unittest.TestCase):
@@ -15,7 +15,7 @@ class Test_MotionModels(unittest.TestCase):
         initial_state = np.array([0.0, 0.0, 5.0, 5.0])
         expected_predicted_array = np.array([5.0, 5.0, 5.0, 5.0])
         predicted_state = CV_motion_model.move(
-            state=State(x=initial_state, P=np.eye(4))
+            state=Gaussian(x=initial_state, P=np.eye(4))
         )
 
         np.testing.assert_array_equal(

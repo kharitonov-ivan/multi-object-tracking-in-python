@@ -1,15 +1,10 @@
 import os
 from dataclasses import asdict
 
-import numpy as np
 import pytest
-from matplotlib.pyplot import show
-from mot import configs
-from mot.common.state import State
-from mot.configs import GroundTruthConfig, Object, SensorModelConfig
+from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.measurement_models import (
     ConstantVelocityMeasurementModel,
-    CoordinateTurnMeasurementModel,
     RangeBearingMeasurementModel,
 )
 from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
