@@ -40,18 +40,18 @@ class Gaussian:
 
 @dataclass
 class WeightedGaussian:
-    w: float
-    gm: Gaussian
+    log_weight: float
+    gaussian: Gaussian
 
     def __post_init__(self):
-        assert not np.isnan(self.w), "nan weight"
+        assert not np.isnan(self.log_weight), "nan weight"
 
     def __repr__(self) -> str:
         return (
             f"\n"
             f"weighted Gaussian with: "
-            f"w = {self.w:.2f}   "
-            f"x = {np.array2string(self.gm.x, max_line_width=np.inf, precision =2)}  "
+            f"w = {self.log_weight:.2f}   "
+            f"x = {np.array2string(self.gaussian.x, max_line_width=np.inf, precision =2)}  "
         )
 
 
@@ -60,15 +60,15 @@ class GaussianMixture(collections.MutableSequence):
         self.weighted_components = weighted_components
 
     @property
-    def weights(self):
-        weights = [x.w for x in self.weighted_components]
+    def log_weights(self):
+        weights = [x.log_weight for x in self.weighted_components]
         return weights
 
-    @weights.setter
-    def weights(self, weights_value):
-        assert len(weights_value) == len(self.weighted_components)
+    @log_weights.setter
+    def log_weights(self, log_weights):
+        assert len(log_weights) == len(self.weighted_components)
         for idx in range(len(self.weighted_components)):
-            self.weighted_components[idx].w = weights_value[idx]
+            self.weighted_components[idx].log_weights = log_weights[idx]
 
     @property
     def size(self):
@@ -76,8 +76,11 @@ class GaussianMixture(collections.MutableSequence):
 
     @property
     def states(self):
-        states = [x.gm for x in self.weighted_components]
+        states = [x.gaussian for x in self.weighted_components]
         return states
+
+    def __copy__(self):
+        return GaussianMixture(weighted_components=self.weighted_components)
 
     def check(self, item):
         if not isinstance(item, (WeightedGaussian)):
