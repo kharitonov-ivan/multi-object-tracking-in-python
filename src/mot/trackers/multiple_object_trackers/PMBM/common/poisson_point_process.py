@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 
 from mot.measurement_models import MeasurementModel
 from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli
@@ -15,7 +16,7 @@ from mot.motion_models import MotionModel
 
 class PoissonRFS:
     def __init__(self, initial_intensity=None, *args, **kwargs):
-        self.intensity = initial_intensity
+        self.intensity = deepcopy(initial_intensity)
 
     def __repr__(self):
         return self.intensity.__repr__()
@@ -148,22 +149,29 @@ class PoissonRFS:
     def predict(
         self,
         motion_model: MotionModel = None,
-        birth_model: GaussianMixture = None,
-        P_S: float = None,
+        probability_survival: float = None,
         dt: float = 1.0,
         density=GaussianDensity,
     ) -> None:
-        """Performs prediciton step for PPP components hypothesing undetected objects:"""
+        """Performs prediciton step for PPP components hypothesing undetected objects.
+        Birth components will be added in another method."""
 
         # Predict Poisson intensity for pre-existing objects.
         for idx in range(len(self.intensity)):
-            self.intensity[idx].w += np.log(P_S)
-            self.intensity[idx].gm = density.predict(
-                state=self.intensity[idx].gm, motion_model=motion_model, dt=dt
+            self.intensity[idx].log_weight += np.log(probability_survival)
+            self.intensity[idx].gaussian = density.predict(
+                state=self.intensity[idx].gaussian, motion_model=motion_model, dt=dt
             )
 
-        # Incorporate PPP birth intensity into PPP intensity
-        # self.intensity.extend(birth_model)
+    def birth(self, born_components: GaussianMixture):
+        """Incorporate PPP birth intensity into PPP intensity
+
+        Parameters
+        ----------
+        born_components : GaussianMixture
+            [description]
+        """
+        self.intensity.extend(born_components)
 
     def gating(
         self,

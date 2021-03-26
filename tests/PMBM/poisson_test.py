@@ -28,16 +28,13 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear):
 
     # Set Poisson RFS
     PPP = PoissonRFS(initial_intensity=initial_PPP_intensity_linear)
-    import pdb; pdb.set_trace()
     PPP.predict(motion_model, P_S, dt)
 
-    # check multiply of weight in log domain 
-    PPP_ref_w = np.array(
-        [
-            current_weight + np.log(P_S)
-            for current_weight in initial_PPP_intensity_linear.log_weights
-        ]
-    )
+    # check multiply of weight in log domain
+    PPP_ref_w = np.array([
+        current_weight + np.log(P_S)
+        for current_weight in initial_PPP_intensity_linear.log_weights
+    ])
 
     PPP_ref_state_x = [
         GaussianDensity.predict(component.gaussian, motion_model, dt).x
@@ -49,15 +46,17 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear):
         for component in initial_PPP_intensity_linear.weighted_components
     ]
 
+    np.testing.assert_allclose(sorted(PPP.intensity.log_weights),
+                               sorted(PPP_ref_w),
+                               rtol=0.1)
     np.testing.assert_allclose(
-        sorted(PPP.intensity.log_weights), sorted(PPP_ref_w), rtol=0.1
-    )
+        [gaussian.x for gaussian in PPP.intensity.states],
+        PPP_ref_state_x,
+        rtol=0.01)
     np.testing.assert_allclose(
-        [gm.x for gm in PPP.intensity.states], PPP_ref_state_x, rtol=0.01
-    )
-    np.testing.assert_allclose(
-        [gm.P for gm in PPP.intensity.states], PPP_ref_state_P, rtol=0.02
-    )
+        [gaussian.P for gaussian in PPP.intensity.states],
+        PPP_ref_state_P,
+        rtol=0.02)
 
 
 def test_PPP_detected_update(initial_PPP_intensity_nonlinear):
@@ -68,9 +67,9 @@ def test_PPP_detected_update(initial_PPP_intensity_nonlinear):
     sigma_r = 5.0
     sigma_b = np.pi / 180
     s = np.array([300, 400]).T
-    meas_model = RangeBearingMeasurementModel(
-        sigma_r=sigma_r, sigma_b=sigma_b, sensor_pos=s
-    )
+    meas_model = RangeBearingMeasurementModel(sigma_r=sigma_r,
+                                              sigma_b=sigma_b,
+                                              sensor_pos=s)
 
     # Set Poisson RFS
     PPP = PoissonRFS(initial_intensity=initial_PPP_intensity_nonlinear)
@@ -87,18 +86,16 @@ def test_PPP_detected_update(initial_PPP_intensity_nonlinear):
     )
 
     np.testing.assert_allclose(likelihood, -4.9618, rtol=0.01)
-    np.testing.assert_allclose(
-        bern.state.x, np.array([24.3498, 5.7689, 5.0000, 0, 0.0175]), rtol=0.1
-    )
-    ref_P = np.array(
-        [
-            [0.9779, -0.0122, 0.0000, 0.0000, 0.0000],
-            [-0.0122, 0.9707, 0.0000, 0.0000, 0.0000],
-            [0.0000, -0.0000, 1.0000, 0.0000, 0.0000],
-            [0.0000, 0.0000, 0.0000, 1.0000, 0.0000],
-            [0.0000, 0.0000, 0.0000, 0.0000, 1.0000],
-        ]
-    )
+    np.testing.assert_allclose(bern.state.x,
+                               np.array([24.3498, 5.7689, 5.0000, 0, 0.0175]),
+                               rtol=0.1)
+    ref_P = np.array([
+        [0.9779, -0.0122, 0.0000, 0.0000, 0.0000],
+        [-0.0122, 0.9707, 0.0000, 0.0000, 0.0000],
+        [0.0000, -0.0000, 1.0000, 0.0000, 0.0000],
+        [0.0000, 0.0000, 0.0000, 1.0000, 0.0000],
+        [0.0000, 0.0000, 0.0000, 0.0000, 1.0000],
+    ])
     np.testing.assert_almost_equal(
         bern.state.P,
         ref_P,
@@ -129,12 +126,12 @@ def test_PPP_gating(initial_PPP_intensity_linear):
     PPP = PoissonRFS(initial_intensity=initial_PPP_intensity_linear)
 
     z = np.array([[0.1, 0.006], [10e6, 10e6]])
-    gating_matrix_ud, meas_indices_ud = PPP.gating(
-        z, GaussianDensity, meas_model, gating_size=0.99
-    )
-    gating_matrix_ud_ref = np.array(
-        [[True, False], [False, False], [False, False], [False, False]]
-    )
+    gating_matrix_ud, meas_indices_ud = PPP.gating(z,
+                                                   GaussianDensity,
+                                                   meas_model,
+                                                   gating_size=0.99)
+    gating_matrix_ud_ref = np.array([[True, False], [False, False],
+                                     [False, False], [False, False]])
     meas_indices_ud_ref = np.array([True, False])
 
     np.testing.assert_almost_equal(
@@ -160,8 +157,9 @@ def test_PPP_get_new_tracks(initial_PPP_intensity_linear):
     PPP = PoissonRFS(initial_intensity=initial_PPP_intensity_linear)
     z = np.array([[0.1, 0.006], [10e6, 10e6]])
 
-    gating_matrix_ud, used_meas_indices_ud = PPP.gating(
-        z, GaussianDensity, meas_model, gating_size=0.99
-    )
+    gating_matrix_ud, used_meas_indices_ud = PPP.gating(z,
+                                                        GaussianDensity,
+                                                        meas_model,
+                                                        gating_size=0.99)
     new_tracks = PPP(z, gating_matrix_ud, clutter_intensity, meas_model, P_D)
     assert new_tracks
