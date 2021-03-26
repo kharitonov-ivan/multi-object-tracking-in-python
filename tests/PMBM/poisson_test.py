@@ -2,172 +2,56 @@ import numpy as np
 
 from pytest import fixture
 
-from mot.common.gaussian_density import GaussianDensity
-from mot.common.state import Gaussian, GaussianMixture, WeightedGaussian
+from mot.common import Gaussian, GaussianMixture, WeightedGaussian, GaussianDensity
+
 from mot.measurement_models import (
     ConstantVelocityMeasurementModel,
     RangeBearingMeasurementModel,
 )
-from mot.motion_models import CoordinateTurnMotionModel
+from mot.motion_models import CoordinateTurnMotionModel, ConstantVelocityMotionModel
 from mot.trackers.multiple_object_trackers.PMBM.common import PoissonRFS
+from .params.birth_model import birth_model_linear
+from .params.initial_PPP_intensity import initial_PPP_intensity_linear
+import copy
 
 
-@fixture(scope="function")
-def initial_PPP_intensity_linear():
-    return GaussianMixture(
-        [
-            WeightedGaussian(
-                np.log(0.03),
-                Gaussian(x=np.array([0.0, 0.0, 0.0, 0.0]), P=400 * np.eye(4)),
-            ),
-            WeightedGaussian(
-                np.log(0.03),
-                Gaussian(x=np.array([400.0, -600.0, 0.0, 0.0]), P=400 * np.eye(4)),
-            ),
-            WeightedGaussian(
-                np.log(0.03),
-                Gaussian(x=np.array([-800.0, -200.0, 0.0, 0.0]), P=400 * np.eye(4)),
-            ),
-            WeightedGaussian(
-                np.log(0.03),
-                Gaussian(x=np.array([-200.0, 800.0, 0.0, 0.0]), P=400 * np.eye(4)),
-            ),
-        ]
-    )
-
-
-@fixture(scope="function")
-def initial_PPP_intensity_nonlinear():
-    return GaussianMixture(
-        [
-            WeightedGaussian(
-                -0.3861,
-                Gaussian(x=np.array([0.0, 0.0, 5.0, 0.0, np.pi / 180]), P=np.eye(5)),
-            ),
-            WeightedGaussian(
-                -0.423,
-                Gaussian(x=np.array([20.0, 20.0, -20.0, 0.0, np.pi / 90]), P=np.eye(5)),
-            ),
-            WeightedGaussian(
-                -1.8164,
-                Gaussian(
-                    x=np.array([-20.0, 10.0, -10.0, 0.0, np.pi / 360]), P=np.eye(5)
-                ),
-            ),
-        ]
-    )
-
-
-def test_PPP_predict(initial_PPP_intensity_nonlinear):
-    # Create nonlinear motion model (coordinate turn)
+def test_PPP_predict_linear_motion(initial_PPP_intensity_linear):
+    # constant timestep
     dt = 1.0
-    sigma_V = 1.0
-    sigma_Omega = np.pi / 180
-    motion_model = CoordinateTurnMotionModel(dt, sigma_V, sigma_Omega)
 
-    # Set birth model
-    birth_model = GaussianMixture(
-        [
-            WeightedGaussian(
-                w=np.log(0.03),
-                gm=Gaussian(
-                    x=np.array([0.4456, 0.6463, 0.7094, 0.7547, 0.2760]),
-                    P=np.diag([1.0, 1.0, 1.0, (np.pi / 90) ** 2, (np.pi / 90) ** 2]),
-                ),
-            )
-        ]
-        * 4
-    )
+    # Create linear motion model
+    sigma_q = 1.0
+    motion_model = ConstantVelocityMotionModel(dt, sigma_q)
 
     # Set probability of esitense
     P_S = 0.8
 
     # Set Poisson RFS
-    PPP = PoissonRFS(initial_intensity=initial_PPP_intensity_nonlinear)
+    PPP = PoissonRFS(initial_intensity=initial_PPP_intensity_linear)
+    import pdb; pdb.set_trace()
+    PPP.predict(motion_model, P_S, dt)
 
-    PPP.predict(motion_model=motion_model, birth_model=birth_model, P_S=P_S)
-
+    # check multiply of weight in log domain 
     PPP_ref_w = np.array(
-        [-0.6092, -0.6461, -2.0395, -3.5066, -3.5066, -3.5066, -3.5066]
+        [
+            current_weight + np.log(P_S)
+            for current_weight in initial_PPP_intensity_linear.log_weights
+        ]
     )
 
     PPP_ref_state_x = [
-        np.array([5.0000, 0, 5.0000, 0.0175, 0.0175]),
-        np.array([0.0, 20.0, -20.0000, 0.0349, 0.0349]),
-        np.array([-30.0000, 10.0000, -10.0000, 0.0087, 0.0087]),
-        np.array([0.4456, 0.6463, 0.7094, 0.7547, 0.2760]),
-        np.array([0.4456, 0.6463, 0.7094, 0.7547, 0.2760]),
-        np.array([0.4456, 0.6463, 0.7094, 0.7547, 0.2760]),
-        np.array([0.4456, 0.6463, 0.7094, 0.7547, 0.2760]),
+        GaussianDensity.predict(component.gaussian, motion_model, dt).x
+        for component in initial_PPP_intensity_linear.weighted_components
     ]
 
     PPP_ref_state_P = [
-        np.array(
-            [
-                [2, 0, 1, 0, 0],
-                [0, 26, 0, 5, 0],
-                [1, 0, 2, 0, 0],
-                [0, 5, 0, 2, 1],
-                [0, 0, 0, 1, 1.0003],
-            ]
-        ),
-        np.array(
-            [
-                [2.0000, 0, 1.0000, 0, 0],
-                [0, 401.0000, 0, -20.0000, 0],
-                [1.0000, 0, 2.0000, 0, 0],
-                [0, -20.0000, 0, 2.0000, 1.0000],
-                [0, 0, 0, 1.0000, 1.0003],
-            ]
-        ),
-        np.array(
-            [
-                [2.0000, 0, 1.0000, 0, 0],
-                [0, 101.0000, 0, -10.0000, 0],
-                [1.0000, 0, 2.0000, 0, 0],
-                [0, -10.0000, 0, 2.0000, 1.0000],
-                [0, 0, 0, 1.0000, 1.0003],
-            ]
-        ),
-        np.array(
-            [
-                [1.0000, 0, 0, 0, 0],
-                [0, 1.0000, 0, 0, 0],
-                [0, 0, 1.0000, 0, 0],
-                [0, 0, 0, 0.0012, 0],
-                [0, 0, 0, 0, 0.0012],
-            ]
-        ),
-        np.array(
-            [
-                [1.0000, 0, 0, 0, 0],
-                [0, 1.0000, 0, 0, 0],
-                [0, 0, 1.0000, 0, 0],
-                [0, 0, 0, 0.0012, 0],
-                [0, 0, 0, 0, 0.0012],
-            ]
-        ),
-        np.array(
-            [
-                [1.0000, 0, 0, 0, 0],
-                [0, 1.0000, 0, 0, 0],
-                [0, 0, 1.0000, 0, 0],
-                [0, 0, 0, 0.0012, 0],
-                [0, 0, 0, 0, 0.0012],
-            ]
-        ),
-        np.array(
-            [
-                [1.0000, 0, 0, 0, 0],
-                [0, 1.0000, 0, 0, 0],
-                [0, 0, 1.0000, 0, 0],
-                [0, 0, 0, 0.0012, 0],
-                [0, 0, 0, 0, 0.0012],
-            ]
-        ),
+        GaussianDensity.predict(component.gaussian, motion_model, dt).P
+        for component in initial_PPP_intensity_linear.weighted_components
     ]
 
-    np.testing.assert_allclose(PPP.intensity.weights, PPP_ref_w, rtol=0.1)
+    np.testing.assert_allclose(
+        sorted(PPP.intensity.log_weights), sorted(PPP_ref_w), rtol=0.1
+    )
     np.testing.assert_allclose(
         [gm.x for gm in PPP.intensity.states], PPP_ref_state_x, rtol=0.01
     )
@@ -279,7 +163,5 @@ def test_PPP_get_new_tracks(initial_PPP_intensity_linear):
     gating_matrix_ud, used_meas_indices_ud = PPP.gating(
         z, GaussianDensity, meas_model, gating_size=0.99
     )
-    new_tracks = PPP.get_new_tracks(
-        z, gating_matrix_ud, clutter_intensity, meas_model, P_D
-    )
+    new_tracks = PPP(z, gating_matrix_ud, clutter_intensity, meas_model, P_D)
     assert new_tracks
