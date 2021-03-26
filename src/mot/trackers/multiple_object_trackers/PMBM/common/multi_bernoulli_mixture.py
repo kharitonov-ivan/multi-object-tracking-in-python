@@ -125,7 +125,7 @@ class MultiBernouilliMixture:
                             z[meas_idx],
                             meas_model,
                         )
-                        cost = (likelihood_detected[meas_idx] - likelihood_undetected)
+                        cost = likelihood_detected[meas_idx] - likelihood_undetected
                         detection_hypothesis = SingleTargetHypothesis(
                             bernoulli_detected,
                             likelihood_detected[meas_idx],
