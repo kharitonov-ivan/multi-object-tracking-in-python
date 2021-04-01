@@ -87,9 +87,6 @@ class PMBM:
         density: GaussianDensity,
     ) -> None:
         """Performs PMBM preidction step"""
-        birth_model = birth_model or self.birth_model
-        motion_model = motion_model or self.motion_model
-        survival_probability = survival_probability or self.survival_probability
 
         # MBM predict
         self.MBM.predict(motion_model, survival_probability, density, dt)
