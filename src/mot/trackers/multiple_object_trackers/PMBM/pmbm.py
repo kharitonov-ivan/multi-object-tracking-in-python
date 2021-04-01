@@ -80,11 +80,11 @@ class PMBM:
 
     def predict(
         self,
-        birth_model: GaussianMixture = None,
-        motion_model: MotionModel = None,
-        survival_probability: float = None,
-        dt=1.0,
-        density: GaussianDensity = GaussianDensity,
+        birth_model: GaussianMixture,
+        motion_model: MotionModel,
+        survival_probability: float,
+        dt: float,
+        density: GaussianDensity,
     ) -> None:
         """Performs PMBM preidction step"""
         birth_model = birth_model or self.birth_model
