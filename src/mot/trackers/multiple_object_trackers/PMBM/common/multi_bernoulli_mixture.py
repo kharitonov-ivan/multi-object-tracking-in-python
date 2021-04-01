@@ -32,6 +32,10 @@ class MultiBernouilliMixture:
             )
         )
 
+    def add_track(self, track: Track):
+        assert track.track_id in self.tracks.keys()
+        self.tracks[track.track_id] = track
+
     def estimator(self):
         """Simply return objects set based on most probable global hypo."""
         if self.global_hypotheses:
@@ -48,6 +52,7 @@ class MultiBernouilliMixture:
                 self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.state.x
             )
             object_list.append({track_id: object_state})
+
         return object_list
 
     def predict(self, motion_model, survival_probability, density_handler, dt) -> None:
