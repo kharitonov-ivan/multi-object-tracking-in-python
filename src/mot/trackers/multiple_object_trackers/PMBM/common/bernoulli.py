@@ -104,12 +104,12 @@ class Bernoulli:
         np.ndarray (number of measurements)
             predicted likelihood on logarithmix scale
         """
-        likelihood_detected = (
+        log_likelihood_detected = (
             density.predicted_likelihood(bern.state, z, meas_model)
             + np.log(detection_probability)
             + bern.r
         )
-        return likelihood_detected
+        return log_likelihood_detected
 
     @staticmethod
     def detected_update_state(bern, z, meas_model, density=GaussianDensity):
