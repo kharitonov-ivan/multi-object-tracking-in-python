@@ -1,11 +1,18 @@
 from dataclasses import dataclass
 from typing import List, Tuple
 
+@dataclass
+class Association:
+    track_id: int # num of tree
+    sth_id: int # num of hypo in tree
+
+    def __iter__(self):
+        return iter((self.track_id, self.sth_id))
 
 @dataclass
 class GlobalHypothesis:
     log_weight: float
-    associations: Tuple[Tuple[int, int]]  # (num_of_tree, num_of_hypo_in_tree)
+    associations: Tuple[Association]
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
