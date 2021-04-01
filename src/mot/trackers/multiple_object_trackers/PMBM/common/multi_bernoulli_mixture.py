@@ -42,7 +42,7 @@ class MultiBernouilliMixture:
             logging.info("Pool of global hypotheses is empty!")
             return None
 
-        object_list = []  # list with {'object_id':'object_state'}
+        object_list = []  # list of {'object_id':'object_state'}
         for (track_id, sth_id) in most_probable_global_hypo.hypothesis:
             object_state = (
                 self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.state.x
