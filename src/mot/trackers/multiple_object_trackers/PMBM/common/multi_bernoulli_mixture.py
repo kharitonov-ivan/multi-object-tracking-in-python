@@ -19,7 +19,8 @@ class MultiBernouilliMixture:
         self.global_hypotheses = []
 
     def add_track(self, track: Track):
-        self.tracks.update({track.track_id: track})
+        assert track.track_id in self.tracks.keys()
+        self.tracks[track.track_id] = track
 
     def __repr__(self) -> str:
         return (
