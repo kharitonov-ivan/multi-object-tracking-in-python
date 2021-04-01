@@ -157,6 +157,9 @@ def ___plot_series(series: list, ax, *args, **kwargs):
 @plot_series.register(np.ndarray)
 def ____plot_series(series: np.ndarray, ax, *args, **kwargs):
     for timestep in range(len(series)):
-        state = series[timestep]
-        ax.add_artist(BasicPlotter.plot_point(x=state[0], y=state[1], ax=ax, color="m"))
+        states = series[timestep]
+        for state in states:
+            ax.add_artist(
+                BasicPlotter.plot_point(x=state[0], y=state[1], ax=ax, color="m")
+            )
     return ax
