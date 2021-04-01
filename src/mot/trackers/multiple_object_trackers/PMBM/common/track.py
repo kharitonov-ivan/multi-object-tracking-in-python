@@ -11,21 +11,22 @@ class SingleTargetHypothesis:
         self.associated_measurement_idx = (
             associated_measurement_idx  # if -1 - misdetection
         )
-        self.children = {}
+        self.missdetection_hypothesis = None
+        self.detection_hypotheses = {}
 
     def get_child_by_meas_idx(self, meas_idx: int):
         child_by_meas_idx = {
-            v.associated_measurement_idx: k for (k, v) in self.children.items()
+            v.associated_measurement_idx: k for (k, v) in self.detection_hypotheses.items()
         }
         if meas_idx in child_by_meas_idx.keys():
             sth_id = child_by_meas_idx[meas_idx]
-            return self.children[sth_id]
+            return self.detection_hypotheses[sth_id]
         else:
             raise KeyError
 
     def get_child_sth_idx_by_meas_idx(self, meas_idx: int):
         child_by_meas_idx = {
-            v.associated_measurement_idx: k for (k, v) in self.children.items()
+            v.associated_measurement_idx: k for (k, v) in self.detection_hypotheses.items()
         }
         if meas_idx in child_by_meas_idx.keys():
             sth_id = child_by_meas_idx[meas_idx]
