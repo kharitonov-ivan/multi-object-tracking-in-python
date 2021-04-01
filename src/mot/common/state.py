@@ -37,6 +37,13 @@ class Gaussian:
             f"x = {np.array2string(self.x, max_line_width=np.inf, precision =1)}  "
         )
 
+    def __eq__(self, other) -> bool:
+        assert isinstance(other, Gaussian)
+        if self.x.__eq__(other.x).all() and self.P.__eq__(other.P).all():
+            return True
+        else:
+            return False
+
 
 @dataclass
 class WeightedGaussian:
