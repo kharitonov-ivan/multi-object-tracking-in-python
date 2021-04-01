@@ -85,7 +85,7 @@ class GaussianDensity:
         return state_upd
 
     @staticmethod
-    def predicted_likelihood(
+    def predict_loglikelihood(
         state_pred: Gaussian, z: npt.ArrayLike, measurement_model: MeasurementModel
     ) -> np.ndarray:
         """Calculates the predicted likelihood in logarithm domain
@@ -96,7 +96,7 @@ class GaussianDensity:
             measurement_model (MeasurementModel): specifies the measurement model
 
         Returns:
-            predicted_likelihood (np.ndarray (number of measurements)): predicted likelihood
+            predicted_loglikelihood (np.ndarray (number of measurements)): predicted likelihood
                                                                         for each measurement
                                                                         in logarithmic scale
         """
@@ -113,13 +113,13 @@ class GaussianDensity:
         # Predicted measurement
         z_bar = H_x @ state_pred.x
 
-        predicted_likelihood = np.zeros(z.shape[0])  # size - num of measurements
+        predicted_loglikelihood = np.zeros(z.shape[0])  # size - num of measurements
 
         for idx in range(z.shape[0]):
-            predicted_likelihood[idx] = multivariate_normal.logpdf(z[idx], z_bar, S)
+            predicted_loglikelihood[idx] = multivariate_normal.logpdf(z[idx], z_bar, S)
 
-        assert predicted_likelihood.shape[0] == z.shape[0]
-        return predicted_likelihood
+        assert predicted_loglikelihood.shape[0] == z.shape[0]
+        return predicted_loglikelihood
 
     @staticmethod
     def ellipsoidal_gating(
