@@ -99,10 +99,10 @@ class PMBM:
         """Creates cost matrix for associated measurements for one global"""
         # get data associated weigths
         # cost matrix with shape - number of cosidering measurements (gated) x number of hypothesis trees
-        L_d = np.full((len(z), len(global_hypothesis.hypothesis)), np.inf)
+        L_d = np.full((len(z), len(global_hypothesis.associations)), np.inf)
 
         for column_idx, (track_idx, parent_sth_idx) in enumerate(
-                global_hypothesis.hypothesis):
+                global_hypothesis.associations):
             parent_sth = self.MBM.tracks[track_idx].single_target_hypotheses[
                 parent_sth_idx]
 
@@ -171,7 +171,7 @@ class PMBM:
             if cost > 10000:
                 break
 
-            num_of_current_targets = len(global_hypothesis.hypothesis)
+            num_of_current_targets = len(global_hypothesis.associations)
             hypotheses = []
             for measurement_row, target_column in enumerate(
                     column_for_meas.tolist()):
@@ -184,7 +184,7 @@ class PMBM:
                     sth_id = 0  # new target - one leaf
                 else:
                     # the target of this measurement os assignes to is a target previously detected
-                    track_id, parent_sth_id = global_hypothesis.hypothesis[
+                    track_id, parent_sth_id = global_hypothesis.associations[
                         target_column]
                     parent_sth = self.MBM.tracks[
                         track_id].single_target_hypotheses[parent_sth_id]
@@ -196,7 +196,7 @@ class PMBM:
 
             log_weight = global_hypothesis.log_weight - cost
             new_global_hypothesis = GlobalHypothesis(
-                log_weight=log_weight, hypothesis=tuple(hypotheses))
+                log_weight=log_weight, associations=tuple(hypotheses))
             new_global_hypotheses.append(new_global_hypothesis)
             logging.debug(f'new global hypo: {new_global_hypothesis}')
         assert isinstance(new_global_hypotheses, List)
@@ -284,7 +284,7 @@ class PMBM:
                     assert sth_id == 0
                     hypo_list.append((track_id, sth_id))
             self.MBM.global_hypotheses.append(
-                GlobalHypothesis(log_weight=0.0, hypothesis=tuple(hypo_list)))
+                GlobalHypothesis(log_weight=0.0, associations=tuple(hypo_list)))
 
         # 4.2 Otherwise, for each global hypothesis construct cost matrix,
         # solve linear programming problem and construct new k global hypothesis for each.
