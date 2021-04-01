@@ -69,7 +69,9 @@ class MultiBernouilliMixture:
                     dt,
                 )
 
-    def gating(self, z, density_handler, meas_model, gating_size):
+    def gating(
+        self, z: np.ndarray, density_handler, meas_model: MeasurementModel, gating_size
+    ):
 
         gating_matrix = defaultdict(lambda: defaultdict(lambda: False))
         used_measurement_detected_indices = np.full(shape=[len(z)], fill_value=False)
