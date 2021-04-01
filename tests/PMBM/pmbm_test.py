@@ -438,11 +438,10 @@ def test_pmbm_update_and_predict_linear(linear_middle_params, birth_model):
         birth_model=birth_model,
         merging_threshold=merging_threshold,
         max_number_of_hypotheses=M,
-        P_G=P_G,
+        gating_percentage=P_G
         w_min=w_min,
         P_D=P_D,
         survival_probability=survival_probability,
-        gating_size=chi2.ppf(P_G, df=meas_model.d),
     )
     estimates = []
     simulation_time = K

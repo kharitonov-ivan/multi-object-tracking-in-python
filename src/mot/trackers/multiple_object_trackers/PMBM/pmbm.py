@@ -1,9 +1,9 @@
-import logging
 import copy
-
+import logging
 from typing import List, Tuple
 
 import numpy as np
+import scipy
 from mot.common.gaussian_density import GaussianDensity as GD
 from mot.common.state import GaussianMixture
 from mot.configs import SensorModelConfig
@@ -12,16 +12,11 @@ from mot.motion_models import MotionModel
 from murty import Murty
 
 logging.basicConfig(level=logging.DEBUG)
-from .common import (
-    PoissonRFS,
-    MultiBernouilliMixture,
-    GlobalHypothesis,
-    Track,
-    SingleTargetHypothesis,
-)
-
 from mot.common.estimation import Estimation
 from mot.common.normalize_log_weights import normalize_log_weights
+
+from .common import (GlobalHypothesis, MultiBernouilliMixture, PoissonRFS,
+                     SingleTargetHypothesis, Track)
 
 
 class PMBM:
@@ -44,11 +39,10 @@ class PMBM:
         birth_model: GaussianMixture,
         merging_threshold,
         max_number_of_hypotheses: int,
-        P_G,
+        gating_percentage : float,
         w_min,
         detection_probability,
         survival_probability: float,
-        gating_size: float,
         *args,
         **kwargs,
     ):
@@ -59,9 +53,13 @@ class PMBM:
         self.motion_model = motion_model
         self.birth_model = birth_model
         self.survival_probability = survival_probability  # models death of an object (aka P_S)
-        self.gating_size = gating_size  # chi2.ppf(P_G, df=self.meas_model.d)
+
+        # Interval for ellipsoidal gating (aka P_G)
+        self.gating_percentage = gating_percentage
+        self.gating_size = scipy.stats.chi2.ppf(self.gating_percentage,
+                                                df=self.meas_model.d)
         self.w_min = w_min  # in log domain
-        self.detection_probability = detection_probability  # models detection (and missdetection) of an object (aka P_D)
+        self.detection_probability = detection_probability  # models detection (and missdetection) of an object (aka P_)
         self.merging_threshold = merging_threshold
         self.desired_num_global_hypotheses = 10
         self.max_number_of_hypotheses = max_number_of_hypotheses
