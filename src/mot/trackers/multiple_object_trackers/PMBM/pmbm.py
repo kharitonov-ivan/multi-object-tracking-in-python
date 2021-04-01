@@ -147,14 +147,14 @@ class PMBM:
         logging.debug(f'\n undetected part = \n{L_u}')
         logging.debug(f'\n measurements =\n {z}')
         murty_solver = Murty(copy.deepcopy(L))
-        max_k = 5
-        # max_k = int(
+        max_murty_steps = 5
+        # max_murty_steps = int(
         #     np.ceil(
         #         self.desired_num_global_hypotheses * np.exp(global_hypothesis.weight)
         #     )
         # )
 
-        for k in range(max_k):
+        for k in range(max_murty_steps):
             try:
                 ok, cost, column_for_meas = murty_solver.draw()
                 if not column_for_meas.tolist():
