@@ -47,7 +47,7 @@ class PMBM:
         P_G,
         w_min,
         P_D,
-        P_S: float,
+        survival_probability: float,
         gating_size: float,
         *args,
         **kwargs,
@@ -58,7 +58,7 @@ class PMBM:
         self.sensor_model = sensor_model
         self.motion_model = motion_model
         self.birth_model = birth_model
-        self.P_S = P_S
+        self.survival_probability = survival_probability  # models death of an object (aka P_S)
         self.gating_size = gating_size  # chi2.ppf(P_G, df=self.meas_model.d)
         self.w_min = w_min  # in log domain
         self.P_D = P_D
@@ -83,19 +83,19 @@ class PMBM:
         self,
         birth_model: GaussianMixture = None,
         motion_model: MotionModel = None,
-        P_S: float = None,
+        survival_probability: float = None,
         dt=1.0,
         density=GD,
     ) -> None:
         """Performs PMBM preidction step"""
         birth_model = birth_model or self.birth_model
         motion_model = motion_model or self.motion_model
-        P_S = P_S or self.P_S
+        survival_probability = survival_probability or self.survival_probability
 
         # MBM predict
-        self.MBM.predict(motion_model, P_S, density, dt)
+        self.MBM.predict(motion_model, survival_probability, density, dt)
         # PPP predict
-        self.PPP.predict(motion_model, copy.deepcopy(birth_model), P_S, dt)
+        self.PPP.predict(motion_model, copy.deepcopy(birth_model), survival_probability, dt)
 
     def create_cost_for_associated_targets(self,
                                            global_hypothesis: GlobalHypothesis,

@@ -49,7 +49,7 @@ class MultiBernouilliMixture:
             object_list.append({track_id: object_state})
         return object_list
 
-    def predict(self, motion_model, P_S, density_handler, dt) -> None:
+    def predict(self, motion_model, survival_probability, density_handler, dt) -> None:
         # MBM predict
         for track_id, track in self.tracks.items():
             for sth_id, sth in track.single_target_hypotheses.items():
@@ -58,7 +58,7 @@ class MultiBernouilliMixture:
                 ].bernoulli = Bernoulli.predict(
                     track.single_target_hypotheses[sth_id].bernoulli,
                     motion_model,
-                    P_S,
+                    survival_probability,
                     density_handler,
                     dt,
                 )

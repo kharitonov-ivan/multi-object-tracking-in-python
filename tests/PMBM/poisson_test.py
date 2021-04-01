@@ -24,15 +24,15 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear):
     motion_model = ConstantVelocityMotionModel(dt, sigma_q)
 
     # Set probability of esitense
-    P_S = 0.8
+    survival_probability = 0.8
 
     # Set Poisson RFS
     PPP = PoissonRFS(initial_intensity=initial_PPP_intensity_linear)
-    PPP.predict(motion_model, P_S, dt)
+    PPP.predict(motion_model, survival_probability, dt)
 
     # check multiply of weight in log domain
     PPP_ref_w = np.array([
-        current_weight + np.log(P_S)
+        current_weight + np.log(survival_probability)
         for current_weight in initial_PPP_intensity_linear.log_weights
     ])
 

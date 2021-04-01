@@ -32,14 +32,14 @@ class Bernoulli:
     def predict(
         bern,
         motion_model: MotionModel,
-        P_S: float,
+        survival_probability: float,
         density=GaussianDensity,
         dt: float = 1.0,
     ):
         """Performs prediciton step for a Bernoulli component"""
 
         # Probability of survival * Probability of existence
-        next_r = P_S * bern.r
+        next_r = survival_probability * bern.r
 
         # Kalman prediction of the new state
         next_state = density.predict(bern.state, motion_model, dt)

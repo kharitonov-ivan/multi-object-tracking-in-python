@@ -14,7 +14,7 @@ def test_bern_predict():
     motion_model = CoordinateTurnMotionModel(dt, sigma_V, sigma_Omega)
 
     # Set probability of existence
-    P_S = 0.8
+    survival_probability = 0.8
 
     # Set Bernoulli RFS
     bern = Bernoulli(
@@ -24,7 +24,7 @@ def test_bern_predict():
         ),
     )
 
-    got_bern = Bernoulli.predict(bern=bern, motion_model=motion_model, P_S=P_S)
+    got_bern = Bernoulli.predict(bern=bern, motion_model=motion_model, survival_probability=survival_probability)
     # reference
     r_ref = 0.7380
     state_ref = Gaussian(

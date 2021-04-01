@@ -167,7 +167,7 @@ def test_PMBM_predict():
     )
 
     # Set probability of existence
-    P_S = 0.7
+    survival_probability = 0.7
 
     # Set Poisson RFS
     PPP = PoissonRFS(
@@ -238,7 +238,7 @@ def test_PMBM_predict():
     pmbm_tracker.PPP = PPP
     pmbm_tracker.MBM = MBM
 
-    pmbm_tracker.predict(birth_model, motion_model, P_S, dt)
+    pmbm_tracker.predict(birth_model, motion_model, survival_probability, dt)
 
     bern_first_ref = Bernoulli(
         r=0.0778,
@@ -394,7 +394,7 @@ def test_pmbm_update_and_predict_linear(linear_middle_params, birth_model):
     lambda_c = 0.1
 
     # Choose object survival probability
-    P_S = 0.9999
+    survival_probability = 0.9999
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
@@ -441,7 +441,7 @@ def test_pmbm_update_and_predict_linear(linear_middle_params, birth_model):
         P_G=P_G,
         w_min=w_min,
         P_D=P_D,
-        P_S=P_S,
+        survival_probability=survival_probability,
         gating_size=chi2.ppf(P_G, df=meas_model.d),
     )
     estimates = []
@@ -457,7 +457,7 @@ def test_pmbm_update_and_predict_linear(linear_middle_params, birth_model):
         current_step_estimates = pmbm.estimator()
         pmbm.reduction()
         estimates.append(current_step_estimates)
-        pmbm.predict(P_S=P_S)
+        pmbm.predict(survival_probability=survival_probability)
 
     Plotter.plot_several(
         [object_data, meas_data],
