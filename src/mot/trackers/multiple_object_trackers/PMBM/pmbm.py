@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 import numpy as np
 import scipy
-from mot.common.gaussian_density import GaussianDensity as GD
+from mot.common.gaussian_density import GaussianDensity
 from mot.common.state import GaussianMixture
 from mot.configs import SensorModelConfig
 from mot.measurement_models import MeasurementModel
@@ -43,11 +43,12 @@ class PMBM:
         w_min,
         detection_probability,
         survival_probability: float,
+        density: GaussianDensity = GaussianDensity,
         *args,
         **kwargs,
     ):
         self.timestep = 0
-        self.density = GD
+        self.density = density
         self.meas_model = meas_model
         self.sensor_model = sensor_model
         self.motion_model = motion_model
@@ -83,7 +84,7 @@ class PMBM:
         motion_model: MotionModel = None,
         survival_probability: float = None,
         dt=1.0,
-        density=GD,
+        density: GaussianDensity = GaussianDensity,
     ) -> None:
         """Performs PMBM preidction step"""
         birth_model = birth_model or self.birth_model
