@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import logging
 
+
 @fixture(scope="function")
 def linear_middle_params():
     return [
@@ -37,7 +38,8 @@ def linear_middle_params():
         #     t_birth=5,
         #     t_death=99,
         # )
-        ]
+    ]
+
 
 @fixture(scope="function")
 def linear_big_params():
@@ -126,20 +128,20 @@ def birth_model():
     return GaussianMixture(
         [
             WeightedGaussian(
-                w=np.log(0.03),
-                gm=Gaussian(x=np.array([0.0, 0.0, 0.0, 0.0]), P=400 * np.eye(4)),
+                np.log(0.03),
+                Gaussian(x=np.array([0.0, 0.0, 0.0, 0.0]), P=400 * np.eye(4)),
             ),
             WeightedGaussian(
-                w=np.log(0.03),
-                gm=Gaussian(x=np.array([400.0, -600.0, 0.0, 0.0]), P=400 * np.eye(4)),
+                np.log(0.03),
+                Gaussian(x=np.array([400.0, -600.0, 0.0, 0.0]), P=400 * np.eye(4)),
             ),
             WeightedGaussian(
-                w=np.log(0.03),
-                gm=Gaussian(x=np.array([-800.0, -200.0, 0.0, 0.0]), P=400 * np.eye(4)),
+                np.log(0.03),
+                Gaussian(x=np.array([-800.0, -200.0, 0.0, 0.0]), P=400 * np.eye(4)),
             ),
             WeightedGaussian(
-                w=np.log(0.03),
-                gm=Gaussian(x=np.array([-200.0, 800.0, 0.0, 0.0]), P=400 * np.eye(4)),
+                np.log(0.03),
+                Gaussian(x=np.array([-200.0, 800.0, 0.0, 0.0]), P=400 * np.eye(4)),
             ),
         ]
     )
@@ -156,8 +158,8 @@ def test_PMBM_predict():
     birth_model = GaussianMixture(
         [
             WeightedGaussian(
-                w=np.log(0.03),
-                gm=Gaussian(
+                log_weight=np.log(0.03),
+                gaussian=Gaussian(
                     x=np.array([0.4456, 0.6463, 0.7094, 0.7547, 0.2760]),
                     P=np.diag([1.0, 1.0, 1.0, (np.pi / 90) ** 2, (np.pi / 90) ** 2]),
                 ),
@@ -174,20 +176,20 @@ def test_PMBM_predict():
         GaussianMixture(
             weighted_components=[
                 WeightedGaussian(
-                    w=-0.3861,
-                    gm=Gaussian(
+                    -0.3861,
+                    Gaussian(
                         x=np.array([0.0, 0.0, 5.0, 0.0, np.pi / 180]), P=np.eye(5)
                     ),
                 ),
                 WeightedGaussian(
-                    w=-0.423,
-                    gm=Gaussian(
+                    -0.423,
+                    Gaussian(
                         x=np.array([20.0, 20.0, -20.0, 0.0, np.pi / 90]), P=np.eye(5)
                     ),
                 ),
                 WeightedGaussian(
-                    w=-1.8164,
-                    gm=Gaussian(
+                    -1.8164,
+                    Gaussian(
                         x=np.array([-20.0, 10.0, -10.0, 0.0, np.pi / 360]), P=np.eye(5)
                     ),
                 ),
@@ -227,14 +229,22 @@ def test_PMBM_predict():
         ),
     )
 
-    track_first = Track(SingleTargetHypothesis(bern_first, 0, 0))
-    track_second = Track(SingleTargetHypothesis(bern_second, 0, 0))
+    track_first = Track(SingleTargetHypothesis(bern_first, 0, 0, 0))
+    track_second = Track(SingleTargetHypothesis(bern_second, 0, 0, 0))
 
     MBM = MultiBernouilliMixture()
-    MBM.tracks.append(track_first)
-    MBM.tracks.append(track_second)
+    MBM.tracks.update({0: track_first, 1: track_second})
 
-    pmbm_tracker = PMBM()
+    pmbm_tracker = PMBM(
+        meas_model=None,
+        sensor_model=None,
+        motion_model=motion_model,
+        birth_model=birth_model,
+        max_number_of_hypotheses=None,
+        P_D=0.9,
+        P_S=0.9,
+        gating_size=None,
+    )
     pmbm_tracker.PPP = PPP
     pmbm_tracker.MBM = MBM
 
@@ -272,9 +282,9 @@ def test_PMBM_predict():
         ),
     )
 
-    track_first_ref = Track(SingleTargetHypothesis(bern_first_ref, 0, 0))
+    track_first_ref = Track(SingleTargetHypothesis(bern_first_ref, 0, 0, 0))
     track_first_ref.track_id = 0
-    track_second_ref = Track(SingleTargetHypothesis(bern_second_ref, 0, 0))
+    track_second_ref = Track(SingleTargetHypothesis(bern_second_ref, 0, 0, 0))
     track_second_ref.track_id = 1
 
     MBM_ref = MultiBernouilliMixture()
@@ -386,12 +396,12 @@ def test_PMBM_predict():
         np.testing.assert_allclose(first_state.w, second_state.w, rtol=0.05)
 
 
-def test_pmbm_update_and_predict_linear(linear_middle_params, birth_model):
+def test_pmbm_update_and_predict_linear(linear_big_params, birth_model):
     # Choose object detection probability
-    P_D = 0.99999
+    P_D = 0.98
 
     # Choose clutter rate
-    lambda_c = 0.1
+    lambda_c = 0.01
 
     # Choose object survival probability
     survival_probability = 0.9999
@@ -402,11 +412,11 @@ def test_pmbm_update_and_predict_linear(linear_middle_params, birth_model):
 
     # Create nlinear motion model
     dt = 1.0
-    sigma_q = 1.0
+    sigma_q = 5.0
     motion_model = ConstantVelocityMotionModel(dt, sigma_q)
 
     # Create linear measurement model
-    sigma_r = 2.0
+    sigma_r = 10.0
     meas_model = ConstantVelocityMeasurementModel(sigma_r)
 
     # Create ground truth model
@@ -414,7 +424,7 @@ def test_pmbm_update_and_predict_linear(linear_middle_params, birth_model):
     K = 20
 
     # Generate true object data (noisy or noiseless) and measurement data
-    ground_truth = GroundTruthConfig(n_births, linear_middle_params, total_time=K)
+    ground_truth = GroundTruthConfig(n_births, linear_big_params, total_time=K)
     object_data = ObjectData(
         ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
     )
@@ -426,7 +436,7 @@ def test_pmbm_update_and_predict_linear(linear_middle_params, birth_model):
     P_G = 0.999  # gating size in percentage
     w_min = 1e-3  # hypothesis pruning threshold
     merging_threshold = 2  # hypothesis merging threshold
-    M = 5  # maximum number of hypotheses kept
+    M = 20  # maximum number of hypotheses kept
     r_min = 1e-3  # Bernoulli component pruning threshold
     r_recycle = 0.1  # Bernoulli component recycling threshold
     r_estimate = 0.4  # Threshold used to extract estimates from Bernoullis
@@ -447,12 +457,14 @@ def test_pmbm_update_and_predict_linear(linear_middle_params, birth_model):
     simulation_time = K
     from pprint import pprint
 
-    for idx in trange(simulation_time):
+    for timestep in trange(simulation_time):
+        import logging
+
+        logging.debug(pmbm.__repr__())
         pmbm.increment_timestep()
-        if len(meas_data[idx]) == 0:
-            continue
-        else:
-            pmbm.update(z=meas_data[idx])
+        if len(meas_data[timestep]) > 0:
+            pmbm.update(z=meas_data[timestep])
+
         current_step_estimates = pmbm.estimator()
         pmbm.reduction()
         estimates.append(current_step_estimates)

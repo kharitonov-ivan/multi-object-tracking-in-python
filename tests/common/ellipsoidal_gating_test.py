@@ -50,14 +50,14 @@ def test_ellipsoidal_gating():
     states = [None for i in range(grount_truth_config.total_time)]
     for timestep in range(0, grount_truth_config.total_time):
         states[timestep] = Gaussian(
-            x=np.array(object_data.X[timestep][0].x), P=np.eye(motion_model.d)
+            x=np.array(object_data[timestep][0].x), P=np.eye(motion_model.d)
         )
 
         if timestep == 0:
             continue
         [z_ingate, meas_in_gate] = GaussianDensity.ellipsoidal_gating(
             state_prev=states[timestep - 1],
-            z=np.array(meas_data.measurements[timestep]),
+            z=np.array(meas_data[timestep]),
             measurement_model=meas_model,
             gating_size=gating_size,
         )
