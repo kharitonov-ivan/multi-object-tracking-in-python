@@ -112,11 +112,15 @@ class Bernoulli:
         return log_likelihood_detected
 
     @staticmethod
-    def detected_update_state(bern, z, meas_model, density=GaussianDensity):
+    def detected_update_state(
+        bern, z: np.ndarray, meas_model: MeasurementModel, density=GaussianDensity
+    ):
         """Creates the new local hypothesis due to measurement update.
         NOTE: page 85 lecture 04
 
         """
+        assert isinstance(meas_model, MeasurementModel)
+
         updated_density = density.update(bern.state, z, meas_model)
         update_bern = Bernoulli(state=updated_density, r=1.0)
         return update_bern
