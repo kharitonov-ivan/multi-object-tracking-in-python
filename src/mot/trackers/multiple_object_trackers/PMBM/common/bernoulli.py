@@ -1,13 +1,15 @@
-from mot.common.state import Gaussian
 from dataclasses import dataclass
-from mot.motion_models import MotionModel
+from typing import List, Tuple
+
+import numpy as np
 from mot.common.gaussian_density import GaussianDensity
+from mot.common.state import Gaussian
+from mot.measurement_models import MeasurementModel
+from mot.motion_models import MotionModel
 from mot.trackers.multiple_object_trackers.PMBM.common.track import (
     SingleTargetHypothesis,
     Track,
 )
-from typing import List, Tuple
-import numpy as np
 
 
 class Bernoulli:
@@ -21,34 +23,34 @@ class Bernoulli:
         probability of existence
     """
 
-    def __init__(self, state: Gaussian, r: float):
+    def __init__(self, state: Gaussian, existence_probability: float):
         self.state: Gaussian = state
-        self.r: float = r
+        self.existence_probability: float = existence_probability
 
     def __repr__(self) -> str:
-        return self.__class__.__name__ + (f"(r={self.r:.2f}, " f"state={self.state}, ")
+        return self.__class__.__name__ + (
+            f"(r={self.existence_probability:.4f}, " f"state={self.state}, "
+        )
 
-    @staticmethod
     def predict(
-        bern,
+        self,
         motion_model: MotionModel,
         survival_probability: float,
         density=GaussianDensity,
         dt: float = 1.0,
-    ):
+    ) -> None:
         """Performs prediciton step for a Bernoulli component"""
 
         # Probability of survival * Probability of existence
-        next_r = survival_probability * bern.r
+        next_existence_probability = survival_probability * self.existence_probability
 
         # Kalman prediction of the new state
-        next_state = density.predict(bern.state, motion_model, dt)
+        self.state = density.predict(self.state, motion_model, dt)
 
-        predicted_bern = Bernoulli(r=next_r, state=next_state)
+        predicted_bern = Bernoulli(next_state, next_existence_probability)
         return predicted_bern
 
-    @staticmethod
-    def undetected_update(bern, detection_probability: float):
+    def undetected_update(self, detection_probability: float):
         """Calculates the likelihood of missed detection,
         and creates new local hypotheses due to missed detection.
         NOTE: from page 88 lecture 04
@@ -67,47 +69,40 @@ class Bernoulli:
 
         """
 
-        # missdetection likelihood l_0 = 1 - P_D
+        missdetecion_probability = 1 - detection_probability
         # update probability of existence
-        posterior_r = (bern.r * (1 - detection_probability)) / (1 - bern.r + bern.r * (1 - detection_probability))
+        posterior_existence_probability = (self.existence_probability * (1 - detection_probability)) / (1 - self.existence_probability + self.existence_probability * (1 - detection_probability))
 
+        # state remains the same
         posterior_bern = Bernoulli(
-            state=bern.state, r=posterior_r
-        )  # state remains the same
+            initial_state=self.state,
+            existence_probability=posterior_existence_probability,
+        )
 
-        # predicted likelihoood
-        likelihood_predicted = 1 - bern.r + bern.r * (1 - detection_probability)
+        likelihood_predicted = (
+            1
+            - self.existence_probability
+            + self.existence_probability * missdetecion_probability
+        )
         log_likelihood_predicted = np.log(likelihood_predicted)
-
         return posterior_bern, log_likelihood_predicted
 
-    @staticmethod
     def detected_update_likelihood(
-        bern, z, meas_model, detection_probability: float, density=GaussianDensity
+        self,
+        measurements: np.ndarray,
+        meas_model: MeasurementModel,
+        detection_probability: float,
+        density=GaussianDensity,
     ) -> np.ndarray:
         """Calculates the predicted likelihood for a given local hypothesis.
         NOTE page 86 lecture 04
-
-        Parameters
-        ----------
-        tt_entry : [type]
-            [description]
-        z : np.array (measurement dimension x num of measurements)
-            [description]
-        meas_model : [type]
-            [description]
-        detection_probability : scalar
-            object detection probability
-
-        Returns
-        -------
-        np.ndarray (number of measurements)
-            predicted likelihood on logarithmix scale
         """
+
+        assert isinstance(meas_model, MeasurementModel)
         log_likelihood_detected = (
-            density.predicted_likelihood(bern.state, z, meas_model)
+            density.predict_loglikelihood(self.state, measurements, meas_model)
             + np.log(detection_probability)
-            + bern.r
+            + np.log(self.existence_probability)
         )
         return log_likelihood_detected
 
@@ -122,5 +117,5 @@ class Bernoulli:
         assert isinstance(meas_model, MeasurementModel)
 
         updated_density = density.update(bern.state, z, meas_model)
-        update_bern = Bernoulli(state=updated_density, r=1.0)
+        update_bern = Bernoulli(state=updated_density, existence_probability=1.0)
         return update_bern
