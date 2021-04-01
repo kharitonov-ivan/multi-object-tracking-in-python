@@ -57,7 +57,7 @@ class Track:
         self.single_target_hypotheses = {next(self.sth_id_generator): initial_sth}
 
     def add_sth(self, sth: SingleTargetHypothesis) -> None:
-        self.single_target_hypotheses.update({next(self.sth_id_generator): sth})
+        self.single_target_hypotheses[next(self.sth_id_generator)] = sth
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
@@ -73,5 +73,5 @@ class Track:
         new_single_target_hypotheses = {}
         for parent_sth_idx, parent_sth in self.single_target_hypotheses.items():
             for child_sth_idx, child_sth in parent_sth.children.items():
-                new_single_target_hypotheses.update({child_sth_idx: child_sth})
+                new_single_target_hypotheses[child_sth_idx] = child_sth
         self.single_target_hypotheses = new_single_target_hypotheses
