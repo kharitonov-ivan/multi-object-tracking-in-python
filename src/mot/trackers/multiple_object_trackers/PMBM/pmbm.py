@@ -300,6 +300,8 @@ class PMBM:
             self.meas_model,
             self.detection_probability,
         )
+        # Update of PPP intensity for undetected objects that remain undetected
+        self.PPP.undetected_update(self.P_D)
         logging.debug(f"\n new tracks from PPP {new_tracks}")
 
         # 4. Update global hypothesis
