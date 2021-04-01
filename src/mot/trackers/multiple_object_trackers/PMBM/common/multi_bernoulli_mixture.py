@@ -201,7 +201,8 @@ class MultiBernouilliMixture:
             global_hypothesis.weight for global_hypothesis in self.global_hypotheses
         ]
         global_hypo_log_w_norm, _ = normalize_log_weights(global_hypo_log_w_unnorm)
-        for global_hypo_idx, global_hypo in enumerate(self.global_hypotheses):
-            self.global_hypotheses[global_hypo_idx].weight = global_hypo_log_w_norm[
-                global_hypo_idx
-            ]
+
+        for global_hypo, normalized_log_weight in zip(
+            self.global_hypotheses, global_hypo_log_w_norm
+        ):
+            global_hypo.weight = normalized_log_weight
