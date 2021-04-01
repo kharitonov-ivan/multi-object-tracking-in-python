@@ -194,9 +194,9 @@ class PMBM:
                     self.MBM.tracks[track_id].single_target_hypotheses[sth_id] = copy.deepcopy(child_sth)})
                 hypotheses.append((track_id, sth_id))
 
-            log_weight = global_hypothesis.weight - cost
+            log_weight = global_hypothesis.log_weight - cost
             new_global_hypothesis = GlobalHypothesis(
-                weight=log_weight, hypothesis=tuple(hypotheses))
+                log_weight=log_weight, hypothesis=tuple(hypotheses))
             new_global_hypotheses.append(new_global_hypothesis)
             logging.debug(f'new global hypo: {new_global_hypothesis}')
         assert isinstance(new_global_hypotheses, List)
@@ -284,7 +284,7 @@ class PMBM:
                     assert sth_id == 0
                     hypo_list.append((track_id, sth_id))
             self.MBM.global_hypotheses.append(
-                GlobalHypothesis(weight=0.0, hypothesis=tuple(hypo_list)))
+                GlobalHypothesis(log_weight=0.0, hypothesis=tuple(hypo_list)))
 
         # 4.2 Otherwise, for each global hypothesis construct cost matrix,
         # solve linear programming problem and construct new k global hypothesis for each.
