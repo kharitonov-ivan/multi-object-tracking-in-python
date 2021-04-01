@@ -32,7 +32,7 @@ class GaussianDensity:
         """
         next_x = motion_model.f(state.x, dt)
         next_F = motion_model.F(state.x, dt)
-        next_P = next_F @ state.P @ next_F.T + motion_model.Q(dt)
+        next_P = np.linalg.multi_dot([next_F, state.P, next_F.T]) + motion_model.Q(dt)
         return Gaussian(next_x, next_P)
 
     @staticmethod
@@ -64,24 +64,24 @@ class GaussianDensity:
         H_x = measurement_model.H(state_pred.x)
 
         # Innovation covariance
-        S = H_x @ state_pred.P @ H_x.conj().T + measurement_model.R
+        S = np.linalg.multi_dot([H_x, state_pred.P, H_x.T]) + measurement_model.R
 
         # Make sure matrix S is positive definite
-        S = (S + S.conj().T) / 2
+        S = 0.5 * (S + S.T)
 
-        K = (state_pred.P @ H_x.conj().T) @ np.linalg.inv(S)
+        K = state_pred.P @ H_x.T @ np.linalg.inv(S)
 
-        # State update
-        state_upd_x = (
-            state_pred.x + (K @ (z - measurement_model.h(state_pred.x)).T).T.squeeze()
+        next_x = (
+            state_pred.x + (K @ (z - measurement_model.h(state_pred.x)).T).squeeze()
         )
 
-        assert state_upd_x.shape == state_pred.x.shape
+        assert next_x.shape == state_pred.x.shape
+
         # Covariance update
         # TODO ndim property for state
-        I = np.eye(state_pred.x.shape[0])  # noqa: E741
-        state_upd_P = (I - K @ H_x) @ state_pred.P
-        state_upd = Gaussian(x=state_upd_x, P=state_upd_P)
+        I = np.eye(state_pred.x.shape[0])
+        next_P = (I - K @ H_x) @ state_pred.P
+        state_upd = Gaussian(x=next_x, P=next_P)
         return state_upd
 
     @staticmethod
@@ -147,10 +147,13 @@ class GaussianDensity:
             logger.warning("No measurements! No updates!")
             return np.array([]), None
         assert z.shape[1] == measurement_model.dim
+
         # Measurements model Jacobian
         H_x = measurement_model.H(state_prev.x)
+
         # Innovation covariance
         S = H_x @ state_prev.P @ H_x.T
+
         # Make sure matrix S is positive definite
         S = (S + S.T) / 2
 
@@ -164,6 +167,7 @@ class GaussianDensity:
 
         # Squared Mahalanobis distance
         Machlanobis_dist = np.zeros(num_of_measurements)
+
         # TODO vectorize this
         for i in range(num_of_measurements):
             try:
