@@ -98,7 +98,7 @@ class PMBM:
                                            z: np.ndarray) -> np.ndarray:
         """Creates cost matrix for associated measurements for one global"""
         # get data associated weigths
-        # cost matrix with shape - number of cosidering measurements (gated) x number of hypothesis trees
+        # cost matrix with shape - number of cosidered measurements (gated) x number of hypothesis trees
         L_d = np.full((len(z), len(global_hypothesis.associations)), np.inf)
 
         for column_idx, (track_idx, parent_sth_idx) in enumerate(
