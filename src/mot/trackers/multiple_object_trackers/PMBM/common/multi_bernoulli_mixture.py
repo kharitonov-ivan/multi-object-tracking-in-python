@@ -130,20 +130,24 @@ class MultiBernouilliMixture:
                 )
                 # Create association hypothesis for measurements which in the gate
                 for meas_idx, meas in enumerate(z):
-                    if gating_matrix[track_id][sth_id][meas_idx]:
-                        bernoulli_detected = Bernoulli.detected_update_state(
-                            sth.bernoulli,
-                            z[meas_idx],
-                            meas_model,
-                        )
+                    bernoulli_detected = Bernoulli.detected_update_state(
+                        sth.bernoulli,
+                        z[meas_idx],
+                        meas_model,
+                    )
                     logging.debug(
                         f"detection z = {meas} likelihood {log_likelihoods_detected[meas_idx]}"
                     )
-                            likelihood_detected[meas_idx],
-                            meas_idx,
-                            cost,
-                        )
-                        sth.children.update({meas_idx: detection_hypothesis})
+                    detection_hypothesis = SingleTargetHypothesis(
+                        bernoulli_detected,
+                        log_likelihoods_detected[meas_idx],
+                        meas_idx,
+                        cost=-(
+                            log_likelihoods_detected[meas_idx]
+                            - log_likelihood_undetected
+                        ),
+                    )
+                    sth.children.update({meas_idx: detection_hypothesis})
 
     def prune_global_hypotheses(self, threshold) -> None:
         """Removes Bernoulli components with small probability of existence and reindex the hypothesis table.
