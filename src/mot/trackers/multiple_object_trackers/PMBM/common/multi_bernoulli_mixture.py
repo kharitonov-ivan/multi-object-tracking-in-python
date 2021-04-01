@@ -145,10 +145,11 @@ class MultiBernouilliMixture:
                         )
                         sth.children.update({meas_idx: detection_hypothesis})
 
-    def prune_global_hypotheses(self, threshold=np.log(0.05)) -> None:
+    def prune_global_hypotheses(self, threshold) -> None:
         """Removes Bernoulli components with small probability of existence and reindex the hypothesis table.
         If a track contains no single object hypothesis after pruning, this track is removed
 
+        good choice threshold : np.log(0.05)
         """
         self.global_hypotheses = [
             global_hypothesis
