@@ -51,13 +51,13 @@ class Track:
     track_id_generator = (x for x in range(max_track_id))
 
     def __init__(self, initial_sth=None):
-        self.track_id = Track.track_id_generator.__next__()
+        self.track_id = next(Track.track_id_generator)
         self.max_sth_id = 1000000
         self.sth_id_generator = (x for x in range(self.max_sth_id))
-        self.single_target_hypotheses = {self.sth_id_generator.__next__(): initial_sth}
+        self.single_target_hypotheses = {next(self.sth_id_generator): initial_sth}
 
     def add_sth(self, sth: SingleTargetHypothesis) -> None:
-        self.single_target_hypotheses.update({self.sth_id_generator.__next__(): sth})
+        self.single_target_hypotheses.update({next(self.sth_id_generator): sth})
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
