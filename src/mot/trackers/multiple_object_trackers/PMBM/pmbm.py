@@ -189,8 +189,8 @@ class PMBM:
                     parent_sth = self.MBM.tracks[
                         track_id].single_target_hypotheses[parent_sth_id]
                     child_sth = parent_sth.children[measurement_row]
-                    sth_id = self.MBM.tracks[
-                        track_id].sth_id_generator.__next__()
+                    sth_id = next(self.MBM.tracks[
+                        track_id].sth_id_generator)
                     self.MBM.tracks[track_id].single_target_hypotheses.update(
                         {sth_id: copy.deepcopy(child_sth)})
                 hypotheses.append((track_id, sth_id))
