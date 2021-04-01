@@ -180,15 +180,26 @@ class PMBM:
 
             num_of_current_targets = len(global_hypothesis.associations)
             hypotheses = []
-            for measurement_row, target_column in enumerate(
-                    column_for_meas.tolist()):
+            likelihood_misdetection = 0
+            likelihood_detection = 0
+            likelihood_birth = 0
+            likelihood_prior = global_hypothesis.weight
+
+            for measurement_row, target_column in enumerate(column_for_meas.tolist()):
+
                 if target_column + 1 > num_of_current_targets:
+
                     # the target of this measurements is assigned
                     # not in the current global hypothesis but to is a newly created target
                     track_id = new_tracks[
-                        target_column -
-                        num_of_current_targets].track_id  # index of bernoulli from PPP birhted bernoulli
+                        target_column - num_of_current_targets
+                    ].track_id  # index of bernoulli from PPP birhted bernoulli
                     sth_id = 0  # new target - one leaf
+                    likelihood_birth += (
+                        new_tracks[target_column - num_of_current_targets]
+                        .single_target_hypotheses[sth_id]
+                        .likelihood
+                    )
                 else:
                     # the target of this measurement os assignes to is a target previously detected
                     track_id, parent_sth_id = global_hypothesis.associations[
@@ -200,6 +211,15 @@ class PMBM:
                         track_id].sth_id_generator)
                     self.MBM.tracks[track_id].single_target_hypotheses[sth_id] = copy.deepcopy(child_sth)})
                 hypotheses.append((track_id, sth_id))
+            likelihood_global = (
+                likelihood_prior
+                + likelihood_misdetection
+                + likelihood_detection
+                + likelihood_birth
+                - cost
+            )
+
+            likelihood_global = global_hypothesis.weight - cost
 
             log_weight = global_hypothesis.log_weight - cost
             new_global_hypothesis = GlobalHypothesis(
