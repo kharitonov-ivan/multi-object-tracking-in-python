@@ -31,13 +31,13 @@ class PMBM:
     8. PMBM update.
     9. Object states extraction.
     """
+
     def __init__(
         self,
         meas_model: MeasurementModel,
         sensor_model: SensorModelConfig,
         motion_model: MotionModel,
         birth_model: GaussianMixture,
-        merging_threshold,
         max_number_of_hypotheses: int,
         gating_percentage : float,
         w_min,
@@ -321,7 +321,8 @@ class PMBM:
         # 4.2 Otherwise, for each global hypothesis construct cost matrix,
         # solve linear programming problem and construct new k global hypothesis for each.
         else:
-            self.MBM.normalize_global_hypotheses_weights()
+            # self.MBM.normalize_global_hypotheses_weights()
+
             new_global_hypotheses = []
             for global_hypothesis in self.MBM.global_hypotheses:
                 new_global_hypotheses_step = self.costruct_new_global_hypothesis(
@@ -332,8 +333,7 @@ class PMBM:
             self.rebuild_tree()
 
             self.MBM.global_hypotheses = new_global_hypotheses
-            for track_id, track in self.MBM.tracks.items():
-                self.MBM.tracks[track_id].cut_tree()
+            self.MBM.normalize_global_hypotheses_weights()
 
             for new_track in new_tracks:
                 self.MBM.add_track(new_track)
