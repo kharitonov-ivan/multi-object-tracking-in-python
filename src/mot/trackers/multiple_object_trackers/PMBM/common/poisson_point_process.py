@@ -171,7 +171,7 @@ class PoissonRFS:
         born_components : GaussianMixture
             [description]
         """
-        self.intensity.extend(born_components)
+        self.intensity.extend(deepcopy(born_components))
 
     def gating(
         self,

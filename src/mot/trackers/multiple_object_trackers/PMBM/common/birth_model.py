@@ -1,3 +1,4 @@
+from copy import deepcopy
 from mot.common import GaussianMixture
 
 
@@ -8,7 +9,7 @@ class BirthModel:
 
 class StaticBirthModel(BirthModel):
     def __init__(self, birth_model_config: GaussianMixture):
-        self.birth_model_config = birth_model_config
+        self.birth_model_config = deepcopy(birth_model_config)
         super(StaticBirthModel, self).__init__()
 
     def get_born_objects_intensity(self):

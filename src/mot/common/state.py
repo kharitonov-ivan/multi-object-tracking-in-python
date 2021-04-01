@@ -1,7 +1,7 @@
 import collections
 from dataclasses import dataclass
 from typing import List
-
+from copy import deepcopy
 import numpy as np
 
 
@@ -64,7 +64,7 @@ class WeightedGaussian:
 
 class GaussianMixture(collections.MutableSequence):
     def __init__(self, weighted_components: List[WeightedGaussian] = (None)):
-        self.weighted_components = weighted_components
+        self.weighted_components = deepcopy(weighted_components)
 
     @property
     def log_weights(self):
