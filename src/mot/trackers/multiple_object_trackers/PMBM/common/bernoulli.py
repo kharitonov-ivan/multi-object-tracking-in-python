@@ -21,8 +21,8 @@ class Bernoulli:
         probability of existence
     """
 
-    def __init__(self, initial_state: Gaussian, r: float):
-        self.state: Gaussian = initial_state
+    def __init__(self, state: Gaussian, r: float):
+        self.state: Gaussian = state
         self.r: float = r
 
     def __repr__(self) -> str:
@@ -44,7 +44,7 @@ class Bernoulli:
         # Kalman prediction of the new state
         next_state = density.predict(bern.state, motion_model, dt)
 
-        predicted_bern = Bernoulli(r=next_r, initial_state=next_state)
+        predicted_bern = Bernoulli(r=next_r, state=next_state)
         return predicted_bern
 
     @staticmethod
@@ -72,7 +72,7 @@ class Bernoulli:
         posterior_r = (bern.r * (1 - detection_probability)) / (1 - bern.r + bern.r * (1 - detection_probability))
 
         posterior_bern = Bernoulli(
-            initial_state=bern.state, r=posterior_r
+            state=bern.state, r=posterior_r
         )  # state remains the same
 
         # predicted likelihoood
@@ -118,5 +118,5 @@ class Bernoulli:
 
         """
         updated_density = density.update(bern.state, z, meas_model)
-        update_bern = Bernoulli(initial_state=updated_density, r=1.0)
+        update_bern = Bernoulli(state=updated_density, r=1.0)
         return update_bern

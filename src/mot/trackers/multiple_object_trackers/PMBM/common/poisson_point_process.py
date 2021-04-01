@@ -32,7 +32,7 @@ class PoissonRFS:
 
         new_tracks = []
         dummy_bernoulli = Bernoulli(
-            r=0.0, initial_state=Gaussian(x=np.array([0, 0, 0, 0]), P=1000 * np.eye(4))
+            r=0.0, state=Gaussian(x=np.array([0, 0, 0, 0]), P=1000 * np.eye(4))
         )
         for meas_idx in range(len(z)):
             indices = gating_matrix_ud[
@@ -125,7 +125,7 @@ class PoissonRFS:
         # in decimal scale while the likelihoods you calculated
         # beforehand are in logarithmic scale.)
         bernoulli = Bernoulli(
-            r=np.exp(log_sum - likelihood_new), initial_state=merged_state
+            r=np.exp(log_sum - likelihood_new), state=merged_state
         )
         return bernoulli, likelihood_new
 
