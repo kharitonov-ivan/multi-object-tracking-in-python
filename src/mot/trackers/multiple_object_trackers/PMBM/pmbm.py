@@ -296,7 +296,7 @@ class PMBM:
         new_tracks = self.PPP.get_targets_detected_for_first_time(
             z,
             gating_matrix_undetected,
-            self.sensor_model.lambda_c,
+            self.sensor_model.intensity_c,
             self.meas_model,
             self.detection_probability,
         )
