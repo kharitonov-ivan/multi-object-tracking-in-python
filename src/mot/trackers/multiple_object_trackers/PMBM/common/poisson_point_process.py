@@ -27,7 +27,7 @@ class PoissonRFS:
         gating_matrix_ud: np.ndarray,
         clutter_intensity: float,
         meas_model: MeasurementModel,
-        P_D: float,
+        detection_probability: float,
     ) -> List[Track]:
 
         new_tracks = []
@@ -43,7 +43,7 @@ class PoissonRFS:
                     indices,
                     np.expand_dims(z[meas_idx], axis=0),
                     meas_model,
-                    P_D,
+                    detection_probability,
                     clutter_intensity,
                 )
             else:
@@ -63,7 +63,7 @@ class PoissonRFS:
         indices,
         z: np.ndarray,
         meas_model: MeasurementModel,
-        P_D: float,
+        detection_probability: float,
         clutter_intensity: float,
         density=GaussianDensity,
     ):
@@ -86,7 +86,7 @@ class PoissonRFS:
         # calculate the predicted likelihood for each detection inside the corresponding ellipsoidal gate.
         clutter_intensity_log = np.log(clutter_intensity)
 
-        P_D_log = np.log(P_D)
+        P_D_log = np.log(detection_probability)
 
         PPP_gated_indices = []
         for idx, is_in_gate in enumerate(indices):
@@ -129,7 +129,7 @@ class PoissonRFS:
         )
         return bernoulli, likelihood_new
 
-    def undetected_update(self, P_D) -> None:
+    def undetected_update(self, detection_probability) -> None:
         """Performs PPP update for missed detection.
 
         Raises
@@ -137,7 +137,7 @@ class PoissonRFS:
         NotImplementedError
             [description]
         """
-        self.intensity.weights += np.log(1 - P_D)
+        self.intensity.weights += np.log(1 - detection_probability)
 
     def prune(self, threshold: float) -> None:
         self.intensity.weighted_components = [

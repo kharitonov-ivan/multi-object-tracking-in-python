@@ -83,7 +83,7 @@ class MultiBernouilliMixture:
 
         return (gating_matrix, used_measurement_detected_indices)
 
-    def update(self, P_D: float, z: np.ndarray, gating_matrix, meas_model) -> None:
+    def update(self, detection_probability: float, z: np.ndarray, gating_matrix, meas_model) -> None:
         """For each Bernoulli state density,
         create a misdetection hypothesis (Bernoulli component), and
         m object detection hypothesis (Bernoulli component),
@@ -100,7 +100,7 @@ class MultiBernouilliMixture:
                 (
                     bernoulli_undetected,
                     likelihood_undetected,
-                ) = Bernoulli.undetected_update(sth.bernoulli, P_D)
+                ) = Bernoulli.undetected_update(sth.bernoulli, detection_probability)
 
                 missdetection_hypothesis = SingleTargetHypothesis(
                     bernoulli_undetected,
@@ -115,7 +115,7 @@ class MultiBernouilliMixture:
                     sth.bernoulli,
                     z,
                     meas_model,
-                    P_D,
+                    detection_probability,
                 )
                 # Create association hypothesis for measurements which in the gate
                 for meas_idx, meas in enumerate(z):

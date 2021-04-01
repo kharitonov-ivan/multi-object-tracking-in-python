@@ -48,14 +48,14 @@ class Bernoulli:
         return predicted_bern
 
     @staticmethod
-    def undetected_update(bern, P_D):
+    def undetected_update(bern, detection_probability: float):
         """Calculates the likelihood of missed detection,
         and creates new local hypotheses due to missed detection.
         NOTE: from page 88 lecture 04
 
         Parameters
         ----------
-        P_D : scalar
+        detection_probability : scalar
             object detection probability
 
         Returns
@@ -69,21 +69,21 @@ class Bernoulli:
 
         # missdetection likelihood l_0 = 1 - P_D
         # update probability of existence
-        posterior_r = (bern.r * (1 - P_D)) / (1 - bern.r + bern.r * (1 - P_D))
+        posterior_r = (bern.r * (1 - detection_probability)) / (1 - bern.r + bern.r * (1 - detection_probability))
 
         posterior_bern = Bernoulli(
             initial_state=bern.state, r=posterior_r
         )  # state remains the same
 
         # predicted likelihoood
-        likelihood_predicted = 1 - bern.r + bern.r * (1 - P_D)
+        likelihood_predicted = 1 - bern.r + bern.r * (1 - detection_probability)
         log_likelihood_predicted = np.log(likelihood_predicted)
 
         return posterior_bern, log_likelihood_predicted
 
     @staticmethod
     def detected_update_likelihood(
-        bern, z, meas_model, P_D, density=GaussianDensity
+        bern, z, meas_model, detection_probability: float, density=GaussianDensity
     ) -> np.ndarray:
         """Calculates the predicted likelihood for a given local hypothesis.
         NOTE page 86 lecture 04
@@ -96,7 +96,7 @@ class Bernoulli:
             [description]
         meas_model : [type]
             [description]
-        P_D : [type]
+        detection_probability : scalar
             object detection probability
 
         Returns
@@ -106,7 +106,7 @@ class Bernoulli:
         """
         likelihood_detected = (
             density.predicted_likelihood(bern.state, z, meas_model)
-            + np.log(P_D)
+            + np.log(detection_probability)
             + bern.r
         )
         return likelihood_detected

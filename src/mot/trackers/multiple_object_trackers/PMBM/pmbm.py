@@ -46,7 +46,7 @@ class PMBM:
         max_number_of_hypotheses: int,
         P_G,
         w_min,
-        P_D,
+        detection_probability,
         survival_probability: float,
         gating_size: float,
         *args,
@@ -61,7 +61,7 @@ class PMBM:
         self.survival_probability = survival_probability  # models death of an object (aka P_S)
         self.gating_size = gating_size  # chi2.ppf(P_G, df=self.meas_model.d)
         self.w_min = w_min  # in log domain
-        self.P_D = P_D
+        self.detection_probability = detection_probability  # models detection (and missdetection) of an object (aka P_D)
         self.merging_threshold = merging_threshold
         self.desired_num_global_hypotheses = 10
         self.max_number_of_hypotheses = max_number_of_hypotheses
@@ -254,7 +254,7 @@ class PMBM:
         # m object detection hypothesis (Bernoulli component),
         # where m is the number of detections inside the ellipsoidal gate of
         # the given state density
-        self.MBM.update(self.P_D, z, gating_matrix_detected, self.meas_model)
+        self.MBM.update(self.detection_probability, z, gating_matrix_detected, self.meas_model)
 
         # 3. Update PPP with detections.
         # Update of potential new object detected for the first time -> new Bern
@@ -268,7 +268,7 @@ class PMBM:
             gating_matrix_undetected,
             self.sensor_model.lambda_c,
             self.meas_model,
-            self.P_D,
+            self.detection_probability,
         )
         logging.debug(
             f'\n===============current timestep: {self.timestep}==============='
@@ -310,7 +310,7 @@ class PMBM:
                 self.MBM.add_track(new_track)
 
         # Update of PPP intensity for undetected objects that remain undetected
-        self.PPP.undetected_update(self.P_D)
+        self.PPP.undetected_update(self.detection_probability)
 
     def estimator(self):
         estimates = self.MBM.estimator()
