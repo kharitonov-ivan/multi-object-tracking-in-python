@@ -191,8 +191,7 @@ class PMBM:
                     child_sth = parent_sth.children[measurement_row]
                     sth_id = next(self.MBM.tracks[
                         track_id].sth_id_generator)
-                    self.MBM.tracks[track_id].single_target_hypotheses.update(
-                        {sth_id: copy.deepcopy(child_sth)})
+                    self.MBM.tracks[track_id].single_target_hypotheses[sth_id] = copy.deepcopy(child_sth)})
                 hypotheses.append((track_id, sth_id))
 
             log_weight = global_hypothesis.weight - cost
