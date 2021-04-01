@@ -9,6 +9,9 @@ class MeasurementModel:
     def __init__(self, random_state=None, *args, **kwargs):
         self._generator = np.random.RandomState(random_state)
 
+    def __repr__(self):
+        raise NotImplemented
+
     def observe(self, params):
         raise NotImplemented
 
