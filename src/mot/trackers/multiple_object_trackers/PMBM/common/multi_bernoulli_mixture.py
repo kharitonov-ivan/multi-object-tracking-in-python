@@ -1,14 +1,19 @@
-from typing import List, Tuple
-from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli
-from collections import defaultdict
-import numpy as np
-from mot.common.normalize_log_weights import normalize_log_weights
-from mot.trackers.multiple_object_trackers.PMBM.common.track import (
-    Track,
-    SingleTargetHypothesis,
-)
-from mot.common.estimation import Estimation
+import itertools
 import logging
+from collections import defaultdict
+from typing import List, Tuple
+
+import numpy as np
+from mot.common.estimation import Estimation
+from mot.common.normalize_log_weights import normalize_log_weights
+from mot.measurement_models import MeasurementModel
+from mot.motion_models import MotionModel
+from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli
+from mot.trackers.multiple_object_trackers.PMBM.common.track import (
+    SingleTargetHypothesis,
+    Track,
+)
+from .global_hypothesis import GlobalHypothesis
 
 
 class MultiBernouilliMixture:
@@ -17,10 +22,6 @@ class MultiBernouilliMixture:
     def __init__(self):
         self.tracks = {}
         self.global_hypotheses = []
-
-    def add_track(self, track: Track):
-        assert track.track_id in self.tracks.keys()
-        self.tracks[track.track_id] = track
 
     def __repr__(self) -> str:
         return (
