@@ -296,7 +296,9 @@ class PMBM:
                     global_hypothesis, z, new_tracks)
                 for _ in new_global_hypotheses_step:
                     new_global_hypotheses.append(_)
-            self.MBM.global_hypotheses.clear()
+
+            self.rebuild_tree()
+
             self.MBM.global_hypotheses = new_global_hypotheses
             for track_id, track in self.MBM.tracks.items():
                 self.MBM.tracks[track_id].cut_tree()
@@ -306,6 +308,11 @@ class PMBM:
 
         # Update of PPP intensity for undetected objects that remain undetected
         self.PPP.undetected_update(self.detection_probability)
+        
+    def rebuild_tree(self):
+        """1. Move children to upper lever."""
+        for track in self.MBM.tracks.values():
+            track.cut_tree()
 
     def estimator(self):
         estimates = self.MBM.estimator()
