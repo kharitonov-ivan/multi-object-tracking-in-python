@@ -109,7 +109,10 @@ class MultiBernouilliMixture:
                     associated_measurement_idx=-1,
                     cost=None,
                 )
-
+                logging.debug(
+                    f"track id ={track_id}, sth_id = {sth_id}, {self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli}"
+                )
+                logging.debug(f"missdetection likelihood {log_likelihood_undetected}")
                 sth.children.update({-1: missdetection_hypothesis})
 
                 likelihood_detected = Bernoulli.detected_update_likelihood(
@@ -126,9 +129,9 @@ class MultiBernouilliMixture:
                             z[meas_idx],
                             meas_model,
                         )
-                        cost = likelihood_detected[meas_idx] - likelihood_undetected
-                        detection_hypothesis = SingleTargetHypothesis(
-                            bernoulli_detected,
+                    logging.debug(
+                        f"detection z = {meas} likelihood {log_likelihoods_detected[meas_idx]}"
+                    )
                             likelihood_detected[meas_idx],
                             meas_idx,
                             cost,

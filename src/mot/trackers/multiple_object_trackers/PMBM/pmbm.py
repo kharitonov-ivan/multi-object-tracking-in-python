@@ -124,7 +124,15 @@ class PMBM:
         sth_idx = 0  # we have olny one sth for new targets
         for meas_idx in range(len(z)):
             L_u[meas_idx, meas_idx] = (
-                new_tracks[meas_idx].single_target_hypotheses[sth_idx].cost)
+                new_tracks[meas_idx].single_target_hypotheses[sth_idx].cost
+            )
+            logging.debug(
+                f"new targets likelihood {new_tracks[meas_idx].single_target_hypotheses[sth_idx].likelihood}"
+            )
+            logging.debug(
+                f"new targets cost {new_tracks[meas_idx].single_target_hypotheses[sth_idx].cost}"
+            )
+
         return L_u
 
     def costruct_new_global_hypothesis(self,
@@ -141,11 +149,10 @@ class PMBM:
                 logging.debug(
                     'it seems we have new measurements which do not stack with our MBM'
                 )
-        logging.debug(f'\n Considered global hypotheses {global_hypothesis}')
-        logging.debug(f'\n cost matrix = \n{L}')
-        logging.debug(f'\n detected part = \n{L_d}')
-        logging.debug(f'\n undetected part = \n{L_u}')
-        logging.debug(f'\n measurements =\n {z}')
+        logging.debug(f"\n Considered global hypotheses {global_hypothesis}")
+        logging.debug(f"\n measurements =\n {z}")
+        logging.debug(f"\n cost matrix = \n{L}")
+
         murty_solver = Murty(copy.deepcopy(L))
         max_murty_steps = 5
         # max_murty_steps = int(
@@ -235,7 +242,15 @@ class PMBM:
          z : [type]
              [description]
         """
+        logging.debug(
+            f"\n===============current timestep: {self.timestep}==============="
+        )
+        logging.debug(f"\n current global hypotheses {self.MBM.global_hypotheses}")
 
+        logging.debug(f"\n MBM tracks {self.MBM.tracks} \n")
+        if len(z) == 0:
+            logging.debug(f"\n no measurements!")
+            return
         # 1.1 Perform ellipsoidal gating for each  mixture component in the PPP intensity
         gating_matrix_undetected, used_meas_undetected = self.PPP.gating(
             z, self.density, self.meas_model, self.gating_size)
@@ -265,12 +280,7 @@ class PMBM:
             self.meas_model,
             self.detection_probability,
         )
-        logging.debug(
-            f'\n===============current timestep: {self.timestep}==============='
-        )
-        logging.debug(f'\n new tracks from PPP {new_tracks}')
-        logging.debug(
-            f'\n current global hypotheses {self.MBM.global_hypotheses}')
+        logging.debug(f"\n new tracks from PPP {new_tracks}")
 
         # 4. Update global hypothesis
         # 4.1 If list of global hypothesis is empty, creates the one.
