@@ -72,7 +72,8 @@ class Track:
 
     def cut_tree(self):
         new_single_target_hypotheses = {}
-        for parent_sth_idx, parent_sth in self.single_target_hypotheses.items():
-            for child_sth_idx, child_sth in parent_sth.children.items():
-                new_single_target_hypotheses[child_sth_idx] = child_sth
+        for parent_sth in self.single_target_hypotheses.values():
+            for child_sth in parent_sth.children.values():
+                if child_sth.sth_id is not None:
+                    new_single_target_hypotheses[child_sth.sth_id] = child_sth
         self.single_target_hypotheses = new_single_target_hypotheses
