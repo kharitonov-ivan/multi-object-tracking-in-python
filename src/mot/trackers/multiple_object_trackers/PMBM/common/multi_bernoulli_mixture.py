@@ -107,12 +107,12 @@ class MultiBernouilliMixture:
                 # Create missdetection hypothesis
                 (
                     bernoulli_undetected,
-                    likelihood_undetected,
-                ) = Bernoulli.undetected_update(sth.bernoulli, detection_probability)
+                    log_likelihood_undetected,
+                ) = sth.bernoulli.undetected_update(detection_probability)
 
                 missdetection_hypothesis = SingleTargetHypothesis(
                     bernoulli_undetected,
-                    likelihood_undetected,
+                    log_likelihood_undetected,
                     associated_measurement_idx=-1,
                     cost=None,
                 )
@@ -122,7 +122,7 @@ class MultiBernouilliMixture:
                 logging.debug(f"missdetection likelihood {log_likelihood_undetected}")
                 sth.children.update({-1: missdetection_hypothesis})
 
-                likelihood_detected = Bernoulli.detected_update_likelihood(
+                log_likelihoods_detected = Bernoulli.detected_update_likelihood(
                     sth.bernoulli,
                     z,
                     meas_model,
