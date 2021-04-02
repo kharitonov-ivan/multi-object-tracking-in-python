@@ -3,7 +3,7 @@ from mot.common import GaussianMixture
 
 
 class BirthModel:
-    def get_born_objects_intensity(self) -> GaussianMixture:
+    def get_born_objects_intensity(self, params) -> GaussianMixture:
         raise NotImplementedError
 
 
@@ -12,7 +12,7 @@ class StaticBirthModel(BirthModel):
         self.birth_model_config = deepcopy(birth_model_config)
         super(StaticBirthModel, self).__init__()
 
-    def get_born_objects_intensity(self):
+    def get_born_objects_intensity(self, params=None) -> GaussianMixture:
         return self.birth_model_config
 
 
@@ -25,4 +25,6 @@ class RandomSampledBirthModel(BirthModel):
 class MeasurementDrivenBirthModel(BirthModel):
     def __init__(self):
         super(MeasurementDrivenBirthModel, self).__init__()
+
+    def get_born_objects_intensity(self, measurements) -> GaussianMixture:
         raise NotImplementedError
