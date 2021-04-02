@@ -88,9 +88,7 @@ def _plot_series(series: ObjectData, ax, *args, **kwargs):
             for object_id in range(series._ground_truth_config.n_births)
         ]
     )
-    lgd = ax.legend(
-        handles=legend_elements, loc="center left", bbox_to_anchor=(1, 0.815)
-    )
+    lgd = ax.legend(handles=legend_elements, loc="best", bbox_to_anchor=(1, 0.815))
     return ax
 
 
@@ -103,9 +101,7 @@ def __plot_series(series: MeasurementData, ax, *args, **kwargs):
     legend_elements.append(
         Line2D([0], [0], marker=CLUTTER_MARKER, color=CLUTTER_COLOR, label="clutter")
     )
-    lgd = ax.legend(
-        handles=legend_elements, loc="center left", bbox_to_anchor=(1, 0.815)
-    )
+    lgd = ax.legend(handles=legend_elements, loc="best", bbox_to_anchor=(1, 0.815))
     return ax
 
 
