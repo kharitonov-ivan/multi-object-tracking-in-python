@@ -1,4 +1,3 @@
-
 import numpy as np
 from mot.common.gaussian_density import GaussianDensity
 from mot.common.state import Gaussian
