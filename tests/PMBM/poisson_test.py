@@ -16,7 +16,6 @@ from mot.trackers.multiple_object_trackers.PMBM.common import (
 from scipy.special import logsumexp
 
 
-
 @pytest.fixture
 def dt():
     return 1.0
@@ -156,9 +155,6 @@ def test_PPP_detected_update(
             log_likelihood_detection_from_clutter,
         )
     )
-    import pdb
-
-    pdb.set_trace()
 
     np.testing.assert_almost_equal(
         bern.existence_probability,
