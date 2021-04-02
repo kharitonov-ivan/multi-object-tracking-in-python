@@ -19,7 +19,7 @@ class AssignmentSolver:
         num_of_desired_hypotheses,
         max_murty_steps=None,
     ) -> None:
-        assert len(measurements)> 0
+        assert len(measurements) > 0
         self.global_hypothesis: GlobalHypothesis = global_hypothesis
         self.old_tracks = old_tracks
         self.new_tracks = new_tracks
@@ -43,8 +43,10 @@ class AssignmentSolver:
                 self.num_of_desired_hypotheses))
 
     def create_cost_matrix(self):
-        cost_detected = self.create_cost_for_associated_targets(self.global_hypothesis, self.old_tracks, self.measurements)
-        cost_undetected = self.create_cost_for_undetected(self.new_tracks, self.measurements)
+        cost_detected = self.create_cost_for_associated_targets(
+            self.global_hypothesis, self.old_tracks, self.measurements)
+        cost_undetected = self.create_cost_for_undetected(
+            self.new_tracks, self.measurements)
         cost_matrix = np.hstack([cost_detected, cost_undetected])
         return cost_matrix
 
