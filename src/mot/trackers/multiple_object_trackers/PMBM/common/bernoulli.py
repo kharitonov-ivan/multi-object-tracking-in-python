@@ -30,86 +30,80 @@ class Bernoulli:
         self,
         motion_model: MotionModel,
         survival_probability: float,
-        density=GaussianDensity,
+        density: GaussianDensity,
         dt: float = 1.0,
     ) -> None:
         """Performs prediciton step for a Bernoulli component"""
 
         # Probability of survival * Probability of existence
-        next_existence_probability = survival_probability * self.existence_probability
+        self.existence_probability = survival_probability * self.existence_probability
 
         # Kalman prediction of the new state
         self.state = density.predict(self.state, motion_model, dt)
+        return self
 
-        predicted_bern = Bernoulli(next_state, next_existence_probability)
-        return predicted_bern
-
-    def undetected_update(self, detection_probability: float):
+    def undetected_update_state(self, detection_probability: float):
         """Calculates the likelihood of missed detection,
         and creates new local hypotheses due to missed detection.
         NOTE: from page 88 lecture 04
-
-        Parameters
-        ----------
-        detection_probability : scalar
-            object detection probability
-
-        Returns
-        -------
-        Bern
-            [description]
-
-        likelihood_undetectd : scalar
-
         """
 
-        missdetecion_probability = 1 - detection_probability
-        # update probability of existence
-        posterior_existence_probability = (self.existence_probability * (1 - detection_probability)) / (1 - self.existence_probability + self.existence_probability * (1 - detection_probability))
-
-        # state remains the same
-        posterior_bern = Bernoulli(
-            initial_state=self.state,
-            existence_probability=posterior_existence_probability,
+        posterior_existence_probability = (
+            self.existence_probability * (1 - detection_probability)
+        ) / (
+            1
+            - self.existence_probability
+            + self.existence_probability * (1 - detection_probability)
         )
+        posterior_bern = Bernoulli(self.state, posterior_existence_probability)
+        return posterior_bern
 
+    def undetected_update_loglikelihood(self, detection_probability: float):
+        missdetecion_probability = 1 - detection_probability
         likelihood_predicted = (
             1
             - self.existence_probability
             + self.existence_probability * missdetecion_probability
         )
         log_likelihood_predicted = np.log(likelihood_predicted)
-        return posterior_bern, log_likelihood_predicted
+        return log_likelihood_predicted
 
-    def detected_update_likelihood(
+    def detected_update_loglikelihood(
         self,
-        measurements: np.ndarray,
+        measurement: np.ndarray,
         meas_model: MeasurementModel,
         detection_probability: float,
         density=GaussianDensity,
-    ) -> np.ndarray:
+    ) -> float:
         """Calculates the predicted likelihood for a given local hypothesis.
         NOTE page 86 lecture 04
         """
 
         assert isinstance(meas_model, MeasurementModel)
+        assert measurement.ndim == 1
+
         log_likelihood_detected = (
-            density.predict_loglikelihood(self.state, measurements, meas_model)
+            density.predict_loglikelihood(
+                self.state, np.expand_dims(measurement, axis=0), meas_model
+            )
             + np.log(detection_probability)
             + np.log(self.existence_probability)
         )
         return log_likelihood_detected
 
-    @staticmethod
     def detected_update_state(
-        bern, z: np.ndarray, meas_model: MeasurementModel, density=GaussianDensity
+        self,
+        measurement: np.ndarray,
+        meas_model: MeasurementModel,
+        density=GaussianDensity,
     ):
         """Creates the new local hypothesis due to measurement update.
         NOTE: page 85 lecture 04
 
         """
         assert isinstance(meas_model, MeasurementModel)
+        assert measurement.ndim == 1
 
-        updated_density = density.update(bern.state, z, meas_model)
+        updated_density = density.update(self.state, measurement, meas_model)
         update_bern = Bernoulli(state=updated_density, existence_probability=1.0)
         return update_bern
