@@ -37,24 +37,26 @@ class PoissonRFS:
 
         new_tracks = {}
         for meas_idx in range(len(measurements)):
-
-            new_single_target_hypothesis = self.detected_update(
-                np.expand_dims(measurements[meas_idx], axis=0),
-                meas_model,
-                detection_probability,
-                clutter_intensity,
-            )
-            new_track = Track.from_sth(new_single_target_hypothesis)
-
-            new_tracks[new_track.track_id] = new_track
+            if gating_matrix_ud.T[meas_idx].any():
+                new_single_target_hypothesis = self.detected_update(
+                    np.expand_dims(measurements[meas_idx], axis=0),
+                    meas_model,
+                    detection_probability,
+                    clutter_intensity,
+                    gating_vector=gating_matrix_ud.T[meas_idx],
+                )
+                new_track = Track.from_sth(new_single_target_hypothesis)
+                new_track.single_target_hypotheses[0].meas_idx = meas_idx
+                new_tracks[new_track.track_id] = new_track
         return new_tracks
 
     def detected_update(
         self,
-        z: np.ndarray,
+        measurement: np.ndarray,
         meas_model: MeasurementModel,
         detection_probability: float,
         clutter_intensity: float,
+        gating_vector,
         density=GaussianDensity,
     ) -> SingleTargetHypothesis:
         """Creates a new local hypothesis by updating the PPP
@@ -75,23 +77,25 @@ class PoissonRFS:
 
         # 1. For each mixture component in the PPP intensity, perform Kalman update and
         # calculate the predicted likelihood for each detection inside the corresponding ellipsoidal gate.
-
+        gated_ppp_components = [
+            ppp_component for ppp_component_idx, ppp_component in enumerate(
+                copy.deepcopy(self.intensity))
+            if gating_vector[ppp_component_idx] == True
+        ]
         updated_ppp_components = [
-            GaussianDensity.update(ppp_component.gaussian, z, meas_model)
-            for ppp_component in copy.deepcopy(self.intensity)
+            GaussianDensity.update(ppp_component.gaussian, measurement,
+                                   meas_model)
+            for ppp_component in gated_ppp_components
         ]
 
         # Compute predicted likelihood
-        log_weights = np.array(
-            [
-                np.log(detection_probability)
-                + ppp_component.log_weight
-                + density.predict_loglikelihood(updated_state, z, meas_model).item()
-                for ppp_component, updated_state in zip(
-                    self.intensity, updated_ppp_components
-                )
-            ]
-        )
+        log_weights = np.array([
+            np.log(detection_probability) +
+            ppp_component.log_weight + density.predict_loglikelihood(
+                updated_state, measurement, meas_model).item()
+            for ppp_component, updated_state in zip(self.intensity,
+                                                    updated_ppp_components)
+        ])
 
         # 2. Perform Gaussian moment matching for the updated object state densities
         # resulted from being updated by the same detection.
