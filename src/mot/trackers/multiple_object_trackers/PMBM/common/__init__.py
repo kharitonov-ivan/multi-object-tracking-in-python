@@ -9,3 +9,4 @@ from .birth_model import (
     RandomSampledBirthModel,
     MeasurementDrivenBirthModel,
 )
+from .single_target_hypothesis import SingleTargetHypothesis
