@@ -145,7 +145,8 @@ class PMBM:
             self.meas_model,
             self.detection_probability,
         )
-
+        lg.debug(f"\n   new tracks {new_tracks} \n")
+        lg.debug(f"\n   current PPP components \n {self.PPP.intensity}")
         # Update of PPP intensity for undetected objects that remain undetected
         self.PPP.undetected_update(self.detection_probability)
 
