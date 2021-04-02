@@ -122,29 +122,29 @@ class PMBM:
         lg.debug(f"\n   global hypotheses {self.MBM.global_hypotheses}")
         lg.debug(f"\n   MBM tracks {self.MBM.tracks} \n")
 
-        _, used_meas_undetected = self.PPP.gating(
-            measurements, self.density, self.meas_model, self.gating_size
-        )
+        _, used_meas_undetected = self.PPP.gating(measurements, self.density,
+                                                  self.meas_model,
+                                                  self.gating_size)
 
-        _, used_meas_detected = self.MBM.gating(
-            measurements, self.density, self.meas_model, self.gating_size
-        )
+        _, used_meas_detected = self.MBM.gating(measurements, self.density,
+                                                self.meas_model,
+                                                self.gating_size)
 
         used_measurements = used_meas_undetected | used_meas_detected
-        measurements_in_gate = [
-            measurement
-            for meas_idx, measurement in enumerate(measurements)
+        measurements_in_gate = np.array([
+            measurement for meas_idx, measurement in enumerate(measurements)
             if used_measurements[meas_idx]
-        ]
+        ])
 
+        gating_matrix_undetected, _ = self.PPP.gating(measurements_in_gate,
+                                                      self.density,
+                                                      self.meas_model,
+                                                      self.gating_size)
 
-        gating_matrix_undetected, _ = self.PPP.gating(
-            measurements, self.density, self.meas_model, self.gating_size
-        )
-
-        gating_matrix_detected, _ = self.MBM.gating(
-            measurements, self.density, self.meas_model, self.gating_size
-        )
+        gating_matrix_detected, _ = self.MBM.gating(measurements_in_gate,
+                                                    self.density,
+                                                    self.meas_model,
+                                                    self.gating_size)
 
         new_tracks = self.PPP.get_targets_detected_for_first_time(
             measurements_in_gate,
