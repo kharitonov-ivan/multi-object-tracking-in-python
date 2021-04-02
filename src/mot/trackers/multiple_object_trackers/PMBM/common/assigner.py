@@ -36,10 +36,11 @@ class AssignmentSolver:
             return
 
     def get_murty_steps(self):
+
         return int(
             np.ceil(
-                np.exp(self.global_hypothesis.log_weight *
-                       self.num_of_desired_hypotheses)))
+                np.exp(self.global_hypothesis.log_weight) *
+                self.num_of_desired_hypotheses))
 
     def create_cost_matrix(self):
         cost_detected = self.create_cost_for_associated_targets(self.global_hypothesis, self.old_tracks, self.measurements)
