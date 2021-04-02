@@ -37,10 +37,12 @@ class MultiBernouilliMixture:
 
         object_list = []  # list of {'object_id':'object_state'}
         for (track_id, sth_id) in most_probable_global_hypo.associations:
-            object_state = (
-                self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.state.x
-            )
-            object_list.append({track_id: object_state})
+            if self.tracks[track_id].single_target_hypotheses[
+                    sth_id].bernoulli.existence_probability > 0.5:
+                object_state = (
+                    self.tracks[track_id].single_target_hypotheses[sth_id].
+                    bernoulli.state.x)
+                object_list.append({track_id: object_state})
 
         return object_list
 
