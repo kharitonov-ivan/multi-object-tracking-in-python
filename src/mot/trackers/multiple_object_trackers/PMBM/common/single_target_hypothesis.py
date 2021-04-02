@@ -22,8 +22,12 @@ class SingleTargetHypothesis:
         self.missdetection_hypothesis = None
         self.detection_hypotheses = {}
 
-    def __repr__(self):
-        return f"likelihood={self.log_likelihood:.2f}, " f"meas_idx={self.meas_idx}, "
+    def __repr__(self) -> str:
+        return self.__class__.__name__ + (
+            f"(log_likelihood={self.log_likelihood:.2f}, "
+            f"bernoulli={self.bernoulli}, "
+            f"cost={self.cost:.2f}, "
+            f"sth_id={self.sth_id}")
 
     def create_missdetection_hypothesis(self, detection_probability: float, sth_id):
         missdetection_bernoulli = self.bernoulli.undetected_update_state(

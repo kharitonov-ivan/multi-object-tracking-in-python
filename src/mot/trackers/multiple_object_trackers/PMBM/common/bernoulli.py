@@ -23,7 +23,7 @@ class Bernoulli:
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
-            f"(r={self.existence_probability:.4f}, " f"state={self.state}, "
+            f"(r={self.existence_probability:.4f}, " f"state={self.state}"
         )
 
     def predict(

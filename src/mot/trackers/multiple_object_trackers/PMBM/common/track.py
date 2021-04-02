@@ -23,7 +23,7 @@ class Track:
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
             f" id = {self.track_id}"
-            f" number of sth = {len(self.single_target_hypotheses}"
+            f" number of sth = {len(self.single_target_hypotheses)}"
         )
 
     @classmethod

@@ -34,7 +34,7 @@ class Gaussian:
         np.set_printoptions(linewidth=np.inf)
         return (
             f"{self.__class__.__name__} "
-            f"x = {np.array2string(self.x, max_line_width=np.inf, precision =1)}  "
+            f"x = {np.array2string(self.x, max_line_width=np.inf, precision =1)}"
         )
 
     def __eq__(self, other) -> bool:
