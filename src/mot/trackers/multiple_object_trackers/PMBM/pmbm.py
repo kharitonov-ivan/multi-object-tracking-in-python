@@ -193,6 +193,6 @@ class PMBM:
 
     def reduction(self) -> None:
         self.PPP.prune(threshold=-10)
-        # self.MBM.prune_global_hypotheses(threshold=np.log(0.001))
+        self.MBM.prune_global_hypotheses(log_threshold=np.log(0.05))
         self.MBM.cap_global_hypothesis(self.max_number_of_hypotheses)
         # self.MBM.remove_unused_bernoullies()

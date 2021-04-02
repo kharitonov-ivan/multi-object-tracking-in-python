@@ -132,7 +132,7 @@ class MultiBernouilliMixture:
         self.global_hypotheses = [
             global_hypothesis
             for global_hypothesis in self.global_hypotheses
-            if global_hypothesis.weight > threshold
+            if global_hypothesis.log_weight > log_threshold
         ]
         self.normalize_global_hypotheses_weights()
 
