@@ -112,7 +112,7 @@ class PoissonRFS:
             log_likelihood=log_likelihood,
             cost=cost,
             meas_idx=None,
-            sth_id=None,
+            sth_id=0,
         )
 
     def undetected_update(self, detection_probability) -> None:
