@@ -13,20 +13,14 @@ from .global_hypothesis import GlobalHypothesis
 
 class MultiBernouilliMixture:
     """Track oriented approach using."""
-
     def __init__(self):
         self.tracks = {}
         self.global_hypotheses: List[GlobalHypothesis] = []
 
     def __repr__(self) -> str:
-        return (
-            self.__class__.__name__
-            + " "
-            + (
-                f"num of tracks= {len(self.tracks)}, "
-                f"num global hypotheses={len(self.global_hypotheses)}, "
-            )
-        )
+        return (self.__class__.__name__ + " " +
+                (f"num of tracks= {len(self.tracks)}, "
+                 f"num global hypotheses={len(self.global_hypotheses)}, "))
 
     def add_track(self, track: Track):
         assert not (track.track_id in self.tracks.keys())
@@ -35,9 +29,8 @@ class MultiBernouilliMixture:
     def estimator(self):
         """Simply return objects set based on most probable global hypo."""
         if self.global_hypotheses:
-            most_probable_global_hypo = max(
-                self.global_hypotheses, key=lambda x: x.log_weight
-            )
+            most_probable_global_hypo = max(self.global_hypotheses,
+                                            key=lambda x: x.log_weight)
         else:
             logging.info("Pool of global hypotheses is empty!")
             return None
@@ -68,21 +61,20 @@ class MultiBernouilliMixture:
                     dt,
                 )
 
-    def gating(
-        self, z: np.ndarray, density_handler, meas_model: MeasurementModel, gating_size
-    ):
+    def gating(self, z: np.ndarray, density_handler,
+               meas_model: MeasurementModel, gating_size):
 
         gating_matrix = defaultdict(lambda: defaultdict(lambda: False))
-        used_measurement_detected_indices = np.full(shape=[len(z)], fill_value=False)
+        used_measurement_detected_indices = np.full(shape=[len(z)],
+                                                    fill_value=False)
 
         for track_id, track in self.tracks.items():
             for sth_id, sth in track.single_target_hypotheses.items():
                 (
                     _,
                     gating_matrix[track_id][sth_id],
-                ) = density_handler.ellipsoidal_gating(
-                    sth.bernoulli.state, z, meas_model, gating_size
-                )
+                ) = density_handler.ellipsoidal_gating(sth.bernoulli.state, z,
+                                                       meas_model, gating_size)
                 used_measurement_detected_indices = np.logical_or(
                     used_measurement_detected_indices,
                     gating_matrix[track_id][sth_id],
@@ -109,8 +101,7 @@ class MultiBernouilliMixture:
         for track in self.tracks.values():
             for sth in track.single_target_hypotheses.values():
                 sth.missdetection_hypothesis = sth.create_missdetection_hypothesis(
-                    detection_probability, next(track.sth_id_generator)
-                )
+                    detection_probability, next(track.sth_id_generator))
 
                 sth.detection_hypotheses = {
                     meas_idx: sth.create_detection_hypothesis(
@@ -130,20 +121,17 @@ class MultiBernouilliMixture:
         good choice threshold : np.log(0.05)
         """
         self.global_hypotheses = [
-            global_hypothesis
-            for global_hypothesis in self.global_hypotheses
+            global_hypothesis for global_hypothesis in self.global_hypotheses
             if global_hypothesis.log_weight > log_threshold
         ]
         self.normalize_global_hypotheses_weights()
 
     def cap_global_hypothesis(self, max_number_of_global_hypothesis: int = 50):
         if len(self.global_hypotheses) > max_number_of_global_hypothesis:
-            top_global_hypotheses = sorted(
-                self.global_hypotheses, key=lambda x: x.log_weight
-            )
-            self.global_hypotheses = top_global_hypotheses[
-                :max_number_of_global_hypothesis
-            ]
+            top_global_hypotheses = sorted(self.global_hypotheses,
+                                           key=lambda x: x.log_weight)
+            self.global_hypotheses = top_global_hypotheses[:
+                                                           max_number_of_global_hypothesis]
             self.normalize_global_hypotheses_weights()
 
     def not_exist_of_bern_global_hypos(self, track_id, sth_id):
