@@ -97,244 +97,69 @@ class PMBM:
         # PPP predict
         self.PPP.predict(motion_model, copy.deepcopy(birth_model), survival_probability, dt)
 
-    def create_cost_for_associated_targets(self,
-                                           global_hypothesis: GlobalHypothesis,
-                                           z: np.ndarray) -> np.ndarray:
-        """Creates cost matrix for associated measurements for one global"""
-        # get data association weigths
-        # cost matrix with shape - number of cosidered measurements (gated) x number of hypothesis trees
-        L_d = np.full((len(z), len(global_hypothesis.associations)), np.inf)
-
-        for column_idx, (track_idx, parent_sth_idx) in enumerate(
-                global_hypothesis.associations):
-            parent_sth = self.MBM.tracks[track_idx].single_target_hypotheses[
-                parent_sth_idx]
-
-            children_meas_vector = np.full((len(z)), np.inf)
-            for meas_idx, sth in parent_sth.children.items():
-                if meas_idx == -1:
-                    continue
-                children_meas_vector[meas_idx] = sth.cost
-            L_d[:, column_idx] = children_meas_vector
-        return L_d
-
-    def create_cost_for_undetected(self, z: np.ndarray,
-                                   new_tracks: List[Track]) -> np.ndarray:
-        # Using association between measurements and previously undetected objects
-
-        L_u = np.full((len(z), len(z)), np.inf)
-        assert len(z) == len(new_tracks)
-
-        sth_idx = 0  # we have olny one sth for new targets
-        for meas_idx in range(len(z)):
-            L_u[meas_idx, meas_idx] = (
-                new_tracks[meas_idx].single_target_hypotheses[sth_idx].cost
-            )
-            logging.debug(
-                f"new targets likelihood {new_tracks[meas_idx].single_target_hypotheses[sth_idx].likelihood}"
-            )
-            logging.debug(
-                f"new targets cost {new_tracks[meas_idx].single_target_hypotheses[sth_idx].cost}"
-            )
-
-        return L_u
-
-    def costruct_new_global_hypothesis(self,
-                                       global_hypothesis: GlobalHypothesis,
-                                       z: np.ndarray,
-                                       new_tracks) -> List[GlobalHypothesis]:
-        new_global_hypotheses = []
-        L_d = self.create_cost_for_associated_targets(global_hypothesis, z)
-        L_u = self.create_cost_for_undetected(z, new_tracks)
-        L = np.hstack([L_d, L_u])  # cost matrix
-
-        for each_column_idx in range(L_d.shape[0]):
-            if (L_d[each_column_idx] == np.inf).all():
-                logging.debug(
-                    'it seems we have new measurements which do not stack with our MBM'
-                )
-        logging.debug(f"\n Considered global hypotheses {global_hypothesis}")
-        logging.debug(f"\n measurements =\n {z}")
-        logging.debug(f"\n cost matrix = \n{L}")
-
-        murty_solver = Murty(copy.deepcopy(L))
-        max_murty_steps = 5
-        # max_murty_steps = int(
-        #     np.ceil(
-        #         self.desired_num_global_hypotheses * np.exp(global_hypothesis.weight)
-        #     )
-        # )
-
-        for k in range(max_murty_steps):
-            try:
-                ok, cost, column_for_meas = murty_solver.draw()
-                if not column_for_meas.tolist():
-                    break
-                logging.debug(
-                    f'\n Assignment solution  = {column_for_meas} Cost = {cost}'
-                )
-            except:
-                import pdb
-                pdb.set_trace()
-            if not ok:
-                # logging.info("Break! Murty solver is over!")
-                break
-            if cost > 10000:
-                break
-
-            num_of_current_targets = len(global_hypothesis.associations)
-            hypotheses = []
-            likelihood_misdetection = 0
-            likelihood_detection = 0
-            likelihood_birth = 0
-            likelihood_prior = global_hypothesis.weight
-
-            for measurement_row, target_column in enumerate(column_for_meas.tolist()):
-
-                if target_column + 1 > num_of_current_targets:
-
-                    # the target of this measurements is assigned
-                    # not in the current global hypothesis but to is a newly created target
-                    track_id = new_tracks[
-                        target_column - num_of_current_targets
-                    ].track_id  # index of bernoulli from PPP birhted bernoulli
-                    sth_id = 0  # new target - one leaf
-                    likelihood_birth += (
-                        new_tracks[target_column - num_of_current_targets]
-                        .single_target_hypotheses[sth_id]
-                        .likelihood
-                    )
-                else:
-                    # the target of this measurement os assignes to is a target previously detected
-                    track_id, parent_sth_id = global_hypothesis.associations[
-                        target_column]
-                    parent_sth = self.MBM.tracks[
-                        track_id].single_target_hypotheses[parent_sth_id]
-                    child_sth = parent_sth.children[measurement_row]
-                    sth_id = next(self.MBM.tracks[
-                        track_id].sth_id_generator)
-                    self.MBM.tracks[track_id].single_target_hypotheses[sth_id] = copy.deepcopy(child_sth)})
-                hypotheses.append((track_id, sth_id))
-            likelihood_global = (
-                likelihood_prior
-                + likelihood_misdetection
-                + likelihood_detection
-                + likelihood_birth
-                - cost
-            )
-
-            likelihood_global = global_hypothesis.weight - cost
-
-            log_weight = global_hypothesis.log_weight - cost
-            new_global_hypothesis = GlobalHypothesis(
-                log_weight=log_weight, associations=tuple(hypotheses))
-            new_global_hypotheses.append(new_global_hypothesis)
-            logging.debug(f'new global hypo: {new_global_hypothesis}')
-        assert isinstance(new_global_hypotheses, List)
-        return new_global_hypotheses
-
-    def update(self, z):
-        """PMBM update.
-        1. Perform ellipsoidal gating for each Bernoulli state density and
-        each mixture component in the PPP intensity.
-
-        2. Bernoulli update. For each Bernoulli state density,
-        create a misdetection hypothesis (Bernoulli component), and
-        m object detection hypothesis (Bernoulli component),
-        where m is the number of detections inside the ellipsoidal gate of the given state density.
-
-        3. Update PPP with detections.
-        Note that for detections that are not inside the gate of undetected objects,
-        create dummy Bernoulli components with existence probability r = 0;
-        in this case, the corresponding likelihood is simply the clutter intensity.
-
-        4. For each global hypothesis,
-        construct the corresponding cost matrix and use Murty's algorithm to obtain
-        the M best global hypothesis with highest weights.
-        Note that for detections that are only inside the gate of undetected objects, they do not need to be taken into account when forming the cost matrix.
-
-        5. Update PPP intensity with misdetection.
-
-        6. Update the global hypothesis look-up table.
-
-        7. Prune global hypotheses with small weights and cap the number. (Reduction step ?)
-
-        8. Prune local hypotheses (or hypothesis trees) that do not appear in the maintained global hypotheses, and re-index the global hypothesis look-up table. (Reduction step ?)
-
-         Parameters
-         ----------
-         z : [type]
-             [description]
-        """
-        logging.debug(
-            f"\n===============current timestep: {self.timestep}==============="
-        )
-        logging.debug(f"\n current global hypotheses {self.MBM.global_hypotheses}")
-
-        logging.debug(f"\n MBM tracks {self.MBM.tracks} \n")
-        if len(z) == 0:
-            logging.debug(f"\n no measurements!")
+    def update(self, measurements: np.ndarray) -> None:
+        if len(measurements) == 0:
+            lg.debug(f"\n no measurements!")
             return
-        # 1.1 Perform ellipsoidal gating for each  mixture component in the PPP intensity
+        lg.debug(f"\n===current timestep: {self.timestep}===")
+        lg.debug(f"\n   global hypotheses {self.MBM.global_hypotheses}")
+        lg.debug(f"\n   MBM tracks {self.MBM.tracks} \n")
+
         gating_matrix_undetected, used_meas_undetected = self.PPP.gating(
-            z, self.density, self.meas_model, self.gating_size)
+            measurements, self.density, self.meas_model, self.gating_size
+        )
 
-        # 1.2 Perform ellipsoidal gating for each Bernoulli state density
         gating_matrix_detected, used_meas_detected = self.MBM.gating(
-            z, self.density, self.meas_model, self.gating_size)
+            measurements, self.density, self.meas_model, self.gating_size
+        )
 
-        # 2. Bernoulli update. For each Bernoulli state density,
-        # create a misdetection hypothesis (Bernoulli component), and
-        # m object detection hypothesis (Bernoulli component),
-        # where m is the number of detections inside the ellipsoidal gate of
-        # the given state density
-        self.MBM.update(self.detection_probability, z, gating_matrix_detected, self.meas_model)
-
-        # 3. Update PPP with detections.
-        # Update of potential new object detected for the first time -> new Bern
-        # Note that for detections that are not inside the gate of undetected objects,
-        # create dummy Bernoulli components with existence probability r = 0;
-        # in this case, the corresponding likelihood is simply the clutter intensity.
-        # Each measurement creates hypothessis tree (new track).
+        self.MBM.update(
+            self.detection_probability,
+            measurements,
+            gating_matrix_detected,
+            self.meas_model,
+            self.density,
+        )
 
         new_tracks = self.PPP.get_targets_detected_for_first_time(
-            z,
+            measurements,
             gating_matrix_undetected,
             self.sensor_model.intensity_c,
             self.meas_model,
             self.detection_probability,
         )
-        # Update of PPP intensity for undetected objects that remain undetected
-        self.PPP.undetected_update(self.P_D)
-        logging.debug(f"\n new tracks from PPP {new_tracks}")
 
-        # 4. Update global hypothesis
-        # 4.1 If list of global hypothesis is empty, creates the one.
-        if self.timestep == 1:
-            for new_track in new_tracks:
-                self.MBM.add_track(new_track)
+        # Update of PPP intensity for undetected objects that remain undetected
+        self.PPP.undetected_update(self.detection_probability)
+
+        if not self.MBM.global_hypotheses:
+            self.MBM.tracks.update(new_tracks)
 
             hypo_list = []
             for track_id, track in self.MBM.tracks.items():
                 for sth_id, sth in track.single_target_hypotheses.items():
-                    assert sth_id == 0
-                    hypo_list.append((track_id, sth_id))
-            self.MBM.global_hypotheses.append(
-                GlobalHypothesis(log_weight=0.0, associations=tuple(hypo_list)))
+                    hypo_list.append(Association(track_id, sth_id))
 
-        # 4.2 Otherwise, for each global hypothesis construct cost matrix,
-        # solve linear programming problem and construct new k global hypothesis for each.
+            self.MBM.global_hypotheses.append(
+                GlobalHypothesis(log_weight=0.0, associations=hypo_list)
+            )
+
         else:
-            # self.MBM.normalize_global_hypotheses_weights()
 
             new_global_hypotheses = []
             for global_hypothesis in self.MBM.global_hypotheses:
-                new_global_hypotheses_step = self.costruct_new_global_hypothesis(
-                    global_hypothesis, z, new_tracks)
-                for _ in new_global_hypotheses_step:
-                    new_global_hypotheses.append(_)
+                assigner = AssignmentSolver(
+                    global_hypothesis=global_hypothesis,
+                    old_tracks=self.MBM.tracks,
+                    new_tracks=new_tracks,
+                    measurements=measurements,
+                    num_of_desired_hypotheses=self.max_number_of_hypotheses,
+                )
+                next_global_hypothesis = assigner.solve()
+                new_global_hypotheses.extend(next_global_hypothesis)
 
-            self.rebuild_tree()
+            self.update_tree()
+            self.MBM.tracks.update(new_tracks)
 
             self.MBM.global_hypotheses = new_global_hypotheses
             self.MBM.normalize_global_hypotheses_weights()

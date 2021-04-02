@@ -10,3 +10,4 @@ from .birth_model import (
     MeasurementDrivenBirthModel,
 )
 from .single_target_hypothesis import SingleTargetHypothesis
+from .assigner import AssignmentSolver
