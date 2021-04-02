@@ -27,23 +27,21 @@ from tqdm import trange
 @fixture(scope="function")
 def linear_middle_params():
     return [
-        # Object(
-        #     initial=Gaussian(x=np.array([0.0, 0.0, 0.0, 50.0]), P=400 * np.eye(4)),
-        #     t_birth=0,
-        #     t_death=69,
-        # ),
         Object(
-            initial=Gaussian(x=np.array([0.0, 10.0, 3.0, 0.0]),
-                             P=10 * np.eye(4)),
+            initial=Gaussian(x=np.array([0.0, 0.0, 0.0, 50.0]), P=400 * np.eye(4)),
             t_birth=0,
             t_death=69,
         ),
         Object(
-            initial=Gaussian(x=np.array([0.0, -10.0, -3.0, 0.0]),
-                             P=10 * np.eye(4)),
-            t_birth=0,
-            t_death=100,
+            initial=Gaussian(x=np.array([0.0, 0.0, 100.0, 0.0]), P=400 * np.eye(4)),
+            t_birth=5,
+            t_death=69,
         ),
+        # Object(
+        #     initial=Gaussian(x=np.array([0.0, -10.0, -3.0, 0.0]), P=10 * np.eye(4)),
+        #     t_birth=0,
+        #     t_death=100,
+        # ),
     ]
 
 
@@ -67,16 +65,15 @@ def linear_middle_params():
 #     )
 
 
-def test_pmbm_update_and_predict_linear(linear_middle_params,
-                                        birth_model_linear):
+def test_pmbm_update_and_predict_linear(linear_middle_params):
     # Choose object detection probability
-    P_D = 0.9
+    detection_probability = 0.9
 
-    # Choose clutter rate
-    lambda_c = 0.1
+    # Choose clutter rate (aka lambda_c)
+    clutter_rate = 0.1
 
     # Choose object survival probability
-    P_S = 0.9
+    survival_probability = 0.9
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
@@ -93,100 +90,73 @@ def test_pmbm_update_and_predict_linear(linear_middle_params,
 
     # Create ground truth model
     n_births = 2
-    K = 100
+    simulation_steps = 15
 
     # Generate true object data (noisy or noiseless) and measurement data
-    ground_truth = GroundTruthConfig(n_births,
-                                     linear_middle_params,
-                                     total_time=K)
-    object_data = ObjectData(ground_truth_config=ground_truth,
-                             motion_model=motion_model,
-                             if_noisy=False)
-    meas_data = MeasurementData(object_data=object_data,
-                                sensor_model=sensor_model,
-                                meas_model=meas_model)
+    ground_truth = GroundTruthConfig(
+        n_births, linear_middle_params, total_time=simulation_steps
+    )
+    object_data = ObjectData(
+        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
+    )
+    meas_data = MeasurementData(
+        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
+    )
 
     # Object tracker parameter setting
-    P_G = 1.0  # gating size in percentage
-    w_min = 1e-3  # hypothesis pruning threshold
-    merging_threshold = 2  # hypothesis merging threshold
-    M = 10  # maximum number of hypotheses kept
-    r_min = 1e-3  # Bernoulli component pruning threshold
-    r_recycle = 0.1  # Bernoulli component recycling threshold
-    r_estimate = 0.4  # Threshold used to extract estimates from Bernoullis
+    gating_percentage = 1.0  # gating size in percentage
+    max_hypothesis_kept = 100  # maximum number of hypotheses kept
 
-    z = np.array([
-        [[10.18387228, 26.24745706]],
-        [[4.63506343, 55.25895524]],
-        [[-5.99270591, 94.37209988]],
-        [[13.79398288, 144.85076744]],
-        [[-9.02793639, 191.49057271]],
-        [[-4.87217019, 249.23153389]],
-        [[-6.57963475, 317.23153029]],
-        [[-5.02301119, 345.22269083]],
-        [[-16.46971218, 401.64635273]],
-        [[-11.00472391, 447.10919919]],
-    ])
-
-    z = np.zeros([K, 1, 2])
+    z = np.zeros([simulation_steps, 1, 2])
     # linear motion
-    z[:, 0, 1] = 0 + 100 * np.arange(K)
+    z[:, 0, 1] = 0 + 100 * np.arange(simulation_steps)
 
     # # outlie
     # z[:, 1, 0] = -100 * np.ones(K)
     # z[:, 1, 1] = -100 * np.ones(K)
 
-    birth_model = GaussianMixture([
-        WeightedGaussian(
-            np.log(0.03),
-            Gaussian(x=np.array([-100.0, 100.0, 0.0, 0.0]), P=100 * np.eye(4)),
-        ),
-        WeightedGaussian(
-            np.log(0.03),
-            Gaussian(x=np.array([100.0, 100.0, 0.0, 0.0]), P=100 * np.eye(4)),
-        ),
-        WeightedGaussian(
-            np.log(0.03),
-            Gaussian(x=np.array([100.0, -100.0, 0.0, 0.0]), P=100 * np.eye(4)),
-        ),
-        WeightedGaussian(
-            np.log(0.03),
-            Gaussian(x=np.array([-100.0, -100.0, 0.0, 0.0]),
-                     P=100 * np.eye(4)),
-        ),
-    ])
+    birth_model = GaussianMixture(
+        [
+            WeightedGaussian(
+                np.log(0.03),
+                Gaussian(x=np.array([0.0, 0.0, 0.0, 0.0]), P=10000 * np.eye(4)),
+            ),
+            # WeightedGaussian(
+            #     np.log(0.03),
+            #     Gaussian(x=np.array([100.0, 100.0, 0.0, 0.0]), P=100 * np.eye(4)),
+            # ),
+            # WeightedGaussian(
+            #     np.log(0.03),
+            #     Gaussian(x=np.array([100.0, -100.0, 0.0, 0.0]), P=100 * np.eye(4)),
+            # ),
+            # WeightedGaussian(
+            #     np.log(0.03),
+            #     Gaussian(x=np.array([-100.0, -100.0, 0.0, 0.0]), P=100 * np.eye(4)),
+            # ),
+        ]
+    )
 
     pmbm = PMBM(
         meas_model=meas_model,
         sensor_model=sensor_model,
         motion_model=motion_model,
-        birth_model=birth_model,
-        merging_threshold=merging_threshold,
-        max_number_of_hypotheses=M,
-        P_G=P_G,
-        w_min=w_min,
-        P_D=P_D,
-        P_S=P_S,
-        gating_size=chi2.ppf(P_G, df=meas_model.d),
+        birth_model=StaticBirthModel(birth_model),
+        max_number_of_hypotheses=max_hypothesis_kept,
+        gating_percentage=gating_percentage,
+        detection_probability=detection_probability,
+        survival_probability=survival_probability,
+        density=GaussianDensity,
     )
     estimates = []
-    simulation_time = K
+    simulation_time = simulation_steps
 
     for timestep in trange(simulation_time):
-        pmbm.predict(birth_model, motion_model, P_S)
-        logging.debug(pmbm.__repr__())
-        pmbm.increment_timestep()
-
-        pmbm.update(z=meas_data[timestep])
-
-        current_step_estimates = pmbm.estimator()
-        pmbm.reduction()
+        current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
         estimates.append(current_step_estimates)
 
     Plotter.plot_several(
         [meas_data],
-        out_path=get_images_dir(__file__) + "/" + "object_and_meas_data" +
-        ".png",
+        out_path=get_images_dir(__file__) + "/" + "object_and_meas_data" + ".png",
     )
 
     fig = plt.figure()
@@ -215,5 +185,4 @@ def test_pmbm_update_and_predict_linear(linear_middle_params,
     plt.savefig(get_images_dir(__file__) + "/" + "estimation" + ".png")
     from pprint import pprint
 
-    pprint(estimation_list)
-    # plt.show()
+    pprint(estimates)
