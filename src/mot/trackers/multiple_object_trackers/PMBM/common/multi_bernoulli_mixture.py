@@ -153,6 +153,18 @@ class MultiBernouilliMixture:
                 result = False
         return result
 
+    def prune_tree(self):
+        used_associations = defaultdict(set)
+        for global_hypothesis in self.global_hypotheses:
+            for (track_id, sth_id) in global_hypothesis.associations:
+                used_associations[track_id] |= set([sth_id])
+
+        for track_id, track in self.tracks.items():
+            track.single_target_hypotheses = {
+                sth_id: track.single_target_hypotheses[sth_id]
+                for sth_id in used_associations[track_id]
+            }
+
     def remove_unused_bernoullies(self):
         list_to_remove = []
         for track_id, track in self.tracks.items():
