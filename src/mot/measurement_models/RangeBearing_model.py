@@ -1,5 +1,4 @@
 import numpy as np
-from mot.common.state import Gaussian
 from mot.measurement_models import MeasurementModel
 
 

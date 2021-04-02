@@ -1,15 +1,9 @@
-from dataclasses import dataclass
-from typing import List, Tuple
 
 import numpy as np
 from mot.common.gaussian_density import GaussianDensity
 from mot.common.state import Gaussian
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import MotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common.track import (
-    SingleTargetHypothesis,
-    Track,
-)
 
 
 class Bernoulli:

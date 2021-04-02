@@ -1,28 +1,27 @@
-import logging
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
 import numpy as np
-from mot.common.state import Gaussian, GaussianMixture, WeightedGaussian
-from mot.configs import GroundTruthConfig, Object, SensorModelConfig
-from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
-from mot.simulator.measurement_data_generator import MeasurementData
-from mot.simulator.object_data_generator import ObjectData
-from mot.trackers.multiple_object_trackers.PMBM.common import (
-    Bernoulli,
-    GlobalHypothesis,
-    MultiBernouilliMixture,
-    SingleTargetHypothesis,
-    Track,
+from mot import (
+    GaussianMixture,
+    Object,
+    Gaussian,
+    SensorModelConfig,
+    ConstantVelocityMotionModel,
+    ConstantVelocityMeasurementModel,
+    GroundTruthConfig,
+    ObjectData,
+    MeasurementData,
+    WeightedGaussian,
+    GaussianDensity,
 )
-from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM, PoissonRFS
+from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
+    StaticBirthModel,
+)
+from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from mot.utils import Plotter, get_images_dir
 from pytest import fixture
-from scipy.stats import chi2
 from tqdm import trange
-
-from .params.birth_model import birth_model_linear
 
 
 @fixture(scope="function")

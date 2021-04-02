@@ -1,7 +1,5 @@
 from mot.common.hypothesis_reduction import Hypothesisreduction
 import numpy as np
-from mot.common.state import Gaussian
-from mot.common.state import Gaussian
 from mot.configs import SensorModelConfig
 from mot.measurement_models import (
     MeasurementModel,
@@ -10,9 +8,8 @@ from mot.motion_models import (
     MotionModel,
 )
 from tqdm import tqdm as tqdm
-from typing import List
 
-from mot.common.state import Gaussian, WeightedGaussian, GaussianMixture
+from mot.common.state import GaussianMixture, WeightedGaussian
 from mot.common.gaussian_density import GaussianDensity as GD
 from scipy.stats import chi2
 

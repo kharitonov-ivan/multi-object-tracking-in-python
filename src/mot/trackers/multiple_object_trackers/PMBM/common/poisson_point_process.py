@@ -4,7 +4,7 @@ import scipy
 import numpy as np
 from mot.common.gaussian_density import GaussianDensity
 from mot.common.normalize_log_weights import normalize_log_weights
-from mot.common.state import Gaussian, GaussianMixture
+from mot.common.state import GaussianMixture
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import MotionModel
 from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli

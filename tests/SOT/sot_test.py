@@ -1,31 +1,24 @@
 from dataclasses import asdict
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from matplotlib.pyplot import show
-from mot import configs, motion_models
-from mot.common.gaussian_density import GaussianDensity
 from mot.common.state import State
-from mot.configs import GroundTruthConfig, Object, SensorModelConfig
+from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.measurement_models import (
     ConstantVelocityMeasurementModel,
-    CoordinateTurnMeasurementModel,
     RangeBearingMeasurementModel,
 )
 from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
 from mot.scenarios.scenario_configs import (
-    linear_n_mot,
     linear_sot,
-    nonlinear_n_mot,
     nonlinear_sot,
 )
 from mot.simulator import MeasurementData
 from mot.simulator.measurement_data_generator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
-from mot.single_object_trackers import NearestNeighbourTracker, SingleObjectTracker
+from mot.single_object_trackers import NearestNeighbourTracker
 from mot.utils import Plotter
-from mot.utils.visualizer import Animator, Plotter
+from mot.utils.visualizer import Plotter
 from mot.utils.get_path import get_images_dir
 
 

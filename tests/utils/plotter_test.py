@@ -12,9 +12,7 @@ from mot.simulator import MeasurementData
 from mot.simulator.measurement_data_generator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
 from mot.utils.get_path import get_images_dir
-from mot.trackers.multiple_object_trackers.gm_phd import GMPHD
-from mot.common.state import Gaussian, WeightedGaussian, GaussianMixture
-from mot.configs.object_config import Object
+from mot.common.state import Gaussian
 from mot.utils.visualizer import Plotter, Animator
 
 test_env_cases = [

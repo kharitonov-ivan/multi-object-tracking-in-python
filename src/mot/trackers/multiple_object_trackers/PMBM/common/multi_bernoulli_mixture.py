@@ -1,18 +1,13 @@
-import itertools
 import logging
 from collections import defaultdict
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
-from mot.common.estimation import Estimation
 from mot.common.normalize_log_weights import normalize_log_weights
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import MotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli
-from mot.trackers.multiple_object_trackers.PMBM.common.track import (
-    SingleTargetHypothesis,
-    Track,
-)
+from mot.trackers.multiple_object_trackers.PMBM.common.track import Track
+
 from .global_hypothesis import GlobalHypothesis
 
 

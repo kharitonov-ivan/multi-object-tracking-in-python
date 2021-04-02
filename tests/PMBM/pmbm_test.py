@@ -17,12 +17,10 @@ from mot.configs import GroundTruthConfig, Object, SensorModelConfig
 from mot.simulator.object_data_generator import ObjectData
 from mot.simulator.measurement_data_generator import MeasurementData
 from pytest import fixture
-from scipy.stats import chi2
 from tqdm import trange
 from mot.utils import Plotter, get_images_dir
 import matplotlib.pyplot as plt
 from collections import defaultdict
-import logging
 
 
 @fixture(scope="function")
@@ -448,7 +446,7 @@ def test_pmbm_update_and_predict_linear(linear_big_params, birth_model):
         birth_model=birth_model,
         merging_threshold=merging_threshold,
         max_number_of_hypotheses=M,
-        gating_percentage=P_G
+        gating_percentage=P_G,
         w_min=w_min,
         P_D=P_D,
         survival_probability=survival_probability,
@@ -463,7 +461,7 @@ def test_pmbm_update_and_predict_linear(linear_big_params, birth_model):
         logging.debug(pmbm.__repr__())
         pmbm.increment_timestep()
         if len(meas_data[timestep]) > 0:
-            pmbm.update(z=meas_data[timestep])
+            pmbm.update(measurements=meas_data[timestep])
 
         current_step_estimates = pmbm.estimator()
         pmbm.reduction()

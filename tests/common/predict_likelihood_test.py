@@ -1,10 +1,6 @@
 import numpy as np
 from mot.common.gaussian_density import GaussianDensity
-from mot.simulator.measurement_data_generator import MeasurementData
 from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.configs import GroundTruthConfig, Object, SensorModelConfig
-from mot.motion_models import ConstantVelocityMotionModel
-from mot.simulator.object_data_generator import ObjectData
 from mot.common.state import Gaussian
 
 TOL = 1e-4

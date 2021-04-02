@@ -3,28 +3,18 @@ import copy
 import numpy as np
 import pytest
 from mot.common import (
-    Gaussian,
     GaussianDensity,
     GaussianMixture,
-    WeightedGaussian,
-    normalize_log_weights,
 )
 from mot.measurement_models import (
     ConstantVelocityMeasurementModel,
-    RangeBearingMeasurementModel,
 )
-from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
 from mot.trackers.multiple_object_trackers.PMBM.common import (
-    Bernoulli,
     PoissonRFS,
-    SingleTargetHypothesis,
     StaticBirthModel,
 )
 from scipy.special import logsumexp
 
-from .bernoulli_test import P_D, P_S, cv_measurement_model, cv_motion_model
-from .params.birth_model import birth_model_linear
-from .params.initial_PPP_intensity import initial_PPP_intensity_linear
 
 
 @pytest.fixture
@@ -45,10 +35,12 @@ def test_PPP_predict_linear_motion(
     PPP.predict(motion_model, survival_probability, dt)
 
     # check multiply of weight in log domain
-    PPP_ref_w = np.array([
-        current_weight + np.log(survival_probability)
-        for current_weight in initial_PPP_intensity_linear.log_weights
-    ])
+    PPP_ref_w = np.array(
+        [
+            current_weight + np.log(survival_probability)
+            for current_weight in initial_PPP_intensity_linear.log_weights
+        ]
+    )
 
     PPP_ref_state_x = [
         GaussianDensity.predict(component.gaussian, cv_motion_model, dt).x
@@ -76,7 +68,7 @@ def test_PPP_adds_birth_components(birth_model_linear):
     # Set Poisson RFS
     PPP = PoissonRFS(initial_intensity=GaussianMixture([]))
     birth_model = StaticBirthModel(birth_model_config=birth_model_linear)
-    PPP.birth(born_components=birth_model.get_born_objects_intensity())
+    PPP.birth(new_components=birth_model.get_born_objects_intensity())
 
     np.testing.assert_allclose(
         sorted(PPP.intensity.log_weights),

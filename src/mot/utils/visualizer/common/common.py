@@ -1,7 +1,6 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import colorcet
-import numpy as np
 import logging
 
 logging.getLogger("matplotlib").setLevel(logging.WARNING)

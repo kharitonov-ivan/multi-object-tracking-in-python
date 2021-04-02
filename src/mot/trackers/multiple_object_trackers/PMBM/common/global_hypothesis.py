@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import Tuple
+
 
 @dataclass
 class Association:
