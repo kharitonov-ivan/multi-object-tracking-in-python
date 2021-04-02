@@ -1,44 +1,4 @@
-from typing import List
-
-
-class SingleTargetHypothesis:
-    def __init__(
-        self, bernoulli, likelihood: float, associated_measurement_idx: int, cost
-    ):
-        self.bernoulli = bernoulli
-        self.likelihood = likelihood
-        self.cost = cost
-        self.associated_measurement_idx = (
-            associated_measurement_idx  # if -1 - misdetection
-        )
-        self.missdetection_hypothesis = None
-        self.detection_hypotheses = {}
-
-    def get_child_by_meas_idx(self, meas_idx: int):
-        child_by_meas_idx = {
-            v.associated_measurement_idx: k for (k, v) in self.detection_hypotheses.items()
-        }
-        if meas_idx in child_by_meas_idx.keys():
-            sth_id = child_by_meas_idx[meas_idx]
-            return self.detection_hypotheses[sth_id]
-        else:
-            raise KeyError
-
-    def get_child_sth_idx_by_meas_idx(self, meas_idx: int):
-        child_by_meas_idx = {
-            v.associated_measurement_idx: k for (k, v) in self.detection_hypotheses.items()
-        }
-        if meas_idx in child_by_meas_idx.keys():
-            sth_id = child_by_meas_idx[meas_idx]
-            return sth_id
-        else:
-            raise KeyError
-
-    def __repr__(self):
-        return (
-            f"likelihood={self.likelihood:.2f}, "
-            f"meas_idx={self.associated_measurement_idx}, "
-        )
+from .single_target_hypothesis import SingleTargetHypothesis
 
 
 class Track:
