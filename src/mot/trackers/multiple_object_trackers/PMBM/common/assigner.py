@@ -10,25 +10,25 @@ from typing import List
 
 
 class AssignmentSolver:
-    def __init__(
-        self,
-        global_hypothesis,
-        old_tracks,
-        new_tracks,
-        measurements,
-        num_of_desired_hypotheses,
-    ) -> None:
+    def __init__(self,
+                 global_hypothesis,
+                 old_tracks,
+                 new_tracks,
+                 measurements,
+                 num_of_desired_hypotheses,
+                 max_murty_steps=None) -> None:
         self.global_hypothesis: GlobalHypothesis = global_hypothesis
         self.old_tracks = old_tracks
         self.new_tracks = new_tracks
         self.measurements = measurements
         self.num_of_desired_hypotheses = num_of_desired_hypotheses
         self.num_of_old_tracks = len(self.global_hypothesis.associations)
-        self.max_murty_steps = 10
+        self.max_murty_steps = max_murty_steps or self.get_murty_steps()
         self.column_row_to_detected_child_sth = defaultdict(
             lambda: defaultdict(dict))
         self.column_row_to_new_detected_sth = defaultdict(
             lambda: defaultdict(dict))
+        self.cost_matrix = self.create_cost_matrix()
 
     def get_murty_steps(self):
         return int(
@@ -36,15 +36,19 @@ class AssignmentSolver:
                 np.exp(self.global_hypothesis.log_weight *
                        self.num_of_desired_hypotheses)))
 
-    def solve(self) -> List[GlobalHypothesis]:
-        new_global_hypotheses = []
+    def create_cost_matrix(self):
         cost_detected = self.create_cost_for_associated_targets(
             self.global_hypothesis, self.old_tracks, self.measurements)
         cost_undetected = self.create_cost_for_undetected(
             self.new_tracks, self.measurements)
         cost_matrix = np.hstack([cost_detected, cost_undetected])
+        return cost_matrix
 
-        murty_solver = Murty(cost_matrix)
+    def solve(self) -> List[GlobalHypothesis]:
+        lg.debug(f"\n Current global hypo = \n{self.global_hypothesis}")
+        lg.debug(f"\n Cost matrix = \n{self.cost_matrix}")
+        new_global_hypotheses = []
+        murty_solver = Murty(self.cost_matrix)
 
         for murty_step in range(self.max_murty_steps):
             try:
@@ -53,16 +57,18 @@ class AssignmentSolver:
                 solution = solution.tolist()
                 if not solution:
                     break
-                lg.debug(f"\n Assignment = {solution} Cost = {solution_cost}")
+
             except:
                 raise Error
             if not status:
                 lg.info("Break! Murty solver is over!")
                 break
+            lg.debug(f"murty step = {murty_step}, solution = {solution}")
             next_log_weight = self.global_hypothesis.log_weight - solution_cost
             next_associations = self.assignment_to_associations(solution)
             next_global_hypothesis = GlobalHypothesis(next_log_weight,
                                                       next_associations)
+            lg.debug(f"next global hypothesis: {next_global_hypothesis}")
             new_global_hypotheses.append(next_global_hypothesis)
         return new_global_hypotheses
 
