@@ -84,7 +84,7 @@ class AssignmentSolver:
                 sth_id = (self.old_tracks[track_id].single_target_hypotheses[
                     parent_sth_id].detection_hypotheses[child_idx].sth_id)
             associations.append(Association(track_id, sth_id))
-            return associations
+        return associations
 
     def create_cost_for_associated_targets(self,
                                            global_hypothesis: GlobalHypothesis,
