@@ -24,18 +24,6 @@ from .common import (
 
 
 class PMBM:
-    """
-    1. Prediction of Bernoulli component.
-    2. Misdetection update of Bernoulli component.
-    3. Object detection update of Bernoulli component.
-    4. Prediction of Poisson Point Process (PPP).
-    5. Misdetection update of PPP.
-    6. Object detection update of PPP.
-    7. PMBM prediction.
-    8. PMBM update.
-    9. Object states extraction.
-    """
-
     def __init__(
         self,
         meas_model: MeasurementModel,
@@ -43,33 +31,46 @@ class PMBM:
         motion_model: MotionModel,
         birth_model: GaussianMixture,
         max_number_of_hypotheses: int,
-        gating_percentage : float,
-        w_min,
-        detection_probability,
+        gating_percentage: float,
+        detection_probability: float,
         survival_probability: float,
-        density: GaussianDensity = GaussianDensity,
+        density: GaussianDensity,
         *args,
         **kwargs,
     ):
+        assert isinstance(meas_model, MeasurementModel)
+        assert isinstance(sensor_model, SensorModelConfig)
+        assert isinstance(motion_model, MotionModel)
+        assert isinstance(birth_model, BirthModel)
+        assert isinstance(max_number_of_hypotheses, int)
+        assert isinstance(gating_percentage, float)
+        assert isinstance(detection_probability, float)
+        assert isinstance(survival_probability, float)
+        assert issubclass(density, GaussianDensity)
+
         self.timestep = 0
         self.density = density
-        self.meas_model = meas_model
+
         self.sensor_model = sensor_model
         self.motion_model = motion_model
         self.birth_model = birth_model
-        self.survival_probability = survival_probability  # models death of an object (aka P_S)
+        self.meas_model = meas_model
+
+        # models death of an object (aka P_S)
+        self.survival_probability = survival_probability
+
+        # models detection (and missdetection) of an object (aka P_D)
+        self.detection_probability = detection_probability
 
         # Interval for ellipsoidal gating (aka P_G)
         self.gating_percentage = gating_percentage
-        self.gating_size = scipy.stats.chi2.ppf(self.gating_percentage,
-                                                df=self.meas_model.d)
-        self.w_min = w_min  # in log domain
-        self.detection_probability = detection_probability  # models detection (and missdetection) of an object (aka P_)
-        self.merging_threshold = merging_threshold
-        self.desired_num_global_hypotheses = 10
+        self.gating_size = scipy.stats.chi2.ppf(
+            self.gating_percentage, df=self.meas_model.d
+        )
+
         self.max_number_of_hypotheses = max_number_of_hypotheses
 
-        self.PPP = PoissonRFS(initial_intensity=copy.deepcopy(birth_model))
+        self.PPP = PoissonRFS(intensity=self.birth_model.get_born_objects_intensity())
         self.MBM = MultiBernouilliMixture()
 
     def __repr__(self) -> str:
@@ -77,25 +78,41 @@ class PMBM:
             f"(current_timestep={self.timestep}, "
             f"MBM components ={len(self.MBM.tracks)}, "
             f"Global hypotheses={len(self.MBM.global_hypotheses)}, "
-            f"PPP components={len(self.PPP.intensity)}, ")
+            f"PPP components={len(self.PPP.intensity)}, "
+        )
+
+    def step(self, measurements: np.ndarray, dt: float):
+        self.increment_timestep()
+        self.predict(
+            self.birth_model,
+            self.motion_model,
+            self.survival_probability,
+            self.density,
+            dt,
+        )
+        self.update(measurements)
+        estimates = self.estimator()
+        self.reduction()
+        return estimates
 
     def increment_timestep(self):
         self.timestep += 1
 
     def predict(
         self,
-        birth_model: GaussianMixture,
+        birth_model: BirthModel,
         motion_model: MotionModel,
         survival_probability: float,
-        dt: float,
         density: GaussianDensity,
+        dt: float,
     ) -> None:
-        """Performs PMBM preidction step"""
+        assert isinstance(birth_model, BirthModel)
+        assert isinstance(motion_model, MotionModel)
+        assert isinstance(survival_probability, float)
 
-        # MBM predict
         self.MBM.predict(motion_model, survival_probability, density, dt)
-        # PPP predict
-        self.PPP.predict(motion_model, copy.deepcopy(birth_model), survival_probability, dt)
+        self.PPP.predict(motion_model, survival_probability, density, dt)
+        self.PPP.birth(self.birth_model.get_born_objects_intensity())
 
     def update(self, measurements: np.ndarray) -> None:
         if len(measurements) == 0:
@@ -164,20 +181,14 @@ class PMBM:
             self.MBM.global_hypotheses = new_global_hypotheses
             self.MBM.normalize_global_hypotheses_weights()
 
-            for new_track in new_tracks:
-                self.MBM.add_track(new_track)
-
-        # Update of PPP intensity for undetected objects that remain undetected
-        self.PPP.undetected_update(self.detection_probability)
-        
-    def rebuild_tree(self):
+    def update_tree(self):
         """1. Move children to upper lever."""
         for track in self.MBM.tracks.values():
             track.cut_tree()
 
     def estimator(self):
         estimates = self.MBM.estimator()
-        logging.debug(f'estimates = {estimates}')
+        lg.debug(f"estimates = {estimates}")
         return estimates
 
     def reduction(self) -> None:
@@ -185,15 +196,3 @@ class PMBM:
         # self.MBM.prune_global_hypotheses(threshold=np.log(0.001))
         self.MBM.cap_global_hypothesis(self.max_number_of_hypotheses)
         # self.MBM.remove_unused_bernoullies()
-
-    def estimation_step(self, current_measurements: np.ndarray):
-        # PMBM prediction
-        self.PMBM_predict()
-
-        # PMBM update
-        self.update(current_measurements)
-
-        # Extract state estimates from the PPP
-        estimates = self.PMBM_estimator()
-
-        return estimates
