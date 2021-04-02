@@ -10,13 +10,16 @@ from typing import List
 
 
 class AssignmentSolver:
-    def __init__(self,
-                 global_hypothesis,
-                 old_tracks,
-                 new_tracks,
-                 measurements,
-                 num_of_desired_hypotheses,
-                 max_murty_steps=None) -> None:
+    def __init__(
+        self,
+        global_hypothesis,
+        old_tracks,
+        new_tracks,
+        measurements,
+        num_of_desired_hypotheses,
+        max_murty_steps=None,
+    ) -> None:
+        assert len(measurements)> 0
         self.global_hypothesis: GlobalHypothesis = global_hypothesis
         self.old_tracks = old_tracks
         self.new_tracks = new_tracks
@@ -29,6 +32,8 @@ class AssignmentSolver:
         self.column_row_to_new_detected_sth = defaultdict(
             lambda: defaultdict(dict))
         self.cost_matrix = self.create_cost_matrix()
+        if self.cost_matrix.size == 0:
+            return
 
     def get_murty_steps(self):
         return int(
@@ -37,10 +42,8 @@ class AssignmentSolver:
                        self.num_of_desired_hypotheses)))
 
     def create_cost_matrix(self):
-        cost_detected = self.create_cost_for_associated_targets(
-            self.global_hypothesis, self.old_tracks, self.measurements)
-        cost_undetected = self.create_cost_for_undetected(
-            self.new_tracks, self.measurements)
+        cost_detected = self.create_cost_for_associated_targets(self.global_hypothesis, self.old_tracks, self.measurements)
+        cost_undetected = self.create_cost_for_undetected(self.new_tracks, self.measurements)
         cost_matrix = np.hstack([cost_detected, cost_undetected])
         return cost_matrix
 
@@ -49,7 +52,6 @@ class AssignmentSolver:
         lg.debug(f"\n Cost matrix = \n{self.cost_matrix}")
         new_global_hypotheses = []
         murty_solver = Murty(self.cost_matrix)
-
         for murty_step in range(self.max_murty_steps):
             try:
                 status, solution_cost, solution = murty_solver.draw()
@@ -117,15 +119,24 @@ class AssignmentSolver:
 
         cost_undetected = np.full((len(measurements), len(measurements)),
                                   np.inf)
-        assert len(measurements) == len(new_tracks)
 
         sth_idx = 0  # we have olny one sth for new targets
-        for meas_idx, track_idx in zip(range(len(measurements)),
-                                       new_tracks.keys()):
-            cost_undetected[meas_idx, meas_idx] = (
-                new_tracks[track_idx].single_target_hypotheses[sth_idx].cost)
-            self.column_row_to_new_detected_sth[meas_idx] = (
-                new_tracks[track_idx].track_id,
-                sth_idx,
-            )
+        for meas_idx in range(len(measurements)):
+            if meas_idx in [
+                    track.single_target_hypotheses[sth_idx].meas_idx
+                    for track in new_tracks.values()
+            ]:
+                track_id = [
+                    track.track_id for track in new_tracks.values()
+                    if track.single_target_hypotheses[sth_idx].meas_idx ==
+                    meas_idx
+                ][0]
+                cost_undetected[meas_idx, meas_idx] = (
+                    new_tracks[track_id].single_target_hypotheses[sth_idx].cost
+                )
+                self.column_row_to_new_detected_sth[meas_idx] = (
+                    new_tracks[track_id].track_id,
+                    sth_idx,
+                )
+
         return cost_undetected
