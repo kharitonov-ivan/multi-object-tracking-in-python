@@ -4,11 +4,12 @@ from typing import Tuple
 
 @dataclass
 class Association:
-    track_id: int # num of tree
-    sth_id: int # num of hypo in tree
+    track_id: int  # num of tree
+    sth_id: int  # num of hypo in tree
 
     def __iter__(self):
         return iter((self.track_id, self.sth_id))
+
 
 @dataclass
 class GlobalHypothesis:
