@@ -25,6 +25,7 @@ from tqdm import trange
 
 from .params import object_motion_scenarious
 from mot.metrics import GOSPA
+import motmetrics as mm
 
 
 @pytest.fixture
@@ -122,6 +123,7 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     estimates = []
     gospas = []
     simulation_time = simulation_steps
+    acc = mm.MOTAccumulator()
 
     for timestep in trange(simulation_time):
         current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
@@ -135,6 +137,29 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
         gospa = GOSPA(targets_vector, estimates_vector)
         gospas.append(gospa)
         estimates.append(current_step_estimates)
+
+        target_ids = []
+        target_points = []
+        for target_id, target_state in object_data[timestep].items():
+            target_ids.append(target_id)
+            target_points.append(target_state.x[:2])
+
+        estimation_ids = []
+        estimation_points = []
+        for estimation in current_step_estimates:
+            for estimation_id, estimation_state in estimation.items():
+                estimation_ids.append(estimation_id)
+                estimation_points.append(estimation_state[:2])
+
+        target_points = np.array(target_points)
+        estimation_points = np.array(estimation_points)
+        distance_matrix = mm.distances.norm2squared_matrix(target_points,
+                                                           estimation_points)
+        
+        acc.update(target_ids,
+                   estimation_ids,
+                   dists=distance_matrix,
+                   frameid=timestep)
 
     fig, (ax1, ax2, ax0) = plt.subplots(1,
                                         3,
@@ -191,4 +216,8 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     pprint(estimates)
     #TODO check ot
     rms_gospa_scene = np.sqrt(np.mean(np.power(np.array(gospas), 2)))
-    assert rms_gospa_scene > 20
+
+    mh = mm.metrics.create()
+    summary = mh.compute(acc, metrics=['num_frames', 'mota', 'motp', 'idp'], name='acc')
+    print(summary)
+
