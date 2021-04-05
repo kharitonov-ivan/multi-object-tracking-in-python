@@ -24,6 +24,7 @@ from pytest import fixture
 from tqdm import trange
 
 from .params import object_motion_scenarious
+from mot.metrics import GOSPA
 
 
 @pytest.fixture
@@ -119,10 +120,20 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
         density=GaussianDensity,
     )
     estimates = []
+    gospas = []
     simulation_time = simulation_steps
 
     for timestep in trange(simulation_time):
         current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
+        targets_vector = np.array(
+            [target.x[:2] for target in object_data[timestep].values()])
+
+        estimates_vector = np.array([
+            list(estimation.values())[0][:2]
+            for estimation in current_step_estimates
+        ])
+        gospa = GOSPA(targets_vector, estimates_vector)
+        gospas.append(gospa)
         estimates.append(current_step_estimates)
 
     fig, (ax1, ax2, ax0) = plt.subplots(1,
@@ -178,3 +189,6 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     from pprint import pprint
 
     pprint(estimates)
+    #TODO check ot
+    rms_gospa_scene = np.sqrt(np.mean(np.power(np.array(gospas), 2)))
+    assert rms_gospa_scene > 20
