@@ -1,4 +1,5 @@
 from .single_target_hypothesis import SingleTargetHypothesis
+import pprint
 
 
 class Track:
@@ -21,10 +22,12 @@ class Track:
         self.single_target_hypotheses[next(self.sth_id_generator)] = sth
 
     def __repr__(self) -> str:
+        sth_rep = f"STH: \n {pprint.pformat(self.single_target_hypotheses)}" if len(
+            self.single_target_hypotheses) < 3 else ""
         return self.__class__.__name__ + (
             f" id = {self.track_id}"
-            f" number of sth = {len(self.single_target_hypotheses)}"
-        )
+            f" number of sth = {len(self.single_target_hypotheses)} "
+        ) + sth_rep
 
     @classmethod
     def from_sth(cls, single_target_hypo):
