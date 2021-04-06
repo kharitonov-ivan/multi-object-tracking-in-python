@@ -34,6 +34,7 @@ class PMBM:
         gating_percentage: float,
         detection_probability: float,
         survival_probability: float,
+        existense_probability_threshold: float,
         density: GaussianDensity,
         *args,
         **kwargs,
@@ -69,6 +70,7 @@ class PMBM:
         )
 
         self.max_number_of_hypotheses = max_number_of_hypotheses
+        self.existense_probability_threshold = existense_probability_threshold
 
         self.PPP = PoissonRFS(intensity=self.birth_model.get_born_objects_intensity())
         self.MBM = MultiBernouilliMixture()
@@ -177,7 +179,7 @@ class PMBM:
             track.cut_tree()
 
     def estimator(self):
-        estimates = self.MBM.estimator()
+        estimates = self.MBM.estimator(existense_probability_threshold=self.existense_probability_threshold)
         lg.debug(f"estimates = {estimates}")
         return estimates
 

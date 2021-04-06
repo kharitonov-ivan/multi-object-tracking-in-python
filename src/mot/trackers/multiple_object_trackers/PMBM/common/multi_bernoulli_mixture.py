@@ -26,7 +26,7 @@ class MultiBernouilliMixture:
         assert not (track.track_id in self.tracks.keys())
         self.tracks[track.track_id] = track
 
-    def estimator(self):
+    def estimator(self, existense_probability_threshold):
         """Simply return objects set based on most probable global hypo."""
         if self.global_hypotheses:
             most_probable_global_hypo = max(self.global_hypotheses,
@@ -38,7 +38,7 @@ class MultiBernouilliMixture:
         object_list = []  # list of {'object_id':'object_state'}
         for (track_id, sth_id) in most_probable_global_hypo.associations:
             if self.tracks[track_id].single_target_hypotheses[
-                    sth_id].bernoulli.existence_probability > 0.5:
+                    sth_id].bernoulli.existence_probability > existense_probability_threshold:
                 object_state = (
                     self.tracks[track_id].single_target_hypotheses[sth_id].
                     bernoulli.state.x)

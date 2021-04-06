@@ -74,8 +74,7 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
                                 meas_model=meas_model)
 
     # Object tracker parameter setting
-    gating_percentage = 0.5  # gating size in percentage
-    max_hypothesis_kept = 30  # maximum number of hypotheses kept
+    existense_probability_threshold = 0.4
 
     z = np.zeros([simulation_steps, 1, 2])
     # linear motion
@@ -118,6 +117,7 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
         gating_percentage=gating_percentage,
         detection_probability=detection_probability,
         survival_probability=survival_probability,
+        existense_probability_threshold = existense_probability_threshold,
         density=GaussianDensity,
     )
     estimates = []
