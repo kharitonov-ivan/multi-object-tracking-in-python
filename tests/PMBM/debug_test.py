@@ -26,26 +26,27 @@ from tqdm import trange
 from .params import object_motion_scenarious
 from mot.metrics import GOSPA
 import motmetrics as mm
-
+import logging
+import pprint
 
 @pytest.fixture
 def object_motion_fixture():
-    return object_motion_scenarious.two_objects_linear_motion
+    return object_motion_scenarious.two_static_objects
 
 
 def test_pmbm_update_and_predict_linear(object_motion_fixture):
     # Choose object detection probability
-    detection_probability = 0.999
+    detection_probability = 0.8
 
     # Choose clutter rate (aka lambda_c)
-    clutter_rate = 0.01
+    clutter_rate = 0.0001
 
     # Choose object survival probability
     survival_probability = 0.9
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
-    sensor_model = SensorModelConfig(P_D=0.5,
+    sensor_model = SensorModelConfig(P_D=detection_probability,
                                      lambda_c=clutter_rate,
                                      range_c=range_c)
 
@@ -59,8 +60,8 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     meas_model = ConstantVelocityMeasurementModel(sigma_r)
 
     # Create ground truth model
-    n_births = 1
-    simulation_steps = 100
+    n_births = 10
+    simulation_steps = 40
 
     # Generate true object data (noisy or noiseless) and measurement data
     ground_truth = GroundTruthConfig(n_births,
@@ -73,12 +74,15 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
                                 sensor_model=sensor_model,
                                 meas_model=meas_model)
 
+    logging.debug(f'object motion config {pprint.pformat(object_motion_fixture)}')
     # Object tracker parameter setting
+    gating_percentage = 1.0  # gating size in percentage
+    max_hypothesis_kept = 100  # maximum number of hypotheses kept
     existense_probability_threshold = 0.4
 
-    z = np.zeros([simulation_steps, 1, 2])
-    # linear motion
-    z[:, 0, 1] = 0 + 100 * np.arange(simulation_steps)
+    # z = np.zeros([simulation_steps, 1, 2])
+    # # linear motion
+    # z[:, 0, 1] = 0 + 100 * np.arange(simulation_steps)
 
     # # outlie
     # z[:, 1, 0] = -100 * np.ones(K)
@@ -91,20 +95,15 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
         ),
         WeightedGaussian(
             np.log(0.03),
-            Gaussian(x=np.array([300.0, 300.0, 0.0, 0.0]), P=400 * np.eye(4)),
+            Gaussian(x=np.array([400.0, -600.0, 0.0, 0.0]), P=400 * np.eye(4)),
         ),
         WeightedGaussian(
             np.log(0.03),
-            Gaussian(x=np.array([300.0, -300.0, 0.0, 0.0]), P=400 * np.eye(4)),
+            Gaussian(x=np.array([-800.0, 200.0, 0.0, 0.0]), P=400 * np.eye(4)),
         ),
         WeightedGaussian(
             np.log(0.03),
-            Gaussian(x=np.array([-300.0, -300.0, 0.0, 0.0]),
-                     P=400 * np.eye(4)),
-        ),
-        WeightedGaussian(
-            np.log(0.03),
-            Gaussian(x=np.array([-300.0, 300.0, 0.0, 0.0]), P=400 * np.eye(4)),
+            Gaussian(x=np.array([-200.0, 900.0, 0.0, 0.0]), P=400 * np.eye(4)),
         ),
     ])
 
@@ -156,9 +155,9 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
 
         target_points = np.array(target_points)
         estimation_points = np.array(estimation_points)
-        distance_matrix = mm.distances.norm2squared_matrix(target_points,
-                                                           estimation_points)
-        
+        distance_matrix = mm.distances.norm2squared_matrix(
+            target_points, estimation_points)
+
         acc.update(target_ids,
                    estimation_ids,
                    dists=distance_matrix,
@@ -208,19 +207,21 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
                     lines[target_id].append((pos_x, pos_y))
 
     from mot.utils.visualizer.common.plot_series import OBJECT_COLORS as object_colors
-
     for target_id, estimation_list in lines.items():
         for (pos_x, pos_y) in estimation_list:
-            ax2.scatter(pos_x, pos_y, color=object_colors[target_id])
+            ax2.scatter(pos_x, pos_y, color=object_colors[target_id % 252])
 
-    plt.savefig(get_images_dir(__file__) + "/" + "estimation" + ".png")
-    from pprint import pprint
-
-    pprint(estimates)
     #TODO check ot
     rms_gospa_scene = np.sqrt(np.mean(np.power(np.array(gospas), 2)))
 
     mh = mm.metrics.create()
-    summary = mh.compute(acc, metrics=['num_frames', 'mota', 'motp', 'idp'], name='acc')
-    print(summary)
-
+    summary = mh.compute(acc,
+                         metrics=['num_frames', 'mota', 'motp', 'idp'],
+                         name='acc')
+    fig.suptitle(
+        f"RMS GOSPA ={rms_gospa_scene:.1f} "
+        f"MOTA ={summary['mota'].item():.1f} "
+        f"MOTP ={summary['motp'].item():.1f} "
+        f"IDP ={summary['idp'].item():.1f} ",
+        fontweight="bold")
+    plt.savefig(get_images_dir(__file__) + "/" + "estimation" + ".png")
