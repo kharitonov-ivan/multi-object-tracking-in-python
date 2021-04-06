@@ -27,17 +27,17 @@ two_static_objects = [
 # TODO three static objects (no motion)
 tree_static_objects = [
     Object(
-        initial=Gaussian(x=np.array([10.0, 10.0, 0.0, 0.0]), P=np.eye(4)),
+        initial=Gaussian(x=np.array([-250.0, 250.0, 0.0, 0.0]), P=np.eye(4)),
         t_birth=0,
         t_death=69,
     ),
     Object(
-        initial=Gaussian(x=np.array([10.0, -10.0, 0.0, 0.0]), P=np.eye(4)),
+        initial=Gaussian(x=np.array([250.0, 250.0, 0.0, 0.0]), P=np.eye(4)),
         t_birth=0,
         t_death=69,
     ),
     Object(
-        initial=Gaussian(x=np.array([-10.0, -10.0, 0.0, 0.0]), P=np.eye(4)),
+        initial=Gaussian(x=np.array([0.0, -250.0, 0.0, 0.0]), P=np.eye(4)),
         t_birth=0,
         t_death=69,
     ),
