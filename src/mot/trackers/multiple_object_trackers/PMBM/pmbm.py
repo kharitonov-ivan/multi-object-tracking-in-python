@@ -121,6 +121,7 @@ class PMBM:
             lg.debug(f"\n no measurements!")
             return
         lg.debug(f"\n===current timestep: {self.timestep}===")
+        lg.debug(f"\n   Observable measurements: \n {measurements}")
         lg.debug(f"\n   global hypotheses {self.MBM.global_hypotheses}")
         lg.debug(f"\n   MBM tracks {self.MBM.tracks} \n")
 
