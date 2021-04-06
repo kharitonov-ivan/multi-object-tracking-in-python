@@ -142,8 +142,7 @@ class PMBM:
         lg.debug(f"\n   new tracks {new_tracks} \n")
         lg.debug(f"\n   current PPP components \n {self.PPP.intensity}")
 
-        # Update of PPP intensity for undetected objects that remain undetected
-        self.PPP.undetected_update(self.detection_probability)
+       
 
         if not self.MBM.global_hypotheses or not self.MBM.tracks:
             self.MBM.tracks.update(new_tracks)
@@ -173,6 +172,9 @@ class PMBM:
             self.MBM.global_hypotheses = new_global_hypotheses
             self.MBM.normalize_global_hypotheses_weights()
             self.MBM.prune_tree()
+        
+        # Update of PPP intensity for undetected objects that remain undetected
+        self.PPP.undetected_update(self.detection_probability)
 
     def update_tree(self):
         """1. Move children to upper lever."""
