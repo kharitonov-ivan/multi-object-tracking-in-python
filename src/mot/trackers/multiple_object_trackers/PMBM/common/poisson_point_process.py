@@ -33,14 +33,13 @@ class PoissonRFS:
         meas_model: MeasurementModel,
         detection_probability: float,
     ) -> List[Track]:
-
         new_tracks = {}
         for meas_idx in range(len(measurements)):
             new_single_target_hypothesis = self.detected_update(
-                np.expand_dims(measurements[meas_idx], axis=0),
-                meas_model,
-                detection_probability,
-                clutter_intensity,
+                measurement=np.expand_dims(measurements[meas_idx], axis=0),
+                meas_model=meas_model,
+                detection_probability=detection_probability,
+                clutter_intensity=clutter_intensity,
             )
             new_track = Track.from_sth(new_single_target_hypothesis)
             new_track.single_target_hypotheses[0].meas_idx = meas_idx
@@ -74,34 +73,32 @@ class PoissonRFS:
         # 1. For each mixture component in the PPP intensity, perform Kalman update and
         # calculate the predicted likelihood for each detection inside the corresponding ellipsoidal gate.
         gated_ppp_components = copy.deepcopy(self.intensity)
-        
         updated_ppp_components = [
-            GaussianDensity.update(ppp_component.gaussian, measurement,
+            GaussianDensity.update(copy.deepcopy(ppp_component.gaussian), measurement,
                                    meas_model)
             for ppp_component in gated_ppp_components
         ]
-
+       
         # Compute predicted likelihood
         log_weights = np.array([
             np.log(detection_probability) +
             ppp_component.log_weight + density.predict_loglikelihood(
-                updated_state, measurement, meas_model).item()
+                copy.deepcopy(ppp_component).gaussian, measurement, meas_model).item()
             for ppp_component, updated_state in zip(self.intensity,
                                                     updated_ppp_components)
         ])
-
         # 2. Perform Gaussian moment matching for the updated object state densities
         # resulted from being updated by the same detection.
         normalized_log_weights, log_sum = normalize_log_weights(log_weights)
-        merged_state = density.moment_matching(
-            normalized_log_weights, updated_ppp_components
-        )
+        merged_state = density.moment_matching(normalized_log_weights,
+                                               updated_ppp_components)
         # merged_state = updated_ppp_components[0]
 
         # 3. The returned likelihood should be the sum of the predicted likelihoods calculated f
         # or each mixture component in the PPP intensity and the clutter intensity.
         # (You can make use of the normalizeLogWeights function to achieve this.)
-        log_likelihood = scipy.special.logsumexp([log_sum, np.log(clutter_intensity)])
+        log_likelihood = scipy.special.logsumexp(
+            [log_sum, np.log(clutter_intensity)])
 
         # 4. The returned existence probability of the Bernoulli component
         # is the ratio between the sum of the predicted likelihoods
@@ -147,9 +144,8 @@ class PoissonRFS:
 
         for ppp_component in self.intensity:
             ppp_component.log_weight += np.log(survival_probability)
-            ppp_component.gaussian = density.predict(
-                ppp_component.gaussian, motion_model, dt
-            )
+            ppp_component.gaussian = density.predict(ppp_component.gaussian,
+                                                     motion_model, dt)
 
     def birth(self, new_components: GaussianMixture):
         """Incorporate PPP birth intensity into PPP intensity
@@ -171,18 +167,18 @@ class PoissonRFS:
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Returns measurement indices inside the gate of undetected objects (PPP)"""
         gating_matrix_undetected = np.full(
-            shape=[self.intensity.size, len(z)], fill_value=False
-        )  # poisson size x number of measurements
-        used_measurement_undetected_indices = np.full(shape=[len(z)], fill_value=False)
+            shape=[self.intensity.size, len(z)],
+            fill_value=False)  # poisson size x number of measurements
+        used_measurement_undetected_indices = np.full(shape=[len(z)],
+                                                      fill_value=False)
 
         for ppp_idx in range(self.intensity.size):
             (
                 _,
                 gating_matrix_undetected[ppp_idx],
             ) = density_handler.ellipsoidal_gating(
-                self.intensity[ppp_idx].gaussian, z, meas_model, gating_size
-            )
+                self.intensity[ppp_idx].gaussian, z, meas_model, gating_size)
             used_measurement_undetected_indices = np.logical_or(
-                used_measurement_undetected_indices, gating_matrix_undetected[ppp_idx]
-            )
+                used_measurement_undetected_indices,
+                gating_matrix_undetected[ppp_idx])
         return (gating_matrix_undetected, used_measurement_undetected_indices)
