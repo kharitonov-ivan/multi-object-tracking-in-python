@@ -22,8 +22,8 @@ class Plot:
         show=False,
         is_autoscale=True,
         autoscale_margin=1.0,
-        lim_x=(-1000, 1000),
-        lim_y=(-1000, 1000),
+        lim_x=(-1100, 1100),
+        lim_y=(-1100, 1100),
         **kwargs
     ):
         set_mpl_params()

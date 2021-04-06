@@ -29,7 +29,6 @@ class PoissonRFS:
     def get_targets_detected_for_first_time(
         self,
         measurements: np.ndarray,
-        gating_matrix_ud: np.ndarray,
         clutter_intensity: float,
         meas_model: MeasurementModel,
         detection_probability: float,
@@ -37,17 +36,15 @@ class PoissonRFS:
 
         new_tracks = {}
         for meas_idx in range(len(measurements)):
-            if gating_matrix_ud.T[meas_idx].any():
-                new_single_target_hypothesis = self.detected_update(
-                    np.expand_dims(measurements[meas_idx], axis=0),
-                    meas_model,
-                    detection_probability,
-                    clutter_intensity,
-                    gating_vector=gating_matrix_ud.T[meas_idx],
-                )
-                new_track = Track.from_sth(new_single_target_hypothesis)
-                new_track.single_target_hypotheses[0].meas_idx = meas_idx
-                new_tracks[new_track.track_id] = new_track
+            new_single_target_hypothesis = self.detected_update(
+                np.expand_dims(measurements[meas_idx], axis=0),
+                meas_model,
+                detection_probability,
+                clutter_intensity,
+            )
+            new_track = Track.from_sth(new_single_target_hypothesis)
+            new_track.single_target_hypotheses[0].meas_idx = meas_idx
+            new_tracks[new_track.track_id] = new_track
         return new_tracks
 
     def detected_update(
@@ -56,7 +53,6 @@ class PoissonRFS:
         meas_model: MeasurementModel,
         detection_probability: float,
         clutter_intensity: float,
-        gating_vector,
         density=GaussianDensity,
     ) -> SingleTargetHypothesis:
         """Creates a new local hypothesis by updating the PPP
@@ -77,11 +73,8 @@ class PoissonRFS:
 
         # 1. For each mixture component in the PPP intensity, perform Kalman update and
         # calculate the predicted likelihood for each detection inside the corresponding ellipsoidal gate.
-        gated_ppp_components = [
-            ppp_component for ppp_component_idx, ppp_component in enumerate(
-                copy.deepcopy(self.intensity))
-            if gating_vector[ppp_component_idx] == True
-        ]
+        gated_ppp_components = copy.deepcopy(self.intensity)
+        
         updated_ppp_components = [
             GaussianDensity.update(ppp_component.gaussian, measurement,
                                    meas_model)

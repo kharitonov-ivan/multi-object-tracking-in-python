@@ -129,11 +129,13 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
         current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
         targets_vector = np.array(
             [target.x[:2] for target in object_data[timestep].values()])
-
-        estimates_vector = np.array([
-            list(estimation.values())[0][:2]
-            for estimation in current_step_estimates
-        ])
+        if current_step_estimates:
+            estimates_vector = np.array([
+                list(estimation.values())[0][:2]
+                for estimation in current_step_estimates
+            ])
+        else:
+            estimates_vector = np.array([])
         gospa = GOSPA(targets_vector, estimates_vector)
         gospas.append(gospa)
         estimates.append(current_step_estimates)
@@ -146,10 +148,11 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
 
         estimation_ids = []
         estimation_points = []
-        for estimation in current_step_estimates:
-            for estimation_id, estimation_state in estimation.items():
-                estimation_ids.append(estimation_id)
-                estimation_points.append(estimation_state[:2])
+        if current_step_estimates:
+            for estimation in current_step_estimates:
+                for estimation_id, estimation_state in estimation.items():
+                    estimation_ids.append(estimation_id)
+                    estimation_points.append(estimation_state[:2])
 
         target_points = np.array(target_points)
         estimation_points = np.array(estimation_points)

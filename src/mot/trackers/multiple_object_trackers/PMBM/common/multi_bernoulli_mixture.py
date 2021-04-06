@@ -88,7 +88,6 @@ class MultiBernouilliMixture:
         self,
         detection_probability: float,
         measurements: np.ndarray,
-        gating_matrix,
         meas_model,
         density,
     ) -> None:

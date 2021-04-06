@@ -122,33 +122,8 @@ class PMBM:
         lg.debug(f"\n   global hypotheses {self.MBM.global_hypotheses}")
         lg.debug(f"\n   MBM tracks {self.MBM.tracks} \n")
 
-        _, used_meas_undetected = self.PPP.gating(measurements, self.density,
-                                                  self.meas_model,
-                                                  self.gating_size)
-
-        _, used_meas_detected = self.MBM.gating(measurements, self.density,
-                                                self.meas_model,
-                                                self.gating_size)
-
-        used_measurements = used_meas_undetected | used_meas_detected
-        measurements_in_gate = np.array([
-            measurement for meas_idx, measurement in enumerate(measurements)
-            if used_measurements[meas_idx]
-        ])
-
-        gating_matrix_undetected, _ = self.PPP.gating(measurements_in_gate,
-                                                      self.density,
-                                                      self.meas_model,
-                                                      self.gating_size)
-
-        gating_matrix_detected, _ = self.MBM.gating(measurements_in_gate,
-                                                    self.density,
-                                                    self.meas_model,
-                                                    self.gating_size)
-
         new_tracks = self.PPP.get_targets_detected_for_first_time(
-            measurements_in_gate,
-            gating_matrix_undetected,
+            measurements,
             self.sensor_model.intensity_c,
             self.meas_model,
             self.detection_probability,
@@ -156,14 +131,14 @@ class PMBM:
 
         self.MBM.update(
             self.detection_probability,
-            measurements_in_gate,
-            gating_matrix_detected,
+            measurements,
             self.meas_model,
             self.density,
         )
 
         lg.debug(f"\n   new tracks {new_tracks} \n")
         lg.debug(f"\n   current PPP components \n {self.PPP.intensity}")
+
         # Update of PPP intensity for undetected objects that remain undetected
         self.PPP.undetected_update(self.detection_probability)
 
@@ -175,30 +150,26 @@ class PMBM:
                     hypo_list.append(Association(track_id, sth_id))
 
             self.MBM.global_hypotheses.append(
-                GlobalHypothesis(log_weight=0.0, associations=hypo_list)
-            )
+                GlobalHypothesis(log_weight=0.0, associations=hypo_list))
 
         else:
-            if measurements_in_gate:
-                new_global_hypotheses = []
-                for global_hypothesis in self.MBM.global_hypotheses:
-                    assigner = AssignmentSolver(
-                        global_hypothesis=global_hypothesis,
-                        old_tracks=self.MBM.tracks,
-                        new_tracks=new_tracks,
-                        measurements=measurements_in_gate,
-                        num_of_desired_hypotheses=self.max_number_of_hypotheses,
-                    )
-                    next_global_hypothesis = assigner.solve()
-                    new_global_hypotheses.extend(next_global_hypothesis)
+            new_global_hypotheses = []
+            for global_hypothesis in self.MBM.global_hypotheses:
+                assigner = AssignmentSolver(
+                    global_hypothesis=global_hypothesis,
+                    old_tracks=self.MBM.tracks,
+                    new_tracks=new_tracks,
+                    measurements=measurements,
+                    num_of_desired_hypotheses=self.max_number_of_hypotheses,
+                )
+                next_global_hypothesis = assigner.solve()
+                new_global_hypotheses.extend(next_global_hypothesis)
 
-                self.update_tree()
-                self.MBM.tracks.update(new_tracks)
-                self.MBM.global_hypotheses = new_global_hypotheses
-                self.MBM.normalize_global_hypotheses_weights()
-                self.MBM.prune_tree()
-            else:
-                return
+            self.update_tree()
+            self.MBM.tracks.update(new_tracks)
+            self.MBM.global_hypotheses = new_global_hypotheses
+            self.MBM.normalize_global_hypotheses_weights()
+            self.MBM.prune_tree()
 
     def update_tree(self):
         """1. Move children to upper lever."""
