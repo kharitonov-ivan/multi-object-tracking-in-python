@@ -8,9 +8,9 @@ import numpy as np
 from .....common import normalize_log_weights
 from .....measurement_models import MeasurementModel
 from .....motion_models import MotionModel
-from ..timer import timing_val
 from .global_hypothesis import GlobalHypothesis
 from .track import Track
+from .....utils.timer import Timer
 
 
 class MultiBernouilliMixture:
@@ -41,8 +41,9 @@ class MultiBernouilliMixture:
             return None
         else:
 
-            most_probable_global_hypo = max(self.global_hypotheses,
-                                            key=lambda x: x.log_weight)
+            most_probable_global_hypo = max(
+                self.global_hypotheses, key=lambda x: x.log_weight
+            )
 
         object_list = []  # list of {'object_id':'object_state'}
         logging.debug(f"\n estimations")
@@ -92,9 +93,9 @@ class MultiBernouilliMixture:
 
         for track_id, track in self.tracks.items():
             for sth_id, sth in track.single_target_hypotheses.items():
-                gating_matrix[track_id][sth_id][
-                    1] = density_handler.ellipsoidal_gating(
-                        sth.bernoulli.state, z, meas_model, gating_size)
+                gating_matrix[track_id][sth_id][1] = density_handler.ellipsoidal_gating(
+                    sth.bernoulli.state, z, meas_model, gating_size
+                )
                 used_measurement_detected_indices = np.logical_or(
                     used_measurement_detected_indices,
                     gating_matrix[track_id][sth_id],
@@ -102,7 +103,7 @@ class MultiBernouilliMixture:
 
         return (gating_matrix, used_measurement_detected_indices)
 
-    @timing_val
+    @Timer(name="updating current MBM forest")
     def update(
         self,
         detection_probability: float,
@@ -160,10 +161,12 @@ class MultiBernouilliMixture:
 
     def cap_global_hypothesis(self, max_number_of_global_hypothesis: int = 50):
         if len(self.global_hypotheses) > max_number_of_global_hypothesis:
-            sorted_global_hypotheses = sorted(self.global_hypotheses,
-                                           key=lambda x: x.log_weight)
-            self.global_hypotheses = sorted_global_hypotheses[:
-                                                           max_number_of_global_hypothesis]
+            sorted_global_hypotheses = sorted(
+                self.global_hypotheses, key=lambda x: x.log_weight
+            )
+            self.global_hypotheses = sorted_global_hypotheses[
+                :max_number_of_global_hypothesis
+            ]
             self.normalize_global_hypotheses_weights()
 
     def prune_tree(self):

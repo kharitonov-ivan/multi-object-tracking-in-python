@@ -17,6 +17,7 @@ from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
 )
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from mot.utils import Plotter, get_images_dir
+from mot.utils.timer import Timer
 from mot.utils.visualizer.common.plot_series import OBJECT_COLORS as object_colors
 from tqdm import trange
 
@@ -118,8 +119,10 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     simulation_time = simulation_steps
     acc = mm.MOTAccumulator()
 
-    for timestep in trange(simulation_time):
-        current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
+    for timestep in range(simulation_time):
+        print(F"=============={timestep}===============")
+        with Timer(name="Full cycle of step"):
+            current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
         targets_vector = np.array(
             [target.x[:2] for target in object_data[timestep].values()]
         )
@@ -158,6 +161,9 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
 
         acc.update(target_ids, estimation_ids, dists=distance_matrix, frameid=timestep)
 
+    import pdb
+
+    pdb.set_trace()
     fig, (ax1, ax2, ax0, ax3, ax4) = plt.subplots(
         5, 1, figsize=(6, 6 * 5), sharey=False, sharex=False
     )

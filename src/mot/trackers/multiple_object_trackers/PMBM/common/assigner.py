@@ -6,7 +6,6 @@ import numpy as np
 from murty import Murty
 
 from .global_hypothesis import Association, GlobalHypothesis
-from ..timer import timing_val
 
 
 class AssignmentSolver:

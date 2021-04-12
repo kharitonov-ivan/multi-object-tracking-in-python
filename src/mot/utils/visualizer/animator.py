@@ -9,7 +9,6 @@ from matplotlib.animation import FuncAnimation
 from mot.utils.visualizer.common.common import create_figure
 from mot.utils.visualizer.common.plot_primitives import BasicPlotter
 
-from mot.utils.timer import timer
 import logging
 
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
@@ -17,7 +16,6 @@ logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 class Animator:
     @staticmethod
-    @timer
     def animate(
         timeseries_list, ax=None, title=None, filename=None, show=False, **kwargs
     ):

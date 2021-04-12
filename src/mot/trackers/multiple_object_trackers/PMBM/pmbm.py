@@ -19,9 +19,9 @@ from .common import (
     MultiBernouilliMixture,
     PoissonRFS,
 )
-from .profiler import Profiler
+from ....utils.profiler import Profiler
 
-from .timer import Timer, timing_val
+from ....utils.timer import Timer
 
 
 class PMBM:
@@ -100,7 +100,7 @@ class PMBM:
     def increment_timestep(self):
         self.timestep += 1
 
-    @timing_val
+    @Timer(name="PMBM preiction step")
     def predict(
         self,
         birth_model: BirthModel,
@@ -117,7 +117,7 @@ class PMBM:
         self.PPP.predict(motion_model, survival_probability, density, dt)
         self.PPP.birth(self.birth_model.get_born_objects_intensity())
 
-    @timing_val
+    @Timer(name="PMBM update step")
     def update(self, measurements: np.ndarray) -> None:
         if len(measurements) == 0:
             lg.debug(f"\n no measurements!")
@@ -141,6 +141,9 @@ class PMBM:
             self.density,
         )
 
+        # Update of PPP intensity for undetected objects that remain undetected
+        self.PPP.undetected_update(self.detection_probability)
+
         lg.debug(f"\n   new tracks {new_tracks} \n")
         lg.debug(f"\n   current PPP components \n {self.PPP.intensity}")
 
@@ -158,7 +161,7 @@ class PMBM:
         else:
             new_global_hypotheses = []
             with Profiler(enabled=True, contextstr="test") as p2:
-                with Timer():
+                with Timer(name="Generating new Hyhpothesis"):
 
                     for global_hypothesis in self.MBM.global_hypotheses:
                         assigner = AssignmentSolver(
@@ -169,33 +172,29 @@ class PMBM:
                             num_of_desired_hypotheses=self.max_number_of_hypotheses,
                         )
                         next_global_hypothesis = assigner.solve()
-
                         new_global_hypotheses.extend(next_global_hypothesis)
 
             lg.debug(p2.get_profile_data())
-
-            self.update_tree()
-            self.MBM.tracks.update(new_tracks)
-            self.MBM.global_hypotheses = new_global_hypotheses
-            self.MBM.normalize_global_hypotheses_weights()
-            self.MBM.prune_tree()
-
-        # Update of PPP intensity for undetected objects that remain undetected
-        self.PPP.undetected_update(self.detection_probability)
+            with Timer(name="Prepation for the next step"):
+                self.update_tree()
+                self.MBM.tracks.update(new_tracks)
+                self.MBM.global_hypotheses = new_global_hypotheses
+                self.MBM.normalize_global_hypotheses_weights()
+                self.MBM.prune_tree()
 
     def update_tree(self):
         """1. Move children to upper lever."""
         for track in self.MBM.tracks.values():
             track.cut_tree()
 
-    @timing_val
+    @Timer(name="PMBM estimation step")
     def estimator(self):
         estimates = self.MBM.estimator(
             existense_probability_threshold=self.existense_probability_threshold
         )
         return estimates
 
-    @timing_val
+    @Timer(name="PMBM reduction step")
     def reduction(self) -> None:
         self.PPP.prune(threshold=-15)
         self.MBM.prune_global_hypotheses(log_threshold=np.log(0.01))
