@@ -36,13 +36,13 @@ class MultiBernouilliMixture:
 
     def estimator(self, existense_probability_threshold):
         """Simply return objects set based on most probable global hypo."""
-        if self.global_hypotheses:
-            most_probable_global_hypo = max(
-                self.global_hypotheses, key=lambda x: x.log_weight
-            )
-        else:
+        if not self.global_hypotheses:
             logging.info("Pool of global hypotheses is empty!")
             return None
+        else:
+
+            most_probable_global_hypo = max(self.global_hypotheses,
+                                            key=lambda x: x.log_weight)
 
         object_list = []  # list of {'object_id':'object_state'}
         logging.debug(f"\n estimations")
