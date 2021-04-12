@@ -200,6 +200,5 @@ class PMBM:
         self.PPP.prune(threshold=-15)
         self.MBM.prune_global_hypotheses(log_threshold=np.log(0.01))
         self.MBM.cap_global_hypothesis(self.max_number_of_hypotheses)
-
-        # self.MBM.remove_unused_tracks()
+        self.MBM.remove_unused_tracks()
         self.MBM.remove_unused_bernoullies()
