@@ -175,12 +175,10 @@ class PoissonRFS:
         used_measurement_undetected_indices = np.full(shape=[len(z)], fill_value=False)
 
         for ppp_idx in range(self.intensity.size):
-            (
-                _,
-                gating_matrix_undetected[ppp_idx],
-            ) = density_handler.ellipsoidal_gating(
-                self.intensity[ppp_idx].gaussian, z, meas_model, gating_size
-            )
+            gating_matrix_undetected[ppp_idx][
+                1] = density_handler.ellipsoidal_gating(
+                    self.intensity[ppp_idx].gaussian, z, meas_model,
+                    gating_size)
             used_measurement_undetected_indices = np.logical_or(
                 used_measurement_undetected_indices, gating_matrix_undetected[ppp_idx]
             )
