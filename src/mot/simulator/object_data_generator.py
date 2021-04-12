@@ -1,5 +1,5 @@
-from mot.configs import GroundTruthConfig
-from mot.motion_models import MotionModel
+from ..configs import GroundTruthConfig
+from ..motion_models import MotionModel
 
 
 class ObjectData:

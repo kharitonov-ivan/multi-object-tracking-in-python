@@ -1,5 +1,6 @@
 from copy import deepcopy
-from mot.common import GaussianMixture
+
+from .....common import GaussianMixture
 
 
 class BirthModel:

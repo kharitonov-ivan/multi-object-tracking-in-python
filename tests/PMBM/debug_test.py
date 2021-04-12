@@ -1,33 +1,26 @@
+import logging
+import pprint
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
+import mot
+import mot.scenarios.object_motion_scenarious as object_motion_scenarious
+import motmetrics as mm
 import numpy as np
 import pytest
-from mot import (
-    GaussianMixture,
-    Object,
-    Gaussian,
-    SensorModelConfig,
-    ConstantVelocityMotionModel,
-    ConstantVelocityMeasurementModel,
-    GroundTruthConfig,
-    ObjectData,
-    MeasurementData,
-    WeightedGaussian,
-    GaussianDensity,
-)
-from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
-    StaticBirthModel, )
+from mot.common import (Gaussian, GaussianDensity, GaussianMixture,
+                        WeightedGaussian)
+from mot.measurement_models import ConstantVelocityMeasurementModel
+from mot.metrics import GOSPA
+from mot.motion_models import ConstantVelocityMotionModel
+from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import \
+    StaticBirthModel
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from mot.utils import Plotter, get_images_dir
-from pytest import fixture
+from mot.utils.visualizer.common.plot_series import \
+    OBJECT_COLORS as object_colors
 from tqdm import trange
 
-from .params import object_motion_scenarious
-from mot.metrics import GOSPA
-import motmetrics as mm
-import logging
-import pprint
 
 @pytest.fixture
 def object_motion_fixture():

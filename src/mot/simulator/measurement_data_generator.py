@@ -1,7 +1,8 @@
 import numpy as np
-from mot.configs import SensorModelConfig
-from mot.measurement_models import MeasurementModel
-from mot.simulator.object_data_generator import ObjectData
+
+from ..configs import SensorModelConfig
+from ..measurement_models import MeasurementModel
+from .object_data_generator import ObjectData
 
 
 class MeasurementData:

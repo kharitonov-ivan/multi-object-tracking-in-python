@@ -1,12 +1,13 @@
 import unittest
+
+import matplotlib.pyplot as plt
+import mot.utils as utils
 import numpy as np
-from mot.configs import GroundTruthConfig, Object, SensorModelConfig
 from mot.common.state import Gaussian
+from mot.configs import GroundTruthConfig, Object, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
 from mot.simulator import MeasurementData, ObjectData
-import mot.utils as utils
-import os
 
 
 class Test_MeasurementData(unittest.TestCase):

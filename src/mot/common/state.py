@@ -1,7 +1,8 @@
 import collections
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import List
-from copy import deepcopy
+
 import numpy as np
 
 

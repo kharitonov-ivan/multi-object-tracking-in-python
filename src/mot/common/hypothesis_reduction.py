@@ -1,6 +1,8 @@
-import numpy as np
 from typing import List
-from mot.common.gaussian_density import GaussianDensity
+
+import numpy as np
+
+from .gaussian_density import GaussianDensity
 
 
 class Hypothesisreduction:

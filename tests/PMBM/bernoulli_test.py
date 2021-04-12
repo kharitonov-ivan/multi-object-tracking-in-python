@@ -1,12 +1,13 @@
-import numpy as np
 from copy import deepcopy
-from mot.common.state import Gaussian
-from mot.measurement_models import (
-    ConstantVelocityMeasurementModel,
-)
-from mot.motion_models import ConstantVelocityMotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli
+
+import numpy as np
 import pytest
+from mot.common import Gaussian, GaussianDensity
+from mot.common.state import Gaussian
+from mot.measurement_models import ConstantVelocityMeasurementModel
+from mot.motion_models import ConstantVelocityMotionModel
+from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import \
+    Bernoulli
 
 
 @pytest.fixture

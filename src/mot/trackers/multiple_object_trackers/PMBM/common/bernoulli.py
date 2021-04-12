@@ -1,8 +1,8 @@
 import numpy as np
-from mot.common.gaussian_density import GaussianDensity
-from mot.common.state import Gaussian
-from mot.measurement_models import MeasurementModel
-from mot.motion_models import MotionModel
+
+from .....common import Gaussian, GaussianDensity
+from .....measurement_models import MeasurementModel
+from .....motion_models import MotionModel
 
 
 class Bernoulli:

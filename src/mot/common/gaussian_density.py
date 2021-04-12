@@ -1,16 +1,15 @@
+import copy
+import logging
 from typing import List
 
 import numpy as np
-from scipy.stats import multivariate_normal
-from mot.measurement_models import MeasurementModel
-from mot.motion_models import MotionModel
-from mot.common.normalize_log_weights import normalize_log_weights
-from mot.common.state import Gaussian
 import numpy.typing as npt
-import logging
-import copy
+from scipy.stats import multivariate_normal
 
-logger = logging.getLogger()
+from ..measurement_models import MeasurementModel
+from ..motion_models import MotionModel
+from .normalize_log_weights import normalize_log_weights
+from .state import Gaussian
 
 
 class GaussianDensity:

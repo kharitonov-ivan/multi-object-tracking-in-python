@@ -1,5 +1,6 @@
-from .single_target_hypothesis import SingleTargetHypothesis
 import pprint
+
+from .single_target_hypothesis import SingleTargetHypothesis
 
 
 class Track:

@@ -1,6 +1,7 @@
 import numpy as np
-from mot.common.gaussian_density import GaussianDensity
-from mot.measurement_models.base_measurement_model import MeasurementModel
+
+from .....common import GaussianDensity
+from .....measurement_models import MeasurementModel
 from .bernoulli import Bernoulli
 
 

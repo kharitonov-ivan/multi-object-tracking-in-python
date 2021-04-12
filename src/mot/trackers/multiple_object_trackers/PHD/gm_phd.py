@@ -1,21 +1,18 @@
-from mot.common.hypothesis_reduction import Hypothesisreduction
-import numpy as np
-from mot.configs import SensorModelConfig
-from mot.measurement_models import (
-    MeasurementModel,
-)
-from mot.motion_models import (
-    MotionModel,
-)
-from tqdm import tqdm as tqdm
-
-from mot.common.state import GaussianMixture, WeightedGaussian
-from mot.common.gaussian_density import GaussianDensity as GD
-from scipy.stats import chi2
-
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+import numpy as np
+from scipy.stats import chi2
+from tqdm import tqdm as tqdm
+
+from ....common import (
+    GaussianDensity,
+    GaussianMixture,
+    HypothesisReduction,
+    WeightedGaussian,
+)
+from ....configs import SensorModelConfig
+from ....measurement_models import MeasurementModel
+from ....motion_models import MotionModel
 
 
 class GMPHD:

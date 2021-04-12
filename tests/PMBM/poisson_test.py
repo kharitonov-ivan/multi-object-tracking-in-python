@@ -1,16 +1,14 @@
 import copy
 
+import mot
 import numpy as np
 import pytest
-from mot.common import (GaussianDensity, GaussianMixture, WeightedGaussian)
-from mot.measurement_models import (
-    ConstantVelocityMeasurementModel, )
+from mot.common import (Gaussian, GaussianDensity, GaussianMixture,
+                        WeightedGaussian)
+from mot.measurement_models import ConstantVelocityMeasurementModel
+from mot.motion_models import ConstantVelocityMotionModel
 from mot.trackers.multiple_object_trackers.PMBM.common import (
-    PoissonRFS,
-    StaticBirthModel,
-    birth_model,
-)
-from mot import SensorModelConfig, ConstantVelocityMeasurementModel, ConstantVelocityMotionModel, Gaussian, WeightedGaussian
+    PoissonRFS, StaticBirthModel, birth_model)
 from scipy.special import logsumexp
 
 

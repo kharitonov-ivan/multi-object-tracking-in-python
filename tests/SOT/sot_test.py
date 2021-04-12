@@ -2,24 +2,21 @@ from dataclasses import asdict
 
 import numpy as np
 import pytest
-from mot.common.state import State
+from mot.common import Gaussian
 from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import (
-    ConstantVelocityMeasurementModel,
-    RangeBearingMeasurementModel,
-)
-from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
-from mot.scenarios.scenario_configs import (
-    linear_sot,
-    nonlinear_sot,
-)
+from mot.measurement_models import (ConstantVelocityMeasurementModel,
+                                    RangeBearingMeasurementModel)
+from mot.motion_models import (ConstantVelocityMotionModel,
+                               CoordinateTurnMotionModel)
+from mot.scenarios.scenario_configs import linear_sot, nonlinear_sot
 from mot.simulator import MeasurementData
 from mot.simulator.measurement_data_generator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
-from mot.single_object_trackers import NearestNeighbourTracker
+from mot.trackers.single_object_trackers import (GaussSumTracker,
+                                                 NearestNeighbourTracker)
 from mot.utils import Plotter
-from mot.utils.visualizer import Plotter
 from mot.utils.get_path import get_images_dir
+from mot.utils.visualizer import Plotter
 
 
 @pytest.mark.parametrize(
