@@ -166,13 +166,6 @@ class MultiBernouilliMixture:
                                                            max_number_of_global_hypothesis]
             self.normalize_global_hypotheses_weights()
 
-    def not_exist_of_bern_global_hypos(self, track_id, sth_id):
-        result = True
-        for global_hypothesis in self.global_hypotheses:
-            if (track_id, sth_id) in global_hypothesis.hypothesis:
-                result = False
-        return result
-
     def prune_tree(self):
         used_associations = defaultdict(set)
         for global_hypothesis in self.global_hypotheses:
