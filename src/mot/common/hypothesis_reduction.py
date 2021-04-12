@@ -5,7 +5,7 @@ import numpy as np
 from .gaussian_density import GaussianDensity
 
 
-class Hypothesisreduction:
+class HypothesisReduction:
     @staticmethod
     def prune(
         hypotheses_weights: List[float], multi_hypotheses: List, threshold: float
