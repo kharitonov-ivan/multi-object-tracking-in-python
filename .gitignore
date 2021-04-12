@@ -138,3 +138,6 @@ dmypy.json
 
 tests/SOT/.DS_Store
 .DS_Store
+
+#dataset
+data/*
