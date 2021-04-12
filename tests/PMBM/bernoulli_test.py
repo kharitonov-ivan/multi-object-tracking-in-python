@@ -14,7 +14,7 @@ from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import \
 def initial_bernoulli():
     return Bernoulli(
         existence_probability=0.6,
-        initial_state=Gaussian(x=np.array([0.0, 0.0, 10.0, 10.0]), P=np.eye(4)),
+        state=Gaussian(x=np.array([0.0, 0.0, 10.0, 10.0]), P=np.eye(4)),
     )
 
 
@@ -56,7 +56,7 @@ def neighbour_measurement():
 
 def test_bern_predict(initial_bernoulli, cv_motion_model, P_S):
     # Create nonlinear motion model (coordinate turn)
-    initial_bernoulli.predict(cv_motion_model, P_S)
+    initial_bernoulli.predict(cv_motion_model, P_S, GaussianDensity)
     # reference
     r_ref = 0.48
     state_ref = Gaussian(
@@ -82,7 +82,7 @@ def test_bern_undetected_update(initial_bernoulli, P_D):
     ref_bern_r = 0.31
     ref_lik_undetected = -0.54
 
-    new_bern, log_likelihood_undetected = bern.undetected_update(P_D)
+    new_bern, log_likelihood_undetected = bern.undetected_update_state(P_D)
 
     np.testing.assert_allclose(new_bern.existence_probability, ref_bern_r, rtol=0.05)
     np.testing.assert_allclose(log_likelihood_undetected, ref_lik_undetected, rtol=0.05)

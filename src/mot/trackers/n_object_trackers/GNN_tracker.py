@@ -70,7 +70,7 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
                 current_measurements=np.array(measurements_in_scene),
             )
             previous_states = [
-                GaussianDensity.predict(state, self.motion_model)
+                GaussianDensity.predict(state, self.motion_model, dt=1.0)
                 for state in estimations[timestep]
             ]
         return tuple(estimations)
@@ -109,7 +109,7 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
                     @ object_states[idx_object].P
                     @ self.meas_model.H(object_states[idx_object]).T
                 )
-                z_bar_i_h = self.meas_model.h(object_states[idx_object])
+                z_bar_i_h = self.meas_model.h(object_states[idx_object].x)
                 vec_diff = current_measurements[idx_meas] - z_bar_i_h
                 mahl = 0.5 * vec_diff @ np.linalg.inv(S_i_h) @ vec_diff.T
                 factor = 0.5 * np.log(np.linalg.det(2 * np.pi * S_i_h))

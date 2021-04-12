@@ -51,7 +51,7 @@ class NearestNeighbourTracker(SingleObjectTracker):
                 current_measurements=np.array(measurements_in_scene),
             )
             prev_state = GaussianDensity.predict(
-                state=estimations[timestep], motion_model=self.motion_model
+                state=estimations[timestep], motion_model=self.motion_model, dt=1.0
             )
         return tuple(estimations)
 
@@ -72,7 +72,7 @@ class NearestNeighbourTracker(SingleObjectTracker):
         else:
             # 2. Calculate the predicted likelihood for each measurement in the gate
 
-            predicted_likelihood = GaussianDensity.predicted_likelihood(
+            predicted_likelihood = GaussianDensity.predict_loglikelihood(
                 state_pred=predicted_state,
                 z=meas_in_gate,
                 measurement_model=self.meas_model,

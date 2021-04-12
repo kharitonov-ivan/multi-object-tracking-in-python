@@ -27,14 +27,14 @@ from mot.utils.visualizer import Plotter
             ConstantVelocityMotionModel,
             ConstantVelocityMeasurementModel,
             "SOT linear case (CV)",
-            State(x=np.array([-40, -40, 15.0, 5.0]), P=100.0 * np.eye(4)),
+            Gaussian(x=np.array([-40, -40, 15.0, 5.0]), P=100.0 * np.eye(4)),
         ),
         (
             nonlinear_sot,
             CoordinateTurnMotionModel,
             RangeBearingMeasurementModel,
             "SOT non linear case (CT)",
-            State(
+            Gaussian(
                 x=np.array([0, 0, 10, 0, np.pi / 180]),
                 P=np.power(np.diag([1, 1, 1, 1 * np.pi / 180, 1 * np.pi / 180]), 2),
             ),
