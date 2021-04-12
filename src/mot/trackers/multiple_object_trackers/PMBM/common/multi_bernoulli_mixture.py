@@ -160,12 +160,10 @@ class MultiBernouilliMixture:
 
     def cap_global_hypothesis(self, max_number_of_global_hypothesis: int = 50):
         if len(self.global_hypotheses) > max_number_of_global_hypothesis:
-            top_global_hypotheses = sorted(
-                self.global_hypotheses, key=lambda x: x.log_weight
-            )
-            self.global_hypotheses = top_global_hypotheses[
-                :max_number_of_global_hypothesis
-            ]
+            sorted_global_hypotheses = sorted(self.global_hypotheses,
+                                           key=lambda x: x.log_weight)
+            self.global_hypotheses = sorted_global_hypotheses[:
+                                                           max_number_of_global_hypothesis]
             self.normalize_global_hypotheses_weights()
 
     def not_exist_of_bern_global_hypos(self, track_id, sth_id):
