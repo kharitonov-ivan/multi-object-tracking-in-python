@@ -22,6 +22,8 @@ murty = {git = "https://github.com/neer201/murty.git"}
 seaborn = "^0.11.1"
 jupyter-contrib-nbextensions = "^0.5.1"
 motmetrics = "^1.2.0"
+nuscenes-devkit = "^1.1.3"
+joblib = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
@@ -55,7 +57,7 @@ show_missing = true
 
 [tool.pytest.ini_options]
 log_cli = true
-log_cli_level = "DEBUG"
+log_cli_level = "INFO"
 log_cli_format = "%(message)s "
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 # docstring check
