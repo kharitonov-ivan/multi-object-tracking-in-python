@@ -12,7 +12,7 @@ from mot.simulator.object_data_generator import ObjectData
 from mot.utils import Plotter
 from mot.utils.get_path import get_images_dir
 from mot.utils.visualizer import Plotter
-from mot.trackers.multiple_object_trackers.gm_phd import GMPHD
+from mot.trackers.multiple_object_trackers import PHD
 from mot.common.state import Gaussian, WeightedGaussian, GaussianMixture
 
 test_env_cases = [
@@ -79,7 +79,9 @@ def test_components_list_operations(
 
     birth_model = GaussianMixture(
         [
-            WeightedGaussian(weight=np.log(0.03), gm=Gaussian(x=pos, P=400 * np.eye(4)))
+            WeightedGaussian(
+                log_weight=np.log(0.03), gaussian=Gaussian(x=pos, P=400 * np.eye(4))
+            )
             for pos in [
                 np.array([0, 0, 0, 0]),
                 np.array([400, -600, 0, 0]),
@@ -113,7 +115,7 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs
             ]
         ]
     )
-    tracker = GMPHD(
+    tracker = PHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
         motion_model=env.motion_model,
@@ -141,7 +143,9 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs
 
     birth_model = GaussianMixture(
         [
-            WeightedGaussian(weight=np.log(0.03), gm=Gaussian(x=pos, P=400 * np.eye(4)))
+            WeightedGaussian(
+                log_weight=np.log(0.03), gaussian=Gaussian(x=pos, P=400 * np.eye(4))
+            )
             for pos in [
                 np.array([0, 0, 0, 0]),
                 np.array([400, -600, 0, 0]),
@@ -150,7 +154,7 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs
             ]
         ]
     )
-    tracker = GMPHD(
+    tracker = PHD.GMPHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
         motion_model=env.motion_model,
@@ -185,7 +189,9 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwarg
 
     birth_model = GaussianMixture(
         [
-            WeightedGaussian(weight=np.log(0.03), gm=Gaussian(x=pos, P=400 * np.eye(4)))
+            WeightedGaussian(
+                log_weight=np.log(0.03), gaussian=Gaussian(x=pos, P=400 * np.eye(4))
+            )
             for pos in [
                 np.array([0, 0, 0, 0]),
                 np.array([400, -600, 0, 0]),
@@ -194,7 +200,7 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwarg
             ]
         ]
     )
-    tracker = GMPHD(
+    tracker = PHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
         motion_model=env.motion_model,
@@ -225,7 +231,9 @@ def test_tracker_normal(config, motion_model, meas_model, name, *args, **kwargs)
 
     birth_model = GaussianMixture(
         [
-            WeightedGaussian(weight=np.log(0.03), gm=Gaussian(x=pos, P=400 * np.eye(4)))
+            WeightedGaussian(
+                log_weight=np.log(0.03), gaussian=Gaussian(x=pos, P=400 * np.eye(4))
+            )
             for pos in [
                 np.array([0, 0, 0, 0]),
                 np.array([400, -600, 0, 0]),
@@ -243,7 +251,7 @@ def test_tracker_normal(config, motion_model, meas_model, name, *args, **kwargs)
     M = 100  # maximum number of hypotheses kept in MHT
     P_D = 0.99
 
-    tracker = GMPHD(
+    tracker = PHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
         motion_model=env.motion_model,

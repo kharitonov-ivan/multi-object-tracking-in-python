@@ -23,24 +23,24 @@ from tqdm import trange
 
 @pytest.fixture
 def object_motion_fixture():
-    return object_motion_scenarious.two_static_objects
+    return object_motion_scenarious.many_objects_linear_motion_delayed
 
 
 def test_pmbm_update_and_predict_linear(object_motion_fixture):
     # Choose object detection probability
-    detection_probability = 0.8
+    detection_probability = 0.99
 
     # Choose clutter rate (aka lambda_c)
-    clutter_rate = 0.0001
+    clutter_rate = 10.0
 
     # Choose object survival probability
     survival_probability = 0.9
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
-    sensor_model = SensorModelConfig(P_D=detection_probability,
-                                     lambda_c=clutter_rate,
-                                     range_c=range_c)
+    sensor_model = mot.configs.SensorModelConfig(
+        P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c
+    )
 
     # Create nlinear motion model
     dt = 1.0
@@ -53,24 +53,24 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
 
     # Create ground truth model
     n_births = 10
-    simulation_steps = 40
+    simulation_steps = 100
 
     # Generate true object data (noisy or noiseless) and measurement data
-    ground_truth = GroundTruthConfig(n_births,
-                                     object_motion_fixture,
-                                     total_time=simulation_steps)
-    object_data = ObjectData(ground_truth_config=ground_truth,
-                             motion_model=motion_model,
-                             if_noisy=False)
-    meas_data = MeasurementData(object_data=object_data,
-                                sensor_model=sensor_model,
-                                meas_model=meas_model)
+    ground_truth = mot.configs.GroundTruthConfig(
+        n_births, object_motion_fixture, total_time=simulation_steps
+    )
+    object_data = mot.simulator.ObjectData(
+        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
+    )
+    meas_data = mot.simulator.MeasurementData(
+        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
+    )
 
-    logging.debug(f'object motion config {pprint.pformat(object_motion_fixture)}')
+    logging.debug(f"object motion config {pprint.pformat(object_motion_fixture)}")
     # Object tracker parameter setting
     gating_percentage = 1.0  # gating size in percentage
     max_hypothesis_kept = 100  # maximum number of hypotheses kept
-    existense_probability_threshold = 0.4
+    existense_probability_threshold = 0.8
 
     # z = np.zeros([simulation_steps, 1, 2])
     # # linear motion
@@ -80,24 +80,26 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     # z[:, 1, 0] = -100 * np.ones(K)
     # z[:, 1, 1] = -100 * np.ones(K)
 
-    birth_model = GaussianMixture([
-        WeightedGaussian(
-            np.log(0.03),
-            Gaussian(x=np.array([0.0, 0.0, 0.0, 0.0]), P=400 * np.eye(4)),
-        ),
-        WeightedGaussian(
-            np.log(0.03),
-            Gaussian(x=np.array([400.0, -600.0, 0.0, 0.0]), P=400 * np.eye(4)),
-        ),
-        WeightedGaussian(
-            np.log(0.03),
-            Gaussian(x=np.array([-800.0, 200.0, 0.0, 0.0]), P=400 * np.eye(4)),
-        ),
-        WeightedGaussian(
-            np.log(0.03),
-            Gaussian(x=np.array([-200.0, 900.0, 0.0, 0.0]), P=400 * np.eye(4)),
-        ),
-    ])
+    birth_model = GaussianMixture(
+        [
+            WeightedGaussian(
+                np.log(0.03),
+                Gaussian(x=np.array([0.0, 0.0, 0.0, 0.0]), P=100 * np.eye(4)),
+            ),
+            WeightedGaussian(
+                np.log(0.03),
+                Gaussian(x=np.array([400.0, -600.0, 0.0, 0.0]), P=100 * np.eye(4)),
+            ),
+            WeightedGaussian(
+                np.log(0.03),
+                Gaussian(x=np.array([-800.0, 200.0, 0.0, 0.0]), P=100 * np.eye(4)),
+            ),
+            WeightedGaussian(
+                np.log(0.03),
+                Gaussian(x=np.array([-200.0, 800.0, 0.0, 0.0]), P=100 * np.eye(4)),
+            ),
+        ]
+    )
 
     pmbm = PMBM(
         meas_model=meas_model,
@@ -108,7 +110,7 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
         gating_percentage=gating_percentage,
         detection_probability=detection_probability,
         survival_probability=survival_probability,
-        existense_probability_threshold = existense_probability_threshold,
+        existense_probability_threshold=existense_probability_threshold,
         density=GaussianDensity,
     )
     estimates = []
@@ -119,12 +121,15 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     for timestep in trange(simulation_time):
         current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
         targets_vector = np.array(
-            [target.x[:2] for target in object_data[timestep].values()])
+            [target.x[:2] for target in object_data[timestep].values()]
+        )
         if current_step_estimates:
-            estimates_vector = np.array([
-                list(estimation.values())[0][:2]
-                for estimation in current_step_estimates
-            ])
+            estimates_vector = np.array(
+                [
+                    list(estimation.values())[0][:2]
+                    for estimation in current_step_estimates
+                ]
+            )
         else:
             estimates_vector = np.array([])
         gospa = GOSPA(targets_vector, estimates_vector)
@@ -148,18 +153,14 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
         target_points = np.array(target_points)
         estimation_points = np.array(estimation_points)
         distance_matrix = mm.distances.norm2squared_matrix(
-            target_points, estimation_points)
+            target_points, estimation_points
+        )
 
-        acc.update(target_ids,
-                   estimation_ids,
-                   dists=distance_matrix,
-                   frameid=timestep)
+        acc.update(target_ids, estimation_ids, dists=distance_matrix, frameid=timestep)
 
-    fig, (ax1, ax2, ax0) = plt.subplots(1,
-                                        3,
-                                        figsize=(6 * 3, 6),
-                                        sharey=True,
-                                        sharex=True)
+    fig, (ax1, ax2, ax0, ax3, ax4) = plt.subplots(
+        5, 1, figsize=(6, 6 * 5), sharey=False, sharex=False
+    )
 
     ax0.grid(which="both", linestyle="-", alpha=0.5)
     ax0.set_title(label="ground truth")
@@ -168,8 +169,7 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     ax0 = Plotter.plot_several(
         [object_data],
         ax=ax0,
-        out_path=get_images_dir(__file__) + "/" + "object_and_meas_data" +
-        ".png",
+        out_path=get_images_dir(__file__) + "/" + "object_and_meas_data" + ".png",
         is_autoscale=False,
     )
 
@@ -180,40 +180,64 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     ax1 = Plotter.plot_several(
         [meas_data],
         ax=ax1,
-        out_path=get_images_dir(__file__) + "/" + "object_and_meas_data" +
-        ".png",
+        out_path=get_images_dir(__file__) + "/" + "object_and_meas_data" + ".png",
         is_autoscale=False,
     )
 
     ax2.grid(which="both", linestyle="-", alpha=0.5)
     ax2.set_title(label="estimations")
+    ax2.set_xlim([-1100, 1100])
+    ax2.set_ylim([-1100, 1100])
     ax2.set_xlabel("x position")
     ax2.set_ylabel("y position")
 
+    ax3.grid(which="both", linestyle="-", alpha=0.5)
+    ax3.set_title(label="x position over time")
+    ax3.set_xlabel("time")
+    ax3.set_ylabel("x position")
+    ax3.set_xlim([0, simulation_steps])
+    ax3.set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
+
+    ax4.grid(which="both", linestyle="-", alpha=0.5)
+    ax4.set_title(label="y position over time")
+    ax4.set_xlabel("time")
+    ax4.set_ylabel("y position")
+    ax4.set_xlim([0, simulation_steps])
+    ax4.set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
+
     lines = defaultdict(lambda: [])  # target_id: line
-    for current_timestep_estimations in estimates:
+    timelines = defaultdict(lambda: [])
+    for timestep, current_timestep_estimations in enumerate(estimates):
         if current_timestep_estimations:
             for estimation in current_timestep_estimations:
                 for target_id, state_vector in estimation.items():
                     pos_x, pos_y = state_vector[:2]
                     lines[target_id].append((pos_x, pos_y))
+                    ax3.scatter(timestep, pos_x, color=object_colors[target_id % 252])
+                    ax4.scatter(timestep, pos_y, color=object_colors[target_id % 252])
+                    timelines[target_id].append((timestep, pos_x, pos_y))
 
-    from mot.utils.visualizer.common.plot_series import OBJECT_COLORS as object_colors
+    for target_id, estimation_list in timelines.items():
+        timesteps = [time for (time, _, _) in estimation_list]
+        poses_x = [pos_x for (_, pos_x, _) in estimation_list]
+        poses_y = [pos_y for (_, _, pos_y) in estimation_list]
+        ax3.plot(timesteps, poses_x, color=object_colors[target_id % 252])
+        ax4.plot(timesteps, poses_y, color=object_colors[target_id % 252])
+
     for target_id, estimation_list in lines.items():
         for (pos_x, pos_y) in estimation_list:
             ax2.scatter(pos_x, pos_y, color=object_colors[target_id % 252])
 
-    #TODO check ot
+    # TODO check ot
     rms_gospa_scene = np.sqrt(np.mean(np.power(np.array(gospas), 2)))
 
     mh = mm.metrics.create()
-    summary = mh.compute(acc,
-                         metrics=['num_frames', 'mota', 'motp', 'idp'],
-                         name='acc')
+    summary = mh.compute(acc, metrics=["num_frames", "mota", "motp", "idp"], name="acc")
     fig.suptitle(
         f"RMS GOSPA ={rms_gospa_scene:.1f} "
         f"MOTA ={summary['mota'].item():.1f} "
         f"MOTP ={summary['motp'].item():.1f} "
         f"IDP ={summary['idp'].item():.1f} ",
-        fontweight="bold")
+        fontweight="bold",
+    )
     plt.savefig(get_images_dir(__file__) + "/" + "estimation" + ".png")
