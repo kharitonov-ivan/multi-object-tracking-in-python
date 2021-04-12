@@ -1,5 +1,6 @@
 import numpy as np
-from mot import Object, Gaussian
+from mot.common import Gaussian
+from mot.configs import Object
 
 # TODO single static object (no motion
 single_static_object = [
@@ -13,12 +14,12 @@ single_static_object = [
 # TODO two static objects (no motion)
 two_static_objects = [
     Object(
-        initial=Gaussian(x=np.array([-250.0, 250.0, 0.0, 0.0]), P=np.eye(4)),
+        initial=Gaussian(x=np.array([-100.0, 100.0, 0.0, 0.0]), P=np.eye(4)),
         t_birth=0,
         t_death=69,
     ),
     Object(
-        initial=Gaussian(x=np.array([250.0, 250.0, 0.0, 0.0]), P=np.eye(4)),
+        initial=Gaussian(x=np.array([100.0, 100.0, 0.0, 0.0]), P=np.eye(4)),
         t_birth=0,
         t_death=69,
     ),
