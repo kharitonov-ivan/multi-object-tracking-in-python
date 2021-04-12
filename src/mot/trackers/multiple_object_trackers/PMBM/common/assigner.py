@@ -27,10 +27,8 @@ class AssignmentSolver:
         self.num_of_desired_hypotheses = num_of_desired_hypotheses
         self.num_of_old_tracks = len(self.global_hypothesis.associations)
         self.max_murty_steps = max_murty_steps or self.get_murty_steps()
-        self.column_row_to_detected_child_sth = defaultdict(
-            lambda: defaultdict(dict))
-        self.column_row_to_new_detected_sth = defaultdict(
-            lambda: defaultdict(dict))
+        self.column_row_to_detected_child_sth = defaultdict(lambda: defaultdict(dict))
+        self.column_row_to_new_detected_sth = defaultdict(lambda: defaultdict(dict))
         self.cost_matrix = self.create_cost_matrix()
         if self.cost_matrix.size == 0:
             return
@@ -39,14 +37,18 @@ class AssignmentSolver:
 
         return int(
             np.ceil(
-                np.exp(self.global_hypothesis.log_weight) *
-                self.num_of_desired_hypotheses))
+                np.exp(self.global_hypothesis.log_weight)
+                * self.num_of_desired_hypotheses
+            )
+        )
 
     def create_cost_matrix(self):
         cost_detected = self.create_cost_for_associated_targets(
-            self.global_hypothesis, self.old_tracks, self.measurements)
+            self.global_hypothesis, self.old_tracks, self.measurements
+        )
         cost_undetected = self.create_cost_for_undetected(
-            self.new_tracks, self.measurements)
+            self.new_tracks, self.measurements
+        )
         cost_matrix = np.hstack([cost_detected, cost_undetected])
         return cost_matrix
 
@@ -71,8 +73,9 @@ class AssignmentSolver:
             lg.debug(f"murty step = {murty_step}, solution = {solution}")
             next_log_weight = self.global_hypothesis.log_weight - solution_cost
             next_associations = self.assignment_to_associations(solution)
-            next_global_hypothesis = GlobalHypothesis(next_log_weight,
-                                                      next_associations)
+            next_global_hypothesis = GlobalHypothesis(
+                next_log_weight, next_associations
+            )
             lg.debug(f"next global hypothesis: {next_global_hypothesis}")
             new_global_hypotheses.append(next_global_hypothesis)
         return new_global_hypotheses
@@ -83,7 +86,8 @@ class AssignmentSolver:
             if target_column + 1 > self.num_of_old_tracks:
                 # assignment is to new target
                 track_id, sth_id = self.column_row_to_new_detected_sth[
-                    target_column - self.num_of_old_tracks]
+                    target_column - self.num_of_old_tracks
+                ]
             else:
                 # assignment is to a previously detected target
                 (
@@ -91,22 +95,27 @@ class AssignmentSolver:
                     parent_sth_id,
                     child_idx,
                 ) = self.column_row_to_detected_child_sth[target_column][
-                    measurement_row]
-                sth_id = (self.old_tracks[track_id].single_target_hypotheses[
-                    parent_sth_id].detection_hypotheses[child_idx].sth_id)
+                    measurement_row
+                ]
+                sth_id = (
+                    self.old_tracks[track_id]
+                    .single_target_hypotheses[parent_sth_id]
+                    .detection_hypotheses[child_idx]
+                    .sth_id
+                )
             associations.append(Association(track_id, sth_id))
         return associations
 
-    def create_cost_for_associated_targets(self,
-                                           global_hypothesis: GlobalHypothesis,
-                                           old_tracks,
-                                           measurements) -> np.ndarray:
+    def create_cost_for_associated_targets(
+        self, global_hypothesis: GlobalHypothesis, old_tracks, measurements
+    ) -> np.ndarray:
         cost_detected = np.full(
-            (len(measurements), len(global_hypothesis.associations)), np.inf)
+            (len(measurements), len(global_hypothesis.associations)), np.inf
+        )
         for column_idx, (track_idx, parent_sth_idx) in enumerate(
-                global_hypothesis.associations):
-            parent_sth = old_tracks[track_idx].single_target_hypotheses[
-                parent_sth_idx]
+            global_hypothesis.associations
+        ):
+            parent_sth = old_tracks[track_idx].single_target_hypotheses[parent_sth_idx]
             for meas_idx, sth in parent_sth.detection_hypotheses.items():
                 cost_detected[meas_idx, column_idx] = sth.cost
                 self.column_row_to_detected_child_sth[column_idx][meas_idx] = (
@@ -116,23 +125,21 @@ class AssignmentSolver:
                 )
         return cost_detected
 
-    def create_cost_for_undetected(self, new_tracks,
-                                   measurements) -> np.ndarray:
+    def create_cost_for_undetected(self, new_tracks, measurements) -> np.ndarray:
         # Using association between measurements and previously undetected objects
 
-        cost_undetected = np.full((len(measurements), len(measurements)),
-                                  np.inf)
+        cost_undetected = np.full((len(measurements), len(measurements)), np.inf)
 
         sth_idx = 0  # we have olny one sth for new targets
         for meas_idx in range(len(measurements)):
             if meas_idx in [
-                    track.single_target_hypotheses[sth_idx].meas_idx
-                    for track in new_tracks.values()
+                track.single_target_hypotheses[sth_idx].meas_idx
+                for track in new_tracks.values()
             ]:
                 track_id = [
-                    track.track_id for track in new_tracks.values()
-                    if track.single_target_hypotheses[sth_idx].meas_idx ==
-                    meas_idx
+                    track.track_id
+                    for track in new_tracks.values()
+                    if track.single_target_hypotheses[sth_idx].meas_idx == meas_idx
                 ][0]
                 cost_undetected[meas_idx, meas_idx] = (
                     new_tracks[track_id].single_target_hypotheses[sth_idx].cost

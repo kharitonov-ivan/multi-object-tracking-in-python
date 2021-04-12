@@ -8,17 +8,16 @@ import mot.scenarios.object_motion_scenarious as object_motion_scenarious
 import motmetrics as mm
 import numpy as np
 import pytest
-from mot.common import (Gaussian, GaussianDensity, GaussianMixture,
-                        WeightedGaussian)
+from mot.common import Gaussian, GaussianDensity, GaussianMixture, WeightedGaussian
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.metrics import GOSPA
 from mot.motion_models import ConstantVelocityMotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import \
-    StaticBirthModel
+from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
+    StaticBirthModel,
+)
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from mot.utils import Plotter, get_images_dir
-from mot.utils.visualizer.common.plot_series import \
-    OBJECT_COLORS as object_colors
+from mot.utils.visualizer.common.plot_series import OBJECT_COLORS as object_colors
 from tqdm import trange
 
 

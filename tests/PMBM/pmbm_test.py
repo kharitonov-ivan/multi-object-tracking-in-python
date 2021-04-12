@@ -1,13 +1,3 @@
-import numpy as np
-from mot.common.state import Gaussian, WeightedGaussian, GaussianMixture
-from mot.motion_models import CoordinateTurnMotionModel, ConstantVelocityMotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common import (
-    Bernoulli,
-    MultiBernouilliMixture,
-    Track,
-    SingleTargetHypothesis,
-)
-from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
@@ -16,12 +6,15 @@ from mot.common.gaussian_density import GaussianDensity
 from mot.common.state import Gaussian, GaussianMixture, WeightedGaussian
 from mot.configs import GroundTruthConfig, Object, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import (ConstantVelocityMotionModel,
-                               CoordinateTurnMotionModel)
+from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
 from mot.simulator.measurement_data_generator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
 from mot.trackers.multiple_object_trackers.PMBM.common import (
-    Bernoulli, MultiBernouilliMixture, SingleTargetHypothesis, Track)
+    Bernoulli,
+    MultiBernouilliMixture,
+    SingleTargetHypothesis,
+    Track,
+)
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM, PoissonRFS
 from mot.utils import Plotter, get_images_dir
 from pytest import fixture
@@ -202,8 +195,8 @@ def test_PMBM_predict():
 
     # Set Bernoulli RFS
     bern_first = Bernoulli(
-        r=0.1112,
-        initial_state=Gaussian(
+        existence_probability=0.1112,
+        state=Gaussian(
             x=np.array(
                 [
                     0.78,
@@ -217,8 +210,8 @@ def test_PMBM_predict():
         ),
     )
     bern_second = Bernoulli(
-        r=0.1319,
-        initial_state=Gaussian(
+        existence_probability=0.1319,
+        state=Gaussian(
             x=np.array(
                 [
                     0.94,
@@ -453,8 +446,10 @@ def test_pmbm_update_and_predict_linear(linear_big_params, birth_model):
         max_number_of_hypotheses=M,
         gating_percentage=P_G,
         w_min=w_min,
-        P_D=P_D,
+        detection_probability=P_D,
         survival_probability=survival_probability,
+        existense_probability_threshold=0.7,
+        density=GaussianDensity,
     )
     estimates = []
     simulation_time = K

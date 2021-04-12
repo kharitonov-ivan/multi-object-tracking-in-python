@@ -28,14 +28,16 @@ class SingleTargetHypothesis:
             f"(log_likelihood={self.log_likelihood:.2f}, "
             f"bernoulli={self.bernoulli}, "
             f"cost={self.cost:.2f}, "
-            f"sth_id={self.sth_id}")
+            f"sth_id={self.sth_id}"
+        )
 
-    def create_missdetection_hypothesis(self, detection_probability: float,
-                                        sth_id):
+    def create_missdetection_hypothesis(self, detection_probability: float, sth_id):
         missdetection_bernoulli = self.bernoulli.undetected_update_state(
-            detection_probability)
+            detection_probability
+        )
         missdetection_loglikelihood = self.bernoulli.undetected_update_loglikelihood(
-            detection_probability)
+            detection_probability
+        )
         missdetection_hypothesis = SingleTargetHypothesis(
             bernoulli=missdetection_bernoulli,
             log_likelihood=np.asscalar(missdetection_loglikelihood),
@@ -54,19 +56,22 @@ class SingleTargetHypothesis:
     ):
         assert measurement.ndim == 1
         detection_bernoulli = self.bernoulli.detected_update_state(
-            measurement, meas_model, density)
+            measurement, meas_model, density
+        )
         detection_log_likelihood = detection_bernoulli.detected_update_loglikelihood(
-            measurement, meas_model, detection_probability, density)
+            measurement, meas_model, detection_probability, density
+        )
         missdetection_log_likelihood = (
             self.missdetection_hypothesis.log_likelihood
-            or self.bernoulli.undetected_update_loglikelihood(
-                detection_probability))
+            or self.bernoulli.undetected_update_loglikelihood(detection_probability)
+        )
 
         detection_hypothesis = SingleTargetHypothesis(
             bernoulli=detection_bernoulli,
             log_likelihood=np.asscalar(detection_log_likelihood),
-            cost=np.asscalar(-(detection_log_likelihood -
-                               missdetection_log_likelihood)),
+            cost=np.asscalar(
+                -(detection_log_likelihood - missdetection_log_likelihood)
+            ),
             sth_id=sth_id,
         )
         return detection_hypothesis
