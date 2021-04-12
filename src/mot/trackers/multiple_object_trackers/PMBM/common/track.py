@@ -5,9 +5,9 @@ from .single_target_hypothesis import SingleTargetHypothesis
 
 class Track:
     """Represents a track - hypotheses tree.
-    The root is association with unique target.
-    Leafs are hypotheses which represent association of this target
-    with corresponding measurements or missdetections.
+    The root is associated with a unique target.
+    Leaves are hypotheses which represent association of this target
+    with corresponding measurements or misdetections.
     """
 
     max_track_id = 1000000
