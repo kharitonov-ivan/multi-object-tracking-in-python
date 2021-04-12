@@ -2,12 +2,14 @@ import numpy as np
 import scipy
 
 
-def GOSPA(targets: np.ndarray,
-          estimates: np.ndarray,
-          p: float = 1,
-          c: float = 100,
-          alpha: float = 2,
-          state_dim: int = 2) -> float:
+def GOSPA(
+    targets: np.ndarray,
+    estimates: np.ndarray,
+    p: float = 1,
+    c: float = 100,
+    alpha: float = 2,
+    state_dim: int = 2,
+) -> float:
     """GOSPA - Generalized optimal sub-pattern assignment metric
     TODO: add paper and formula
 
@@ -40,15 +42,15 @@ def GOSPA(targets: np.ndarray,
         return GOSPA(estimates, targets, p, c, alpha, state_dim)
 
     elif targets_number == 0:
-        return c**p / alpha * estimates_number
+        return c ** p / alpha * estimates_number
 
     costs = scipy.spatial.distance.cdist(targets, estimates)
-    costs = np.minimum(costs, c)**p
+    costs = np.minimum(costs, c) ** p
 
     row_ind, col_ind = scipy.optimize.linear_sum_assignment(costs)
 
-    gospa_scalar = np.sum(
-        costs[row_ind,
-              col_ind]) + c**p / alpha * (estimates_number - targets_number)
+    gospa_scalar = np.sum(costs[row_ind, col_ind]) + c ** p / alpha * (
+        estimates_number - targets_number
+    )
 
     return gospa_scalar
