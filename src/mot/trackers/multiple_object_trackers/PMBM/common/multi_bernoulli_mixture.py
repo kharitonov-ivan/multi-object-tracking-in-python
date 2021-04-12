@@ -92,12 +92,9 @@ class MultiBernouilliMixture:
 
         for track_id, track in self.tracks.items():
             for sth_id, sth in track.single_target_hypotheses.items():
-                (
-                    _,
-                    gating_matrix[track_id][sth_id],
-                ) = density_handler.ellipsoidal_gating(
-                    sth.bernoulli.state, z, meas_model, gating_size
-                )
+                gating_matrix[track_id][sth_id][
+                    1] = density_handler.ellipsoidal_gating(
+                        sth.bernoulli.state, z, meas_model, gating_size)
                 used_measurement_detected_indices = np.logical_or(
                     used_measurement_detected_indices,
                     gating_matrix[track_id][sth_id],
