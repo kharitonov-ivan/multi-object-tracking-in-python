@@ -64,7 +64,7 @@ class PoissonRFS:
         z np .ndarray
             number of measurementx x measurement dimension
 
-        Resulted Bernoulli component represents two possibilites:
+        Resulting Bernoulli component represents two possibilites:
         1) deteciton from clutter
         2) detection from a new object
 
