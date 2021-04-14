@@ -1,3 +1,4 @@
+import itertools
 import logging as lg
 from collections import defaultdict
 from typing import List
@@ -24,10 +25,10 @@ class AssignmentSolver:
         self.new_tracks = new_tracks
         self.measurements = measurements
         self.num_of_desired_hypotheses = num_of_desired_hypotheses
-        self.num_of_old_tracks = len(self.global_hypothesis.associations)
+        self.num_of_old_tracks = len(list(self.global_hypothesis.associations))
         self.max_murty_steps = max_murty_steps or self.get_murty_steps()
-        self.column_row_to_detected_child_sth = defaultdict(lambda: defaultdict(dict))
-        self.column_row_to_new_detected_sth = defaultdict(lambda: defaultdict(dict))
+        self.column_row_to_detected_child_sth = defaultdict(defaultdict)
+        self.column_row_to_new_detected_sth = defaultdict(defaultdict)
         self.cost_matrix = self.create_cost_matrix()
         if self.cost_matrix.size == 0:
             return
@@ -54,73 +55,84 @@ class AssignmentSolver:
     def solve(self) -> List[GlobalHypothesis]:
         lg.debug(f"\n Current global hypo = \n{self.global_hypothesis}")
         lg.debug(f"\n Cost matrix = \n{self.cost_matrix}")
-        new_global_hypotheses = []
-        murty_solver = Murty(self.cost_matrix)
-        for murty_step in range(self.max_murty_steps):
-            try:
-                status, solution_cost, solution = murty_solver.draw()
-                # solution looks like array of assigned colums for meas idx
-                solution = solution.tolist()
-                if not solution:
-                    break
 
-            except:
-                raise Error
-            if not status:
-                lg.info("Break! Murty solver is over!")
-                break
-            lg.debug(f"murty step = {murty_step}, solution = {solution}")
-            next_log_weight = self.global_hypothesis.log_weight - solution_cost
-            next_associations = self.assignment_to_associations(solution)
-            next_global_hypothesis = GlobalHypothesis(
-                next_log_weight, next_associations
+        murty_solver = Murty(self.cost_matrix)
+
+        # each solution is a tuple(status, solution_cost, solution)
+        murty_solutions = [
+            murty_solver.draw() for murty_step in range(self.max_murty_steps)
+        ]
+        new_global_hypotheses = [
+            GlobalHypothesis(
+                log_weight=self.global_hypothesis.log_weight - solution_cost,
+                associations=self.optimized_assignment_to_associations(solution),
             )
-            lg.debug(f"next global hypothesis: {next_global_hypothesis}")
-            new_global_hypotheses.append(next_global_hypothesis)
+            for (status, solution_cost, solution) in murty_solutions
+            if status
+        ]
         return new_global_hypotheses
+
+    def optimized_assignment_to_associations(self, solution):
+        new_target_rows = np.argwhere(solution + 1 > self.num_of_old_tracks)
+        new_target_columns = solution[new_target_rows] - self.num_of_old_tracks
+        new_associations = (
+            self.column_row_to_new_detected_sth[target_column.item()]
+            for target_column in new_target_columns)
+
+        previous_target_rows = np.argwhere(
+            solution + 1 < self.num_of_old_tracks)
+        previous_target_columns = solution[previous_target_rows]
+
+        gen1 = (self.column_row_to_detected_child_sth[target_column.item()][
+            target_row.item()]
+                for (target_row, target_column
+                     ) in zip(previous_target_rows, previous_target_columns))
+        previous_target_associations = (Association(track_id, sth_id)
+                                        for (track_id, parent_sth_id,
+                                             child_idx, sth_id) in gen1)
+        result = itertools.chain(new_associations,
+                                 previous_target_associations)
+        return list(result)
 
     def assignment_to_associations(self, solution):
         associations = []
-        for measurement_row, target_column in enumerate(solution):
+        for measurement_row, target_column in np.ndenumerate(solution):
             if target_column + 1 > self.num_of_old_tracks:
                 # assignment is to new target
                 track_id, sth_id = self.column_row_to_new_detected_sth[
-                    target_column - self.num_of_old_tracks
-                ]
+                    target_column - self.num_of_old_tracks]
             else:
                 # assignment is to a previously detected target
                 (
                     track_id,
                     parent_sth_id,
                     child_idx,
+                    _,
                 ) = self.column_row_to_detected_child_sth[target_column][
-                    measurement_row
-                ]
-                sth_id = (
-                    self.old_tracks[track_id]
-                    .single_target_hypotheses[parent_sth_id]
-                    .detection_hypotheses[child_idx]
-                    .sth_id
-                )
+                    measurement_row[0]]
+                sth_id = (self.old_tracks[track_id].single_target_hypotheses[
+                    parent_sth_id].detection_hypotheses[child_idx].sth_id)
             associations.append(Association(track_id, sth_id))
         return associations
 
-    def create_cost_for_associated_targets(
-        self, global_hypothesis: GlobalHypothesis, old_tracks, measurements
-    ) -> np.ndarray:
+    def create_cost_for_associated_targets(self,
+                                           global_hypothesis: GlobalHypothesis,
+                                           old_tracks,
+                                           measurements) -> np.ndarray:
         cost_detected = np.full(
-            (len(measurements), len(global_hypothesis.associations)), np.inf
-        )
+            (len(measurements), len(list(global_hypothesis.associations))),
+            np.inf)
         for column_idx, (track_idx, parent_sth_idx) in enumerate(
-            global_hypothesis.associations
-        ):
-            parent_sth = old_tracks[track_idx].single_target_hypotheses[parent_sth_idx]
+                global_hypothesis.associations):
+            parent_sth = old_tracks[track_idx].single_target_hypotheses[
+                parent_sth_idx]
             for meas_idx, sth in parent_sth.detection_hypotheses.items():
                 cost_detected[meas_idx, column_idx] = sth.cost
                 self.column_row_to_detected_child_sth[column_idx][meas_idx] = (
                     track_idx,
                     parent_sth_idx,
                     meas_idx,
+                    sth.sth_id,
                 )
         return cost_detected
 
@@ -143,7 +155,7 @@ class AssignmentSolver:
                 cost_undetected[meas_idx, meas_idx] = (
                     new_tracks[track_id].single_target_hypotheses[sth_idx].cost
                 )
-                self.column_row_to_new_detected_sth[meas_idx] = (
+                self.column_row_to_new_detected_sth[meas_idx] = Association(
                     new_tracks[track_id].track_id,
                     sth_idx,
                 )
