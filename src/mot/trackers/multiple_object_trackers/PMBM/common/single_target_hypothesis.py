@@ -40,7 +40,7 @@ class SingleTargetHypothesis:
         )
         missdetection_hypothesis = SingleTargetHypothesis(
             bernoulli=missdetection_bernoulli,
-            log_likelihood=np.asscalar(missdetection_loglikelihood),
+            log_likelihood=missdetection_loglikelihood.item(),
             cost=0,
             sth_id=sth_id,
         )
@@ -68,10 +68,8 @@ class SingleTargetHypothesis:
 
         detection_hypothesis = SingleTargetHypothesis(
             bernoulli=detection_bernoulli,
-            log_likelihood=np.asscalar(detection_log_likelihood),
-            cost=np.asscalar(
-                -(detection_log_likelihood - missdetection_log_likelihood)
-            ),
+            log_likelihood=detection_log_likelihood.item(),
+            cost=(-(detection_log_likelihood - missdetection_log_likelihood)).item(),
             sth_id=sth_id,
         )
         return detection_hypothesis
