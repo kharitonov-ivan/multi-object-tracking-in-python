@@ -161,9 +161,6 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
 
         acc.update(target_ids, estimation_ids, dists=distance_matrix, frameid=timestep)
 
-    import pdb
-
-    pdb.set_trace()
     fig, (ax1, ax2, ax0, ax3, ax4) = plt.subplots(
         5, 1, figsize=(6, 6 * 5), sharey=False, sharex=False
     )

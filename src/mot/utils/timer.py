@@ -32,4 +32,3 @@ class Timer:
             return method_output
 
         return _whraped_method
-
