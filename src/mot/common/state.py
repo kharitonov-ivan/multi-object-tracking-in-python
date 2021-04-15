@@ -63,7 +63,7 @@ class WeightedGaussian:
         )
 
 
-class GaussianMixture(collections.MutableSequence):
+class GaussianMixture(collections.abc.MutableSequence):
     def __init__(self, weighted_components: List[WeightedGaussian] = (None)):
         self.weighted_components = deepcopy(weighted_components)
 
