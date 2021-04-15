@@ -172,7 +172,7 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     ax0 = Plotter.plot_several(
         [object_data],
         ax=ax0,
-        out_path=get_images_dir(__file__) + "/" + "object_and_meas_data" + ".png",
+        out_path=None,
         is_autoscale=False,
     )
 
@@ -183,7 +183,7 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     ax1 = Plotter.plot_several(
         [meas_data],
         ax=ax1,
-        out_path=get_images_dir(__file__) + "/" + "object_and_meas_data" + ".png",
+        out_path=None,
         is_autoscale=False,
     )
 
