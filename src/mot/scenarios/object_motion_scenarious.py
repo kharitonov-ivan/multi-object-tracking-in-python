@@ -2,12 +2,15 @@ import numpy as np
 from mot.common import Gaussian
 from mot.configs import Object
 
+COMMON_BIRTH_TIME = 10
+COMMON_DEATH_TIME = 80
+
 # TODO single static object (no motion
 single_static_object = [
     Object(
         initial=Gaussian(x=np.array([10.0, 10.0, 0.0, 0.0]), P=np.eye(4)),
-        t_birth=0,
-        t_death=69,
+        t_birth=COMMON_BIRTH_TIME,
+        t_death=COMMON_DEATH_TIME,
     )
 ]
 
@@ -15,13 +18,13 @@ single_static_object = [
 two_static_objects = [
     Object(
         initial=Gaussian(x=np.array([-100.0, 100.0, 0.0, 0.0]), P=np.eye(4)),
-        t_birth=0,
-        t_death=69,
+        t_birth=COMMON_BIRTH_TIME,
+        t_death=COMMON_DEATH_TIME,
     ),
     Object(
         initial=Gaussian(x=np.array([100.0, 100.0, 0.0, 0.0]), P=np.eye(4)),
-        t_birth=0,
-        t_death=69,
+        t_birth=COMMON_BIRTH_TIME,
+        t_death=COMMON_DEATH_TIME,
     ),
 ]
 
@@ -29,26 +32,26 @@ two_static_objects = [
 tree_static_objects = [
     Object(
         initial=Gaussian(x=np.array([-250.0, 250.0, 0.0, 0.0]), P=np.eye(4)),
-        t_birth=0,
-        t_death=69,
+        t_birth=COMMON_BIRTH_TIME,
+        t_death=COMMON_DEATH_TIME,
     ),
     Object(
         initial=Gaussian(x=np.array([250.0, 250.0, 0.0, 0.0]), P=np.eye(4)),
-        t_birth=0,
-        t_death=69,
+        t_birth=COMMON_BIRTH_TIME,
+        t_death=COMMON_DEATH_TIME,
     ),
     Object(
         initial=Gaussian(x=np.array([0.0, -250.0, 0.0, 0.0]), P=np.eye(4)),
-        t_birth=0,
-        t_death=69,
+        t_birth=COMMON_BIRTH_TIME,
+        t_death=COMMON_DEATH_TIME,
     ),
 ]
 # TODO single_object_linear_motion
 single_object_linear_motion = [
     Object(
         initial=Gaussian(x=np.array([0.0, 0.0, 10.0, 10.0]), P=np.eye(4)),
-        t_birth=0,
-        t_death=100,
+        t_birth=COMMON_BIRTH_TIME,
+        t_death=COMMON_DEATH_TIME,
     )
 ]
 
@@ -56,13 +59,13 @@ single_object_linear_motion = [
 two_objects_linear_motion = [
     Object(
         initial=Gaussian(x=np.array([-100.0, 10.0, 10.0, 10.0]), P=np.eye(4)),
-        t_birth=0,
-        t_death=69,
+        t_birth=COMMON_BIRTH_TIME,
+        t_death=COMMON_DEATH_TIME,
     ),
     Object(
         initial=Gaussian(x=np.array([10.0, -10.0, 0.0, -10.0]), P=np.eye(4)),
-        t_birth=0,
-        t_death=69,
+        t_birth=COMMON_BIRTH_TIME,
+        t_death=COMMON_DEATH_TIME,
     ),
 ]
 
