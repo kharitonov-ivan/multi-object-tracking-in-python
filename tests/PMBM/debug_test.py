@@ -120,7 +120,7 @@ def test_pmbm_update_and_predict_linear(object_motion_fixture):
     acc = mm.MOTAccumulator()
 
     for timestep in range(simulation_time):
-        print(F"=============={timestep}===============")
+        logging.info(f"==============current timestep{timestep}===============")
         with Timer(name="Full cycle of step"):
             current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
         targets_vector = np.array(
