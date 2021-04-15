@@ -1,414 +1,51 @@
+import logging
+import pprint
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
+import mot
+import mot.scenarios.object_motion_scenarious as object_motion_scenarious
+import motmetrics as mm
 import numpy as np
-from mot.common.gaussian_density import GaussianDensity
-from mot.common.state import Gaussian, GaussianMixture, WeightedGaussian
-from mot.configs import GroundTruthConfig, Object, SensorModelConfig
+import pytest
+from mot.common import Gaussian, GaussianDensity, GaussianMixture, WeightedGaussian
 from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
-from mot.simulator.measurement_data_generator import MeasurementData
-from mot.simulator.object_data_generator import ObjectData
-from mot.trackers.multiple_object_trackers.PMBM.common import (
-    Bernoulli,
-    MultiBernouilliMixture,
-    SingleTargetHypothesis,
-    Track,
+from mot.metrics import GOSPA
+from mot.motion_models import ConstantVelocityMotionModel
+from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
+    StaticBirthModel,
 )
-from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM, PoissonRFS
+from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from mot.utils import Plotter, get_images_dir
-from pytest import fixture
+from mot.utils.timer import Timer
+from mot.utils.visualizer.common.plot_series import OBJECT_COLORS as object_colors
 from tqdm import trange
 
 
-@fixture(scope="function")
-def linear_middle_params():
-    return [
-        Object(
-            initial=Gaussian(x=np.array([0.0, 0.0, 0.0, 5.0]), P=np.eye(4)),
-            t_birth=0,
-            t_death=69,
-        ),
-        # Object(
-        #     initial=Gaussian(x=np.array([-800.0, -200.0, 20.0, -5.0]), P=np.eye(4)),
-        #     t_birth=5,
-        #     t_death=99,
-        # )
-    ]
+@pytest.fixture
+def object_motion_fixture():
+    return object_motion_scenarious.many_objects_linear_motion_delayed
 
 
-@fixture(scope="function")
-def linear_big_params():
-    return [
-        Object(
-            initial=Gaussian(x=np.array([0.0, 0.0, 0.0, -10.0]), P=np.eye(4)),
-            t_birth=0,
-            t_death=69,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([400.0, -600.0, -10.0, 5.0]), P=np.eye(4)),
-            t_birth=0,
-            t_death=99,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([-800.0, -200.0, 20.0, -5.0]), P=np.eye(4)),
-            t_birth=0,
-            t_death=69,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([400.0, -600.0, -7.0, -4.0]), P=np.eye(4)),
-            t_birth=19,
-            t_death=99,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([400.0, -600.0, -2.5, 10.0]), P=np.eye(4)),
-            t_birth=19,
-            t_death=99,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([0.0, 0.0, 7.5, -5.0]), P=np.eye(4)),
-            t_birth=19,
-            t_death=99,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([-800.0, -200.0, 12.0, 7.0]), P=np.eye(4)),
-            t_birth=39,
-            t_death=99,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([-200.0, 800.0, 15.0, -10.0]), P=np.eye(4)),
-            t_birth=39,
-            t_death=99,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([-800.0, -200.0, 3.0, 15.0]), P=np.eye(4)),
-            t_birth=59,
-            t_death=99,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([-200.0, 800.0, -3.0, -15.0]), P=np.eye(4)),
-            t_birth=59,
-            t_death=99,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([0.0, 0.0, -20.0, -15.0]), P=np.eye(4)),
-            t_birth=79,
-            t_death=99,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([-200.0, 800.0, 15.0, -5.0]), P=np.eye(4)),
-            t_birth=79,
-            t_death=99,
-        ),
-    ]
-
-
-@fixture(scope="function")
-def linear_small_params():
-    return [
-        Object(
-            initial=Gaussian(x=np.array([0.0, 0.0, 0.0, 20.0]), P=np.eye(4)),
-            t_birth=0,
-            t_death=69,
-        ),
-        Object(
-            initial=Gaussian(x=np.array([400.0, -600.0, -40.0, 45.0]), P=np.eye(4)),
-            t_birth=0,
-            t_death=99,
-        ),
-    ]
-
-
-@fixture(scope="function")
-def birth_model():
-    return GaussianMixture(
-        [
-            WeightedGaussian(
-                np.log(0.03),
-                Gaussian(x=np.array([0.0, 0.0, 0.0, 0.0]), P=400 * np.eye(4)),
-            ),
-            WeightedGaussian(
-                np.log(0.03),
-                Gaussian(x=np.array([400.0, -600.0, 0.0, 0.0]), P=400 * np.eye(4)),
-            ),
-            WeightedGaussian(
-                np.log(0.03),
-                Gaussian(x=np.array([-800.0, -200.0, 0.0, 0.0]), P=400 * np.eye(4)),
-            ),
-            WeightedGaussian(
-                np.log(0.03),
-                Gaussian(x=np.array([-200.0, 800.0, 0.0, 0.0]), P=400 * np.eye(4)),
-            ),
-        ]
-    )
-
-
-def test_PMBM_predict():
-    # Create nonlinear motion model (coordinate turn)
-    dt = 1.0
-    sigma_V = 1.0
-    sigma_Omega = np.pi / 180
-    motion_model = CoordinateTurnMotionModel(dt, sigma_V, sigma_Omega)
-
-    # Set birth model
-    birth_model = GaussianMixture(
-        [
-            WeightedGaussian(
-                log_weight=np.log(0.03),
-                gaussian=Gaussian(
-                    x=np.array([0.4456, 0.6463, 0.7094, 0.7547, 0.2760]),
-                    P=np.diag([1.0, 1.0, 1.0, (np.pi / 90) ** 2, (np.pi / 90) ** 2]),
-                ),
-            )
-        ]
-        * 4
-    )
-
-    # Set probability of existence
-    survival_probability = 0.7
-
-    # Set Poisson RFS
-    PPP = PoissonRFS(
-        GaussianMixture(
-            weighted_components=[
-                WeightedGaussian(
-                    -0.3861,
-                    Gaussian(
-                        x=np.array([0.0, 0.0, 5.0, 0.0, np.pi / 180]), P=np.eye(5)
-                    ),
-                ),
-                WeightedGaussian(
-                    -0.423,
-                    Gaussian(
-                        x=np.array([20.0, 20.0, -20.0, 0.0, np.pi / 90]), P=np.eye(5)
-                    ),
-                ),
-                WeightedGaussian(
-                    -1.8164,
-                    Gaussian(
-                        x=np.array([-20.0, 10.0, -10.0, 0.0, np.pi / 360]), P=np.eye(5)
-                    ),
-                ),
-            ]
-        )
-    )
-
-    # Set Bernoulli RFS
-    bern_first = Bernoulli(
-        existence_probability=0.1112,
-        state=Gaussian(
-            x=np.array(
-                [
-                    0.78,
-                    0.39,
-                    0.24,
-                    0.40,
-                    0.09,
-                ]
-            ),
-            P=np.eye(5),
-        ),
-    )
-    bern_second = Bernoulli(
-        existence_probability=0.1319,
-        state=Gaussian(
-            x=np.array(
-                [
-                    0.94,
-                    0.95,
-                    0.57,
-                    0.06,
-                    0.23,
-                ]
-            ),
-            P=np.eye(5),
-        ),
-    )
-
-    track_first = Track(SingleTargetHypothesis(bern_first, 0, 0, 0))
-    track_second = Track(SingleTargetHypothesis(bern_second, 0, 0, 0))
-
-    MBM = MultiBernouilliMixture()
-    MBM.tracks.update({0: track_first, 1: track_second})
-
-    pmbm_tracker = PMBM(
-        meas_model=None,
-        sensor_model=None,
-        motion_model=motion_model,
-        birth_model=birth_model,
-        max_number_of_hypotheses=None,
-        P_D=0.9,
-        P_S=0.9,
-        gating_size=None,
-    )
-    pmbm_tracker.PPP = PPP
-    pmbm_tracker.MBM = MBM
-
-    pmbm_tracker.predict(birth_model, motion_model, survival_probability, dt)
-
-    bern_first_ref = Bernoulli(
-        r=0.0778,
-        initial_state=Gaussian(
-            x=np.array([1.002, 0.485, 0.242, 0.500, 0.096]),
-            P=np.array(
-                [
-                    [1.85, 0.34, 0.92, -0.095, 0.0],
-                    [0.34, 1.20, 0.39, 0.22, 0.0],
-                    [0.92, 0.39, 2.0, 0.0, 0.0],
-                    [-0.095, 0.22, 0.0, 2.0, 1.0],
-                    [0.0, 0.0, 0.0, 1.0, 1.0],
-                ]
-            ),
-        ),
-    )
-
-    bern_second_ref = Bernoulli(
-        r=0.092,
-        initial_state=Gaussian(
-            x=np.array([1.51, 0.99, 0.57, 0.29, 0.23]),
-            P=np.array(
-                [
-                    [1.997, 0.039, 0.998, -0.034, 0.0],
-                    [0.039, 1.33, 0.059, 0.574, 0.0],
-                    [0.998, 0.059, 2.0, 0.0, 0.0],
-                    [-0.034, 0.574, 0.0, 2.0, 1.0],
-                    [0.0, 0.0, 0.0, 1.0, 1.000],
-                ]
-            ),
-        ),
-    )
-
-    track_first_ref = Track(SingleTargetHypothesis(bern_first_ref, 0, 0, 0))
-    track_first_ref.track_id = 0
-    track_second_ref = Track(SingleTargetHypothesis(bern_second_ref, 0, 0, 0))
-    track_second_ref.track_id = 1
-
-    MBM_ref = MultiBernouilliMixture()
-    MBM_ref.tracks.append(track_first_ref)
-    MBM_ref.tracks.append(track_second_ref)
-    for i in range(1):
-        np.testing.assert_allclose(
-            pmbm_tracker.MBM.tracks[i].hypotheses[0].bernoulli.state.x,
-            MBM_ref.tracks[i].hypotheses[0].bernoulli.state.x,
-            rtol=0.1,
-        )
-        np.testing.assert_allclose(
-            pmbm_tracker.MBM.tracks[i].hypotheses[0].bernoulli.state.P,
-            MBM_ref.tracks[i].hypotheses[0].bernoulli.state.P,
-            rtol=0.1,
-        )
-
-    ppp_w_ref = np.array(
-        [-3.5066, -3.5066, -3.5066, -3.5066, -2.1731, -0.7797, -0.7428]
-    )
-    ppp_w_got = np.array(
-        sorted([component.w for component in pmbm_tracker.PPP.intensity])
-    )
-    np.testing.assert_allclose(ppp_w_ref, ppp_w_got, rtol=0.01)
-
-    PPP_ref = PoissonRFS(
-        initial_intensity=GaussianMixture(
-            weighted_components=[
-                WeightedGaussian(
-                    w=-0.7428,
-                    gm=Gaussian(
-                        x=np.array([5.0, 0.0, 5.0, 0.0175, 0.0175]),
-                        P=np.array(
-                            [
-                                [2.0, 0.0, 1.0, 0.0, 0.0],
-                                [0.0, 26.0, 0.0, 5.0, 0.0],
-                                [1.0, 0.0, 2.0, 0.0, 0.0],
-                                [0.0, 5.0, 0.0, 2.0, 1.0],
-                                [0.0, 0.0, 0.0, 1.0, 1.00030462],
-                            ]
-                        ),
-                    ),
-                ),
-                WeightedGaussian(
-                    w=-0.7797,
-                    gm=Gaussian(
-                        x=np.array([0.0, 20.0, -20.0, 0.0349, 0.0349]),
-                        P=np.array(
-                            [
-                                [2.0, 0.0, 1.0, 0.0, 0.0],
-                                [0.0, 401.0, 0.0, -20.0, 0.0],
-                                [1.0, 0.0, 2.0, 0.0, 0.0],
-                                [0.0, -20.0, 0.0, 2.0, 1.0],
-                                [0.0, 0.0, 0.0, 1.0, 1.0003],
-                            ]
-                        ),
-                    ),
-                ),
-                WeightedGaussian(
-                    w=-2.1731,
-                    gm=Gaussian(
-                        x=np.array([-30.0, 10.0, -10.0, 0.0087, 0.0087]),
-                        P=np.array(
-                            [
-                                [2.0, 0.0, 1.0, 0.0, 0.0],
-                                [0.0, 101.0, 0.0, -10.0, 0.0],
-                                [1.0, 0.0, 2.0, 0.0, 0.0],
-                                [0.0, -10.0, 0.0, 2.0, 1.0],
-                                [0.0, 0.0, 0.0, 1.0, 1.0003],
-                            ]
-                        ),
-                    ),
-                ),
-                WeightedGaussian(
-                    w=-3.5066,
-                    gm=Gaussian(
-                        x=np.array([0.4456, 0.6463, 0.7094, 0.7547, 0.2760]),
-                        P=np.diag([1.0, 1.0, 1.0, 0.0012, 0.0012]),
-                    ),
-                ),
-                WeightedGaussian(
-                    w=-3.5066,
-                    gm=Gaussian(
-                        x=np.array([0.4456, 0.6463, 0.7094, 0.7547, 0.2760]),
-                        P=np.diag([1.0, 1.0, 1.0, 0.0012, 0.0012]),
-                    ),
-                ),
-                WeightedGaussian(
-                    w=-3.5066,
-                    gm=Gaussian(
-                        x=np.array([0.4456, 0.6463, 0.7094, 0.7547, 0.2760]),
-                        P=np.diag([1.0, 1.0, 1.0, 0.0012, 0.0012]),
-                    ),
-                ),
-                WeightedGaussian(
-                    w=-3.5066,
-                    gm=Gaussian(
-                        x=np.array([0.4456, 0.6463, 0.7094, 0.7547, 0.2760]),
-                        P=np.diag([1.0, 1.0, 1.0, 0.0012, 0.0012]),
-                    ),
-                ),
-            ]
-        )
-    )
-
-    for first_state, second_state in zip(pmbm_tracker.PPP.intensity, PPP_ref.intensity):
-        np.testing.assert_allclose(first_state.gm.x, second_state.gm.x, rtol=0.05)
-        np.testing.assert_allclose(first_state.gm.P, second_state.gm.P, rtol=0.05)
-        np.testing.assert_allclose(first_state.w, second_state.w, rtol=0.05)
-
-
-def test_pmbm_update_and_predict_linear(linear_big_params, birth_model):
+def test_pmbm_update_and_predict_linear(object_motion_fixture):
     # Choose object detection probability
-    P_D = 0.98
+    detection_probability = 0.99
 
-    # Choose clutter rate
-    lambda_c = 0.01
+    # Choose clutter rate (aka lambda_c)
+    clutter_rate = 10.0
 
     # Choose object survival probability
-    survival_probability = 0.9999
+    survival_probability = 0.9
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
-    sensor_model = SensorModelConfig(P_D, lambda_c, range_c)
+    sensor_model = mot.configs.SensorModelConfig(
+        P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c
+    )
 
     # Create nlinear motion model
     dt = 1.0
-    sigma_q = 5.0
+    sigma_q = 10.0
     motion_model = ConstantVelocityMotionModel(dt, sigma_q)
 
     # Create linear measurement model
@@ -416,87 +53,194 @@ def test_pmbm_update_and_predict_linear(linear_big_params, birth_model):
     meas_model = ConstantVelocityMeasurementModel(sigma_r)
 
     # Create ground truth model
-    n_births = 12
-    K = 20
+    n_births = 10
+    simulation_steps = 100
 
     # Generate true object data (noisy or noiseless) and measurement data
-    ground_truth = GroundTruthConfig(n_births, linear_big_params, total_time=K)
-    object_data = ObjectData(
+    ground_truth = mot.configs.GroundTruthConfig(
+        n_births, object_motion_fixture, total_time=simulation_steps
+    )
+    object_data = mot.simulator.ObjectData(
         ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
     )
-    meas_data = MeasurementData(
+    meas_data = mot.simulator.MeasurementData(
         object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
     )
 
+    logging.debug(f"object motion config {pprint.pformat(object_motion_fixture)}")
     # Object tracker parameter setting
-    P_G = 0.999  # gating size in percentage
-    w_min = 1e-3  # hypothesis pruning threshold
-    merging_threshold = 2  # hypothesis merging threshold
-    M = 20  # maximum number of hypotheses kept
-    r_min = 1e-3  # Bernoulli component pruning threshold
-    r_recycle = 0.1  # Bernoulli component recycling threshold
-    r_estimate = 0.4  # Threshold used to extract estimates from Bernoullis
+    gating_percentage = 1.0  # gating size in percentage
+    max_hypothesis_kept = 100  # maximum number of hypotheses kept
+    existense_probability_threshold = 0.8
+
+    # z = np.zeros([simulation_steps, 1, 2])
+    # # linear motion
+    # z[:, 0, 1] = 0 + 100 * np.arange(simulation_steps)
+
+    # # outlie
+    # z[:, 1, 0] = -100 * np.ones(K)
+    # z[:, 1, 1] = -100 * np.ones(K)
+
+    birth_model = GaussianMixture(
+        [
+            WeightedGaussian(
+                np.log(0.03),
+                Gaussian(x=np.array([0.0, 0.0, 0.0, 0.0]), P=100 * np.eye(4)),
+            ),
+            WeightedGaussian(
+                np.log(0.03),
+                Gaussian(x=np.array([400.0, -600.0, 0.0, 0.0]), P=100 * np.eye(4)),
+            ),
+            WeightedGaussian(
+                np.log(0.03),
+                Gaussian(x=np.array([-800.0, 200.0, 0.0, 0.0]), P=100 * np.eye(4)),
+            ),
+            WeightedGaussian(
+                np.log(0.03),
+                Gaussian(x=np.array([-200.0, 800.0, 0.0, 0.0]), P=100 * np.eye(4)),
+            ),
+        ]
+    )
 
     pmbm = PMBM(
         meas_model=meas_model,
         sensor_model=sensor_model,
         motion_model=motion_model,
-        birth_model=birth_model,
-        merging_threshold=merging_threshold,
-        max_number_of_hypotheses=M,
-        gating_percentage=P_G,
-        w_min=w_min,
-        detection_probability=P_D,
+        birth_model=StaticBirthModel(birth_model),
+        max_number_of_hypotheses=max_hypothesis_kept,
+        gating_percentage=gating_percentage,
+        detection_probability=detection_probability,
         survival_probability=survival_probability,
-        existense_probability_threshold=0.7,
+        existense_probability_threshold=existense_probability_threshold,
         density=GaussianDensity,
     )
     estimates = []
-    simulation_time = K
-    from pprint import pprint
+    gospas = []
+    simulation_time = simulation_steps
+    acc = mm.MOTAccumulator()
 
-    for timestep in trange(simulation_time):
-        import logging
-
-        logging.debug(pmbm.__repr__())
-        pmbm.increment_timestep()
-        if len(meas_data[timestep]) > 0:
-            pmbm.update(measurements=meas_data[timestep])
-
-        current_step_estimates = pmbm.estimator()
-        pmbm.reduction()
+    for timestep in range(simulation_time):
+        logging.info(f"==============current timestep{timestep}===============")
+        with Timer(name="Full cycle of step"):
+            current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
+        targets_vector = np.array(
+            [target.x[:2] for target in object_data[timestep].values()]
+        )
+        if current_step_estimates:
+            estimates_vector = np.array(
+                [
+                    list(estimation.values())[0][:2]
+                    for estimation in current_step_estimates
+                ]
+            )
+        else:
+            estimates_vector = np.array([])
+        gospa = GOSPA(targets_vector, estimates_vector)
+        gospas.append(gospa)
         estimates.append(current_step_estimates)
-        pmbm.predict(survival_probability=survival_probability)
 
-    Plotter.plot_several(
-        [object_data, meas_data],
-        out_path=get_images_dir(__file__) + "/" + "object_and_meas_data" + ".png",
+        target_ids = []
+        target_points = []
+        for target_id, target_state in object_data[timestep].items():
+            target_ids.append(target_id)
+            target_points.append(target_state.x[:2])
+
+        estimation_ids = []
+        estimation_points = []
+        if current_step_estimates:
+            for estimation in current_step_estimates:
+                for estimation_id, estimation_state in estimation.items():
+                    estimation_ids.append(estimation_id)
+                    estimation_points.append(estimation_state[:2])
+
+        target_points = np.array(target_points)
+        estimation_points = np.array(estimation_points)
+        distance_matrix = mm.distances.norm2squared_matrix(
+            target_points, estimation_points
+        )
+
+        acc.update(target_ids, estimation_ids, dists=distance_matrix, frameid=timestep)
+
+    fig, (ax1, ax2, ax0, ax3, ax4) = plt.subplots(
+        5, 1, figsize=(6, 6 * 5), sharey=False, sharex=False
     )
 
-    fig = plt.figure()
-    ax = plt.subplot(111, aspect="equal")
-    ax.grid(which="both", linestyle="-", alpha=0.5)
-    ax.set_title(label="estimations")
-    ax.set_xlabel("x position")
-    ax.set_ylabel("y p{osition")
-    ax.set_xlim((-1000, 1000))
-    ax.set_ylim((-1000, 1000))
+    ax0.grid(which="both", linestyle="-", alpha=0.5)
+    ax0.set_title(label="ground truth")
+    ax0.set_xlabel("x position")
+    ax0.set_ylabel("y position")
+    ax0 = Plotter.plot_several(
+        [object_data],
+        ax=ax0,
+        out_path=get_images_dir(__file__) + "/" + "object_and_meas_data" + ".png",
+        is_autoscale=False,
+    )
+
+    ax1.grid(which="both", linestyle="-", alpha=0.5)
+    ax1.set_title(label="measurements")
+    ax1.set_xlabel("x position")
+    ax1.set_ylabel("y position")
+    ax1 = Plotter.plot_several(
+        [meas_data],
+        ax=ax1,
+        out_path=get_images_dir(__file__) + "/" + "object_and_meas_data" + ".png",
+        is_autoscale=False,
+    )
+
+    ax2.grid(which="both", linestyle="-", alpha=0.5)
+    ax2.set_title(label="estimations")
+    ax2.set_xlim([-1100, 1100])
+    ax2.set_ylim([-1100, 1100])
+    ax2.set_xlabel("x position")
+    ax2.set_ylabel("y position")
+
+    ax3.grid(which="both", linestyle="-", alpha=0.5)
+    ax3.set_title(label="x position over time")
+    ax3.set_xlabel("time")
+    ax3.set_ylabel("x position")
+    ax3.set_xlim([0, simulation_steps])
+    ax3.set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
+
+    ax4.grid(which="both", linestyle="-", alpha=0.5)
+    ax4.set_title(label="y position over time")
+    ax4.set_xlabel("time")
+    ax4.set_ylabel("y position")
+    ax4.set_xlim([0, simulation_steps])
+    ax4.set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
 
     lines = defaultdict(lambda: [])  # target_id: line
-    for current_timestep_estimations in estimates:
+    timelines = defaultdict(lambda: [])
+    for timestep, current_timestep_estimations in enumerate(estimates):
         if current_timestep_estimations:
             for estimation in current_timestep_estimations:
                 for target_id, state_vector in estimation.items():
                     pos_x, pos_y = state_vector[:2]
                     lines[target_id].append((pos_x, pos_y))
+                    ax3.scatter(timestep, pos_x, color=object_colors[target_id % 252])
+                    ax4.scatter(timestep, pos_y, color=object_colors[target_id % 252])
+                    timelines[target_id].append((timestep, pos_x, pos_y))
 
-    from mot.utils.visualizer.common.plot_series import OBJECT_COLORS as object_colors
+    for target_id, estimation_list in timelines.items():
+        timesteps = [time for (time, _, _) in estimation_list]
+        poses_x = [pos_x for (_, pos_x, _) in estimation_list]
+        poses_y = [pos_y for (_, _, pos_y) in estimation_list]
+        ax3.plot(timesteps, poses_x, color=object_colors[target_id % 252])
+        ax4.plot(timesteps, poses_y, color=object_colors[target_id % 252])
 
     for target_id, estimation_list in lines.items():
         for (pos_x, pos_y) in estimation_list:
-            plt.scatter(pos_x, pos_y, color=object_colors[target_id])
+            ax2.scatter(pos_x, pos_y, color=object_colors[target_id % 252])
 
+    # TODO check ot
+    rms_gospa_scene = np.sqrt(np.mean(np.power(np.array(gospas), 2)))
+
+    mh = mm.metrics.create()
+    summary = mh.compute(acc, metrics=["num_frames", "mota", "motp", "idp"], name="acc")
+    fig.suptitle(
+        f"RMS GOSPA ={rms_gospa_scene:.1f} "
+        f"MOTA ={summary['mota'].item():.1f} "
+        f"MOTP ={summary['motp'].item():.1f} "
+        f"IDP ={summary['idp'].item():.1f} ",
+        fontweight="bold",
+    )
     plt.savefig(get_images_dir(__file__) + "/" + "estimation" + ".png")
-    pprint(estimates)
-
-    # plt.show()
