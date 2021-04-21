@@ -2,18 +2,14 @@ from dataclasses import asdict
 
 import pytest
 from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import (
-    ConstantVelocityMeasurementModel,
-)
+from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
-from mot.scenarios.scenario_configs import (
-    linear_n_mot,
-)
+from mot.scenarios.initial_conditions import linear_n_mot_object_life_params
+from mot.scenarios.scenario_configs import linear_n_mot
 from mot.simulator import MeasurementData
 from mot.simulator.measurement_data_generator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
 from mot.trackers.n_object_trackers import GlobalNearestNeighboursTracker
-from mot.scenarios.initial_conditions import linear_n_mot_object_life_params
 
 
 @pytest.mark.parametrize(

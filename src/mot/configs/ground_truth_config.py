@@ -1,12 +1,10 @@
 from typing import List
 
-from .object_config import Object
-
 
 class GroundTruthConfig:
     def __init__(
         self,
-        object_configs: List[Object],
+        object_configs: List,
         total_time: int,
         *args,
         **kwargs,
@@ -22,6 +20,7 @@ class GroundTruthConfig:
         total_time : int
             total tracking time
         """
+        from .object_config import Object
 
         assert isinstance(total_time, int), "Argument of wrong type!"
         assert all(

@@ -27,6 +27,9 @@ class ConstantVelocityMeasurementModel(MeasurementModel):
     def __call__(self, x):
         return self.H @ x
 
+    def __repr__(self) -> str:
+        return self.__class__.__name__ + (f"(d={self.d}, " f"R={self.R}, ")
+
     def _observation_matrix(self, state_vector):
         assert isinstance(state_vector, np.ndarray)
         return self.H(state_vector)

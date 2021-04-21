@@ -1,19 +1,18 @@
 from collections import namedtuple
 from dataclasses import asdict
+
 import numpy as np
 import pytest
+from mot.common.state import Gaussian, GaussianMixture, WeightedGaussian
 from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
 from mot.scenarios.scenario_configs import linear_full_mot
-from mot.simulator import MeasurementData
-from mot.simulator.measurement_data_generator import MeasurementData
-from mot.simulator.object_data_generator import ObjectData
+from mot.simulator import MeasurementData, ObjectData
+from mot.trackers.multiple_object_trackers.PHD import GMPHD
 from mot.utils import Plotter
 from mot.utils.get_path import get_images_dir
 from mot.utils.visualizer import Plotter
-from mot.trackers.multiple_object_trackers import PHD
-from mot.common.state import Gaussian, WeightedGaussian, GaussianMixture
 
 test_env_cases = [
     (
@@ -115,7 +114,7 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs
             ]
         ]
     )
-    tracker = PHD(
+    tracker = GMPHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
         motion_model=env.motion_model,
@@ -154,7 +153,7 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs
             ]
         ]
     )
-    tracker = PHD.GMPHD(
+    tracker = GMPHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
         motion_model=env.motion_model,
@@ -200,7 +199,7 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwarg
             ]
         ]
     )
-    tracker = PHD(
+    tracker = GMPHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
         motion_model=env.motion_model,
@@ -251,7 +250,7 @@ def test_tracker_normal(config, motion_model, meas_model, name, *args, **kwargs)
     M = 100  # maximum number of hypotheses kept in MHT
     P_D = 0.99
 
-    tracker = PHD(
+    tracker = GMPHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
         motion_model=env.motion_model,

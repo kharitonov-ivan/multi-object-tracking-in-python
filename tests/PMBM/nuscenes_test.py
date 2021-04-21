@@ -38,20 +38,16 @@ class NuscenesTrackerEvaluator:
     def __init__(
         self, detection_filepath: str, nuscens_config: NuscenesDatasetConfig
     ) -> None:
-        with mp.Pool(processes=8) as pool:
+        # with mp.Pool(processes=8) as pool:
 
-            result1 = pool.map_async(self.initialize_nuscenes, [nuscens_config])
+        #     # result1 = pool.map_async(self.initialize_nuscenes, [nuscens_config])
 
-            result2 = pool.map_async(self.read_detection_file, [detection_filepath])
-            result1 = result1.get()
-            result2 = result2.get()
-        # _, _, self.detection_results = self.read_detection_file(detection_filepath)
-        # self.nuscenes_helper = self.initialize_nuscenes(nuscens_config)
-        # self.estimatios = {}
-
-        import pdb
-
-        pdb.set_trace()
+        #     # result2 = pool.map_async(self.read_detection_file, [detection_filepath])
+        #     # result1 = result1.get()
+        #     # result2 = result2.get()
+        _, _, self.detection_results = self.read_detection_file(detection_filepath)
+        self.nuscenes_helper = self.initialize_nuscenes(nuscens_config)
+        self.estimatios = {}
 
     def evaluate(self):
 

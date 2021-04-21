@@ -1,4 +1,4 @@
-from ..configs import GroundTruthConfig
+from ..configs.ground_truth_config import GroundTruthConfig
 from ..motion_models import MotionModel
 
 

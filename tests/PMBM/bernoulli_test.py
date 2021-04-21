@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 import pytest
+import mot
 from mot.common import Gaussian, GaussianDensity
 from mot.common.state import Gaussian
 from mot.measurement_models import ConstantVelocityMeasurementModel

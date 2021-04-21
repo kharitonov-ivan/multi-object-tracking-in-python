@@ -1,7 +1,8 @@
 import numpy as np
+from abc import ABC, abstractmethod
 
 
-class MeasurementModel:
+class MeasurementModel(ABC):
     """
     MeasurementModel is a abstract class for different measurement models.
     """
@@ -10,11 +11,11 @@ class MeasurementModel:
         self._generator = np.random.RandomState(random_state)
 
     def __repr__(self):
-        raise NotImplemented
+        pass
 
     def observe(self, params):
-        raise NotImplemented
+        pass
 
     @property
     def dim(self):
-        raise NotImplemented
+        pass

@@ -1,18 +1,14 @@
 import numpy as np
 
-from ..configs import SensorModelConfig
-from ..measurement_models import MeasurementModel
-from .object_data_generator import ObjectData
-
 
 class MeasurementData:
     """Generates object_generated measurements and clutter"""
 
     def __init__(
         self,
-        object_data: ObjectData,
-        sensor_model: SensorModelConfig,
-        meas_model: MeasurementModel,
+        object_data,
+        sensor_model,
+        meas_model,
         random_state=None,
     ):
         """Generates object generated measurement and clutter
