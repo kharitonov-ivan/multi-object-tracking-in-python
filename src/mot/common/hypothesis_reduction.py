@@ -7,9 +7,8 @@ from .gaussian_density import GaussianDensity
 
 class HypothesisReduction:
     @staticmethod
-    def prune(
-        hypotheses_weights: List[float], multi_hypotheses: List, threshold: float
-    ):
+    def prune(hypotheses_weights: List[float], multi_hypotheses: List,
+              threshold: float):
         """Prunes hypotheses with small weights
 
         Parameters
@@ -29,12 +28,14 @@ class HypothesisReduction:
             hypotheses after pruning
         """
         selection_indices = np.array(hypotheses_weights) > threshold
-        new_hypotheses_weights = np.array(hypotheses_weights)[selection_indices]
+        new_hypotheses_weights = np.array(
+            hypotheses_weights)[selection_indices]
         new_multi_hypotheses = np.array(multi_hypotheses)[selection_indices]
         return new_hypotheses_weights.tolist(), new_multi_hypotheses.tolist()
 
     @staticmethod
-    def cap(hypotheses_weights: List[float], multi_hypotheses: List, top_k: int):
+    def cap(hypotheses_weights: List[float], multi_hypotheses: List,
+            top_k: int):
         """keeps top_k hypotheses with the highest weights and discard the rest
 
         Parameters
@@ -55,14 +56,14 @@ class HypothesisReduction:
         """
         assert top_k >= 0, "only keep must be equal of larger than 0"
         selection_indices = np.argsort(hypotheses_weights)[:top_k]
-        new_hypotheses_weights = np.array(hypotheses_weights)[selection_indices]
+        new_hypotheses_weights = np.array(
+            hypotheses_weights)[selection_indices]
         new_multi_hypotheses = np.array(multi_hypotheses)[selection_indices]
         return new_hypotheses_weights.tolist(), new_multi_hypotheses.tolist()
 
     @staticmethod
-    def merge(
-        hypotheses_weights: List[float], multi_hypotheses: List, threshold: float
-    ):
+    def merge(hypotheses_weights: List[float], multi_hypotheses: List,
+              threshold: float):
         """Merges hypotheses with small Mahalanobis distance
 
         Parameters
@@ -86,7 +87,7 @@ class HypothesisReduction:
         (
             new_hypotheses_weights,
             new_multi_hypotheses,
-        ) = GaussianDensity.mixture_reduction(
-            weights=hypotheses_weights, states=multi_hypotheses, threshold=threshold
-        )
+        ) = GaussianDensity.mixture_reduction(weights=hypotheses_weights,
+                                              states=multi_hypotheses,
+                                              threshold=threshold)
         return new_hypotheses_weights, new_multi_hypotheses

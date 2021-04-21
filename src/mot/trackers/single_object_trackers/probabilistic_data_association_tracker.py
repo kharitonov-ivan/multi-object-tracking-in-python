@@ -56,13 +56,11 @@ class ProbabilisticDataAssociationTracker(SingleObjectTracker):
                 current_measurements=np.array(measurements_in_scene),
             )
             prev_state = GaussianDensity.predict(
-                state=estimations[timestep], motion_model=self.motion_model
-            )
+                state=estimations[timestep], motion_model=self.motion_model)
         return tuple(estimations)
 
-    def estimation_step(
-        self, predicted_state: Gaussian, current_measurements: np.ndarray
-    ):
+    def estimation_step(self, predicted_state: Gaussian,
+                        current_measurements: np.ndarray):
         # 1. Gating
         (meas_in_gate, _) = GaussianDensity.ellipsoidal_gating(
             state_prev=predicted_state,
@@ -82,8 +80,7 @@ class ProbabilisticDataAssociationTracker(SingleObjectTracker):
                         state_pred=predicted_state,
                         z=z_ingate,
                         measurement_model=self.meas_model,
-                    )
-                )
+                    ))
 
             predicted_likelihood = GaussianDensity.predicted_likelihood(
                 state_pred=predicted_state,
@@ -93,9 +90,8 @@ class ProbabilisticDataAssociationTracker(SingleObjectTracker):
 
             # Hypothesis evaluation
             # detection
-            w_theta_factor = np.log(
-                self.sensor_model.P_D / self.sensor_model.intensity_c
-            )
+            w_theta_factor = np.log(self.sensor_model.P_D /
+                                    self.sensor_model.intensity_c)
             w_theta_k = predicted_likelihood + w_theta_factor
             # misdetection
             w_theta_0 = 1 - self.sensor_model.P_D
@@ -111,8 +107,7 @@ class ProbabilisticDataAssociationTracker(SingleObjectTracker):
             log_w, log_sum_ = normalize_log_weights(hypotheses_weights_log)
             # def moment_matching(weights: List[float], states: List[Gaussian]) -> Gaussian:
             current_step_state = GaussianDensity.moment_matching(
-                weights=log_w, states=multi_hypotheses
-            )
+                weights=log_w, states=multi_hypotheses)
 
         estimation = current_step_state
         return estimation

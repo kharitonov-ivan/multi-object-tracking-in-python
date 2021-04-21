@@ -30,12 +30,12 @@ def generate_environment(config, motion_model, meas_model, *args, **kwargs):
     motion_model = motion_model(**config)
     sensor_model = SensorModelConfig(**config)
     meas_model = meas_model(**config)
-    object_data = ObjectData(
-        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
-    )
-    meas_data = MeasurementData(
-        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
-    )
+    object_data = ObjectData(ground_truth_config=ground_truth,
+                             motion_model=motion_model,
+                             if_noisy=False)
+    meas_data = MeasurementData(object_data=object_data,
+                                sensor_model=sensor_model,
+                                meas_model=meas_model)
     env = namedtuple(
         "env",
         [
@@ -60,14 +60,15 @@ def generate_environment(config, motion_model, meas_model, *args, **kwargs):
 
 
 @pytest.mark.parametrize("config,motion_model,meas_model,name", test_env_cases)
-def test_generate_environment(config, motion_model, meas_model, name, *args, **kwargs):
+def test_generate_environment(config, motion_model, meas_model, name, *args,
+                              **kwargs):
     env = generate_environment(config, motion_model, meas_model)
 
 
-@pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
-def test_components_list_operations(
-    config, motion_model, meas_model, name, *args, **kwargs
-):
+@pytest.mark.parametrize("config, motion_model, meas_model, name",
+                         test_env_cases)
+def test_components_list_operations(config, motion_model, meas_model, name,
+                                    *args, **kwargs):
     env = generate_environment(config, motion_model, meas_model)
 
     # Single object tracker parameter setting
@@ -76,25 +77,24 @@ def test_components_list_operations(
     merging_threshold = 2  # hypothesis merging threshold
     M = 100  # maximum number of hypotheses kept in MHT
 
-    birth_model = GaussianMixture(
-        [
-            WeightedGaussian(
-                log_weight=np.log(0.03), gaussian=Gaussian(x=pos, P=400 * np.eye(4))
-            )
-            for pos in [
-                np.array([0, 0, 0, 0]),
-                np.array([400, -600, 0, 0]),
-                np.array([-800, -200, 0, 0]),
-                np.array([-200, 800, 0, 0]),
-            ]
+    birth_model = GaussianMixture([
+        WeightedGaussian(log_weight=np.log(0.03),
+                         gaussian=Gaussian(x=pos, P=400 * np.eye(4)))
+        for pos in [
+            np.array([0, 0, 0, 0]),
+            np.array([400, -600, 0, 0]),
+            np.array([-800, -200, 0, 0]),
+            np.array([-200, 800, 0, 0]),
         ]
-    )
+    ])
     gmm_components = GaussianMixture()
     gmm_components.extend(birth_model)
 
 
-@pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
-def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs):
+@pytest.mark.parametrize("config, motion_model, meas_model, name",
+                         test_env_cases)
+def test_tracker_predict(config, motion_model, meas_model, name, *args,
+                         **kwargs):
     env = generate_environment(config, motion_model, meas_model)
 
     # Single object tracker parameter setting
@@ -103,17 +103,15 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs
     merging_threshold = 2  # hypothesis merging threshold
     M = 100  # maximum number of hypotheses kept in MHT
 
-    birth_model = GaussianMixture(
-        [
-            WeightedGaussian(weight=np.log(0.03), gm=Gaussian(x=pos, P=400 * np.eye(4)))
-            for pos in [
-                np.array([0, 0, 0, 0]),
-                np.array([400, -600, 0, 0]),
-                np.array([-800, -200, 0, 0]),
-                np.array([-200, 800, 0, 0]),
-            ]
-        ]
-    )
+    birth_model = GaussianMixture([
+        WeightedGaussian(weight=np.log(0.03),
+                         gm=Gaussian(x=pos, P=400 * np.eye(4))) for pos in [
+                             np.array([0, 0, 0, 0]),
+                             np.array([400, -600, 0, 0]),
+                             np.array([-800, -200, 0, 0]),
+                             np.array([-200, 800, 0, 0]),
+                         ]
+    ])
     tracker = GMPHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
@@ -130,8 +128,10 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs
     tracker.predict_step()
 
 
-@pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
-def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs):
+@pytest.mark.parametrize("config, motion_model, meas_model, name",
+                         test_env_cases)
+def test_tracker_predict(config, motion_model, meas_model, name, *args,
+                         **kwargs):
     env = generate_environment(config, motion_model, meas_model)
 
     # Single object tracker parameter setting
@@ -140,19 +140,16 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs
     merging_threshold = 2  # hypothesis merging threshold
     M = 100  # maximum number of hypotheses kept in MHT
 
-    birth_model = GaussianMixture(
-        [
-            WeightedGaussian(
-                log_weight=np.log(0.03), gaussian=Gaussian(x=pos, P=400 * np.eye(4))
-            )
-            for pos in [
-                np.array([0, 0, 0, 0]),
-                np.array([400, -600, 0, 0]),
-                np.array([-800, -200, 0, 0]),
-                np.array([-200, 800, 0, 0]),
-            ]
+    birth_model = GaussianMixture([
+        WeightedGaussian(log_weight=np.log(0.03),
+                         gaussian=Gaussian(x=pos, P=400 * np.eye(4)))
+        for pos in [
+            np.array([0, 0, 0, 0]),
+            np.array([400, -600, 0, 0]),
+            np.array([-800, -200, 0, 0]),
+            np.array([-200, 800, 0, 0]),
         ]
-    )
+    ])
     tracker = GMPHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
@@ -169,14 +166,15 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs
     tracker.predict_step()
 
     test_measurements = np.array(
-        [config.object_configs[idx].initial_state.x[0:2] for idx in range(3)]
-    )
+        [config.object_configs[idx].initial_state.x[0:2] for idx in range(3)])
     # One step update
     tracker.update(z=test_measurements)
 
 
-@pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
-def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwargs):
+@pytest.mark.parametrize("config, motion_model, meas_model, name",
+                         test_env_cases)
+def test_tracker_estimate(config, motion_model, meas_model, name, *args,
+                          **kwargs):
     env = generate_environment(config, motion_model, meas_model)
 
     # Single object tracker parameter setting
@@ -186,19 +184,16 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwarg
     M = 100  # maximum number of hypotheses kept in MHT
     P_D = 0.9
 
-    birth_model = GaussianMixture(
-        [
-            WeightedGaussian(
-                log_weight=np.log(0.03), gaussian=Gaussian(x=pos, P=400 * np.eye(4))
-            )
-            for pos in [
-                np.array([0, 0, 0, 0]),
-                np.array([400, -600, 0, 0]),
-                np.array([-800, -200, 0, 0]),
-                np.array([-200, 800, 0, 0]),
-            ]
+    birth_model = GaussianMixture([
+        WeightedGaussian(log_weight=np.log(0.03),
+                         gaussian=Gaussian(x=pos, P=400 * np.eye(4)))
+        for pos in [
+            np.array([0, 0, 0, 0]),
+            np.array([400, -600, 0, 0]),
+            np.array([-800, -200, 0, 0]),
+            np.array([-200, 800, 0, 0]),
         ]
-    )
+    ])
     tracker = GMPHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
@@ -216,8 +211,7 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwarg
     tracker.predict_step()
 
     test_measurements = np.array(
-        [config.object_configs[idx].initial_state.x[0:2] for idx in range(3)]
-    )
+        [config.object_configs[idx].initial_state.x[0:2] for idx in range(3)])
     # One step update
     tracker.update(z=test_measurements)
 
@@ -225,22 +219,21 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwarg
     estimates = tracker.PHD_estimator()
 
 
-@pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
-def test_tracker_normal(config, motion_model, meas_model, name, *args, **kwargs):
+@pytest.mark.parametrize("config, motion_model, meas_model, name",
+                         test_env_cases)
+def test_tracker_normal(config, motion_model, meas_model, name, *args,
+                        **kwargs):
 
-    birth_model = GaussianMixture(
-        [
-            WeightedGaussian(
-                log_weight=np.log(0.03), gaussian=Gaussian(x=pos, P=400 * np.eye(4))
-            )
-            for pos in [
-                np.array([0, 0, 0, 0]),
-                np.array([400, -600, 0, 0]),
-                np.array([-800, -200, 0, 0]),
-                np.array([-200, 800, 0, 0]),
-            ]
+    birth_model = GaussianMixture([
+        WeightedGaussian(log_weight=np.log(0.03),
+                         gaussian=Gaussian(x=pos, P=400 * np.eye(4)))
+        for pos in [
+            np.array([0, 0, 0, 0]),
+            np.array([400, -600, 0, 0]),
+            np.array([-800, -200, 0, 0]),
+            np.array([-200, 800, 0, 0]),
         ]
-    )
+    ])
     env = generate_environment(config, motion_model, meas_model)
 
     # Single object tracker parameter setting
@@ -272,11 +265,10 @@ def test_tracker_normal(config, motion_model, meas_model, name, *args, **kwargs)
     # )
 
     Plotter.plot_several(
-        [env.meas_data, env.object_data, list(estimations)],
-        out_path=get_images_dir(__file__)
-        + "/"
-        + "meas_data_and_obj_data_and_estimations"
-        + ".png",
+        [env.meas_data, env.object_data,
+         list(estimations)],
+        out_path=get_images_dir(__file__) + "/" +
+        "meas_data_and_obj_data_and_estimations" + ".png",
     )
 
     Plotter.plot_several(

@@ -36,8 +36,7 @@ def plot_measurement_scene(
                 ax=ax,
                 color=clutter_color,
                 marker=clutter_marker,
-            )
-        )
+            ))
 
     for observation_point in measurements.meas_data[timestep]:
         artists.append(
@@ -47,8 +46,7 @@ def plot_measurement_scene(
                 ax=ax,
                 color=OBJECT_MEASUREMENT_COLOR,
                 marker=OBJECT_MEASUREMENT_MARKER,
-            )
-        )
+            ))
     return artists
 
 
@@ -76,19 +74,18 @@ def _plot_series(series: ObjectData, ax, *args, **kwargs):
             ax.add_artist(point)
 
     legend_elements, labels = ax.get_legend_handles_labels()
-    legend_elements.extend(
-        [
-            Line2D(
-                [0],
-                [0],
-                marker=OBJECT_MARKER,
-                color=OBJECT_COLORS[object_id],
-                label=f"object {object_id}",
-            )
-            for object_id in range(series._ground_truth_config.n_births)
-        ]
-    )
-    lgd = ax.legend(handles=legend_elements, loc="best", bbox_to_anchor=(1, 0.815))
+    legend_elements.extend([
+        Line2D(
+            [0],
+            [0],
+            marker=OBJECT_MARKER,
+            color=OBJECT_COLORS[object_id],
+            label=f"object {object_id}",
+        ) for object_id in range(series._ground_truth_config.n_births)
+    ])
+    lgd = ax.legend(handles=legend_elements,
+                    loc="best",
+                    bbox_to_anchor=(1, 0.815))
     return ax
 
 
@@ -99,9 +96,13 @@ def __plot_series(series: MeasurementData, ax, *args, **kwargs):
 
     legend_elements, labels = ax.get_legend_handles_labels()
     legend_elements.append(
-        Line2D([0], [0], marker=CLUTTER_MARKER, color=CLUTTER_COLOR, label="clutter")
-    )
-    lgd = ax.legend(handles=legend_elements, loc="best", bbox_to_anchor=(1, 0.815))
+        Line2D([0], [0],
+               marker=CLUTTER_MARKER,
+               color=CLUTTER_COLOR,
+               label="clutter"))
+    lgd = ax.legend(handles=legend_elements,
+                    loc="best",
+                    bbox_to_anchor=(1, 0.815))
     return ax
 
 
@@ -121,15 +122,14 @@ def ___plot_series(series: list, ax, *args, **kwargs):
                     ax=ax,
                     color="r",
                     marker="x",
-                )
-            )
+                ))
         elif isinstance(scene, list):
             if scene:
                 for curr_object in scene:
                     if isinstance(curr_object, Gaussian):
-                        for patch in BasicPlotter.plot_state(
-                            curr_object, ax=ax, color="m"
-                        ):
+                        for patch in BasicPlotter.plot_state(curr_object,
+                                                             ax=ax,
+                                                             color="m"):
                             ax.add_artist(patch)
     return ax
 
@@ -156,6 +156,8 @@ def ____plot_series(series: np.ndarray, ax, *args, **kwargs):
         states = series[timestep]
         for state in states:
             ax.add_artist(
-                BasicPlotter.plot_point(x=state[0], y=state[1], ax=ax, color="m")
-            )
+                BasicPlotter.plot_point(x=state[0],
+                                        y=state[1],
+                                        ax=ax,
+                                        color="m"))
     return ax

@@ -26,10 +26,10 @@ class Gaussian:
         assert isinstance(self.P, np.ndarray), "Argument of wrong type!"
         assert self.x.ndim == 1, "x must be N - vector"
         assert self.P.ndim == 2, "P must be N x N matrix"
-        assert self.P.shape[0] == self.P.shape[1], "Covariance matrix should be square!"
-        assert (
-            self.P.shape[0] == self.x.shape[0]
-        ), "size of vector should be equal P column size!"
+        assert self.P.shape[0] == self.P.shape[
+            1], "Covariance matrix should be square!"
+        assert (self.P.shape[0] == self.x.shape[0]
+                ), "size of vector should be equal P column size!"
 
     def __repr__(self) -> str:
         np.set_printoptions(linewidth=np.inf)
@@ -99,11 +99,13 @@ class GaussianMixture(collections.abc.MutableSequence):
 
     @property
     def states_np(self):
-        return np.array([state.gaussian.x for state in self.weighted_components])
+        return np.array(
+            [state.gaussian.x for state in self.weighted_components])
 
     @property
     def covariances_np(self):
-        return np.array([state.gaussian.P for state in self.weighted_components])
+        return np.array(
+            [state.gaussian.P for state in self.weighted_components])
 
     def __copy__(self):
         return GaussianMixture(weighted_components=self.weighted_components)

@@ -24,13 +24,12 @@ def vectorized_gaussian_logpdf(X, means, covariances):
     log_determinants = np.log(np.prod(covariances, axis=1))
     deviations = X - means
     inverses = 1 / covariances
-    return -0.5 * (
-        constant + log_determinants + np.sum(deviations * inverses * deviations, axis=1)
-    )
+    return -0.5 * (constant + log_determinants +
+                   np.sum(deviations * inverses * deviations, axis=1))
 
 
 if __name__ == "__main__":
-    n = 128 ** 2
+    n = 128**2
     d = 64
 
     means = np.random.uniform(-1, 1, (n, d))
@@ -41,7 +40,8 @@ if __name__ == "__main__":
 
     ref_start = time.time()
     for x, mean, covariance in zip(X, means, covariances):
-        refs.append(scipy.stats.multivariate_normal.logpdf(x, mean, covariance))
+        refs.append(scipy.stats.multivariate_normal.logpdf(
+            x, mean, covariance))
     ref_time = time.time() - ref_start
 
     fast_start = time.time()

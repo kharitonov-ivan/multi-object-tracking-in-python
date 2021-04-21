@@ -13,8 +13,7 @@ from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.metrics import GOSPA
 from mot.motion_models import ConstantVelocityMotionModel
 from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
-    StaticBirthModel,
-)
+    StaticBirthModel, )
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from mot.utils import Plotter, get_images_dir
 from mot.utils.timer import Timer
@@ -28,28 +27,24 @@ def scenario_detection_probability(request):
     yield request.param
 
 
-@pytest.fixture(
-    params=[
-        0.5,
-        10.0,
-        5.0,
-    ]
-)
+@pytest.fixture(params=[
+    0.5,
+    10.0,
+    5.0,
+])
 def scenario_clutter_rate(request):
     yield request.param
 
 
-@pytest.fixture(
-    params=[
-        object_motion_scenarious.single_static_object,
-        object_motion_scenarious.two_static_objects,
-        object_motion_scenarious.tree_static_objects,
-        object_motion_scenarious.single_object_linear_motion,
-        object_motion_scenarious.two_objects_linear_motion,
-        object_motion_scenarious.two_objects_linear_motion_delayed,
-        object_motion_scenarious.many_objects_linear_motion_delayed,
-    ]
-)
+@pytest.fixture(params=[
+    object_motion_scenarious.single_static_object,
+    object_motion_scenarious.two_static_objects,
+    object_motion_scenarious.tree_static_objects,
+    object_motion_scenarious.single_object_linear_motion,
+    object_motion_scenarious.two_objects_linear_motion,
+    object_motion_scenarious.two_objects_linear_motion_delayed,
+    object_motion_scenarious.many_objects_linear_motion_delayed,
+])
 def object_motion_fixture(request):
     yield request.param
 
@@ -88,22 +83,22 @@ def test_synthetic_scenario(
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
-    sensor_model = mot.configs.SensorModelConfig(
-        P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c
-    )
+    sensor_model = mot.configs.SensorModelConfig(P_D=detection_probability,
+                                                 lambda_c=clutter_rate,
+                                                 range_c=range_c)
 
     # Generate true object data (noisy or noiseless) and measurement data
-    ground_truth = mot.configs.GroundTruthConfig(
-        object_motion_fixture, total_time=simulation_steps
-    )
-    object_data = mot.simulator.ObjectData(
-        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
-    )
-    meas_data = mot.simulator.MeasurementData(
-        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
-    )
+    ground_truth = mot.configs.GroundTruthConfig(object_motion_fixture,
+                                                 total_time=simulation_steps)
+    object_data = mot.simulator.ObjectData(ground_truth_config=ground_truth,
+                                           motion_model=motion_model,
+                                           if_noisy=False)
+    meas_data = mot.simulator.MeasurementData(object_data=object_data,
+                                              sensor_model=sensor_model,
+                                              meas_model=meas_model)
 
-    logging.debug(f"object motion config {pprint.pformat(object_motion_fixture)}")
+    logging.debug(
+        f"object motion config {pprint.pformat(object_motion_fixture)}")
 
     # Object tracker parameter setting
     gating_percentage = 1.0  # gating size in percentage
@@ -137,21 +132,17 @@ def test_synthetic_scenario(
         estimates.append(current_step_estimates)
 
         target_points = np.array(
-            [target.x[:2] for target in object_data[timestep].values()]
-        )
+            [target.x[:2] for target in object_data[timestep].values()])
         target_ids = [target_id for target_id in object_data[timestep].keys()]
 
         if current_step_estimates:
-            estimation_points = np.array(
-                [
-                    list(estimation.values())[0][:2]
-                    for estimation in current_step_estimates
-                ]
-            )
+            estimation_points = np.array([
+                list(estimation.values())[0][:2]
+                for estimation in current_step_estimates
+            ])
 
             estimation_ids = [
-                estimation_ids
-                for estimation in current_step_estimates
+                estimation_ids for estimation in current_step_estimates
                 for estimation_ids in estimation.keys()
             ]
 
@@ -162,16 +153,18 @@ def test_synthetic_scenario(
         gospas.append(GOSPA(target_points, estimation_points))
 
         distance_matrix = mm.distances.norm2squared_matrix(
-            target_points, estimation_points
-        )
+            target_points, estimation_points)
 
-        motmetrics_accumulator.update(
-            target_ids, estimation_ids, dists=distance_matrix, frameid=timestep
-        )
+        motmetrics_accumulator.update(target_ids,
+                                      estimation_ids,
+                                      dists=distance_matrix,
+                                      frameid=timestep)
 
-    fig, (ax1, ax2, ax0, ax3, ax4) = plt.subplots(
-        5, 1, figsize=(8, 8 * 5), sharey=False, sharex=False
-    )
+    fig, (ax1, ax2, ax0, ax3, ax4) = plt.subplots(5,
+                                                  1,
+                                                  figsize=(8, 8 * 5),
+                                                  sharey=False,
+                                                  sharex=False)
 
     ax0.grid(which="both", linestyle="-", alpha=0.5)
     ax0.set_title(label="ground truth")
@@ -207,14 +200,16 @@ def test_synthetic_scenario(
     ax3.set_xlabel("time")
     ax3.set_ylabel("x position")
     ax3.set_xlim([0, simulation_steps])
-    ax3.set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
+    ax3.set_xticks(
+        np.arange(0, simulation_time, step=int(simulation_time / 10)))
 
     ax4.grid(which="both", linestyle="-", alpha=0.5)
     ax4.set_title(label="y position over time")
     ax4.set_xlabel("time")
     ax4.set_ylabel("y position")
     ax4.set_xlim([0, simulation_steps])
-    ax4.set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
+    ax4.set_xticks(
+        np.arange(0, simulation_time, step=int(simulation_time / 10)))
 
     lines = defaultdict(lambda: [])  # target_id: line
     timelines = defaultdict(lambda: [])
@@ -224,8 +219,12 @@ def test_synthetic_scenario(
                 for target_id, state_vector in estimation.items():
                     pos_x, pos_y = state_vector[:2]
                     lines[target_id].append((pos_x, pos_y))
-                    ax3.scatter(timestep, pos_x, color=object_colors[target_id % 252])
-                    ax4.scatter(timestep, pos_y, color=object_colors[target_id % 252])
+                    ax3.scatter(timestep,
+                                pos_x,
+                                color=object_colors[target_id % 252])
+                    ax4.scatter(timestep,
+                                pos_y,
+                                color=object_colors[target_id % 252])
                     timelines[target_id].append((timestep, pos_x, pos_y))
 
     for target_id, estimation_list in timelines.items():

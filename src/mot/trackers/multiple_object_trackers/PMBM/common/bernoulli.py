@@ -15,15 +15,14 @@ class Bernoulli:
     r : scalar
         probability of existence
     """
-
     def __init__(self, state: Gaussian, existence_probability: float):
         self.state: Gaussian = state
         self.existence_probability: float = existence_probability
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
-            f"(r={self.existence_probability:.4f}, " f"state={self.state}"
-        )
+            f"(r={self.existence_probability:.4f}, "
+            f"state={self.state}")
 
     def predict(
         self,
@@ -48,22 +47,18 @@ class Bernoulli:
         """
 
         posterior_existence_probability = (
-            self.existence_probability * (1 - detection_probability)
-        ) / (
-            1
-            - self.existence_probability
-            + self.existence_probability * (1 - detection_probability)
-        )
+            self.existence_probability *
+            (1 - detection_probability)) / (1 - self.existence_probability +
+                                            self.existence_probability *
+                                            (1 - detection_probability))
         posterior_bern = Bernoulli(self.state, posterior_existence_probability)
         return posterior_bern
 
     def undetected_update_loglikelihood(self, detection_probability: float):
         missdetecion_probability = 1 - detection_probability
         likelihood_predicted = (
-            1
-            - self.existence_probability
-            + self.existence_probability * missdetecion_probability
-        )
+            1 - self.existence_probability +
+            self.existence_probability * missdetecion_probability)
         log_likelihood_predicted = np.log(likelihood_predicted)
         return log_likelihood_predicted
 
@@ -81,13 +76,10 @@ class Bernoulli:
         assert isinstance(meas_model, MeasurementModel)
         assert measurement.ndim == 1
 
-        log_likelihood_detected = (
-            density.predict_loglikelihood(
-                self.state, np.expand_dims(measurement, axis=0), meas_model
-            )
-            + np.log(detection_probability)
-            + np.log(self.existence_probability)
-        )
+        log_likelihood_detected = (density.predict_loglikelihood(
+            self.state, np.expand_dims(measurement, axis=0), meas_model) +
+                                   np.log(detection_probability) +
+                                   np.log(self.existence_probability))
         return log_likelihood_detected
 
     def detected_update_state(
@@ -104,5 +96,6 @@ class Bernoulli:
         assert measurement.ndim == 1
 
         updated_density = density.update(self.state, measurement, meas_model)
-        update_bern = Bernoulli(state=updated_density, existence_probability=1.0)
+        update_bern = Bernoulli(state=updated_density,
+                                existence_probability=1.0)
         return update_bern

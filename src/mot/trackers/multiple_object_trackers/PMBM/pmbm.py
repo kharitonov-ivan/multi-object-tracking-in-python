@@ -76,14 +76,14 @@ class PMBM:
 
         # Interval for ellipsoidal gating (aka P_G)
         self.gating_percentage = gating_percentage
-        self.gating_size = scipy.stats.chi2.ppf(
-            self.gating_percentage, df=self.meas_model.d
-        )
+        self.gating_size = scipy.stats.chi2.ppf(self.gating_percentage,
+                                                df=self.meas_model.d)
 
         self.max_number_of_hypotheses = max_number_of_hypotheses
         self.existense_probability_threshold = existense_probability_threshold
 
-        self.PPP = PoissonRFS(intensity=self.birth_model.get_born_objects_intensity())
+        self.PPP = PoissonRFS(
+            intensity=self.birth_model.get_born_objects_intensity())
         self.MBM = MultiBernouilliMixture()
         self.assingner_pool = Pool(processes=6)
 
@@ -92,8 +92,7 @@ class PMBM:
             f"(current_timestep={self.timestep}, "
             f"MBM components ={len(self.MBM.tracks)}, "
             f"Global hypotheses={len(self.MBM.global_hypotheses)}, "
-            f"PPP components={len(self.PPP.intensity)}, "
-        )
+            f"PPP components={len(self.PPP.intensity)}, ")
 
     def step(self, measurements: np.ndarray, dt: float):
         self.increment_timestep()
@@ -168,8 +167,7 @@ class PMBM:
                     hypo_list.append(Association(track_id, sth_id))
 
             self.MBM.global_hypotheses.append(
-                GlobalHypothesis(log_weight=0.0, associations=hypo_list)
-            )
+                GlobalHypothesis(log_weight=0.0, associations=hypo_list))
 
         else:
 
@@ -201,7 +199,8 @@ class PMBM:
             # new_global_hypotheses = itertools.chain.from_iterable(
             #     [problem.solve() for problem in assignment_problems]))
 
-            new_global_hypotheses = itertools.chain.from_iterable(parallel_global_hypo)
+            new_global_hypotheses = itertools.chain.from_iterable(
+                parallel_global_hypo)
 
             with Timer(name="Prepation for the next step"):
                 self.update_tree()
@@ -217,9 +216,8 @@ class PMBM:
 
     @Timer(name="PMBM estimation step")
     def estimator(self):
-        estimates = self.MBM.estimator(
-            existense_probability_threshold=self.existense_probability_threshold
-        )
+        estimates = self.MBM.estimator(existense_probability_threshold=self.
+                                       existense_probability_threshold)
         return estimates
 
     @Timer(name="PMBM reduction step")

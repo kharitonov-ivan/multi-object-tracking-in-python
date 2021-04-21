@@ -16,9 +16,12 @@ logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 class Animator:
     @staticmethod
-    def animate(
-        timeseries_list, ax=None, title=None, filename=None, show=False, **kwargs
-    ):
+    def animate(timeseries_list,
+                ax=None,
+                title=None,
+                filename=None,
+                show=False,
+                **kwargs):
         if ax is None:
             fig, ax = create_figure(title=title)
 
@@ -54,8 +57,7 @@ class Animator:
                             color="r",
                             marker="*",
                             label="measurements",
-                        )
-                    )
+                        ))
                 # elif isinstance(timeseries, tuple) or isinstance(timeseries, list):
                 #     if not isinstance(timeseries[timestep], list):
                 #         if isinstance(timeseries[timestep], Gaussian):

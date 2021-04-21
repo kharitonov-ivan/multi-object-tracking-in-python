@@ -20,7 +20,8 @@ class GaussianDensity:
         """
 
     @staticmethod
-    def predict(state: Gaussian, motion_model: MotionModel, dt: float) -> Gaussian:
+    def predict(state: Gaussian, motion_model: MotionModel,
+                dt: float) -> Gaussian:
         """Performs linear/nonlinear (Extended) Kalman prediction step
 
         Args:
@@ -32,7 +33,8 @@ class GaussianDensity:
         """
         next_x = motion_model.f(state.x, dt)
         next_F = motion_model.F(state.x, dt)
-        next_P = np.linalg.multi_dot([next_F, state.P, next_F.T]) + motion_model.Q(dt)
+        next_P = np.linalg.multi_dot([next_F, state.P, next_F.T
+                                      ]) + motion_model.Q(dt)
         return Gaussian(next_x, next_P)
 
     @staticmethod
@@ -53,22 +55,23 @@ class GaussianDensity:
         K = initial_states.covariances_np @ H_x.T @ np.linalg.inv(S)
 
         measurement_row = np.vstack([measurement] * initial_states.size)
-        fraction = measurement_row - measurement_model.h(initial_states.states_np.T).T
+        fraction = measurement_row - measurement_model.h(
+            initial_states.states_np.T).T
         with_K = np.einsum("ijk,ik->ij", K, fraction)
         new_states = initial_states.states_np + with_K
 
         state_vector_size = initial_states.states_np[0].shape[0]
 
-        next_covariances = (
-            np.eye(state_vector_size) - K @ H_x
-        ) @ initial_states.covariances_np
+        next_covariances = (np.eye(state_vector_size) -
+                            K @ H_x) @ initial_states.covariances_np
 
         next_states = [
             Gaussian(new_states[idx], next_covariances[idx])
             for idx in range(initial_states.size)
         ]
 
-        measurements_bar = np.expand_dims(H_x, axis=0) @ initial_states.states_np.T
+        measurements_bar = np.expand_dims(H_x,
+                                          axis=0) @ initial_states.states_np.T
 
         # it takes 0.0277 sec
         # TODO: clean up
@@ -108,11 +111,13 @@ class GaussianDensity:
 
         with_K = K @ fraction.T
 
-        next_states = np.vstack([initial_state.x] * len(measurements)) + with_K.T
+        next_states = np.vstack(
+            [initial_state.x] * len(measurements)) + with_K.T
 
         state_vector_size = initial_state.x.shape[0]
 
-        next_covariances = (np.eye(state_vector_size) - K @ H_x) @ initial_state.P
+        next_covariances = (np.eye(state_vector_size) -
+                            K @ H_x) @ initial_state.P
 
         return next_states, next_covariances
 
@@ -148,9 +153,8 @@ class GaussianDensity:
         return loglikelihoods
 
     @staticmethod
-    def update(
-        state_pred: Gaussian, z, measurement_model: MeasurementModel
-    ) -> Gaussian:
+    def update(state_pred: Gaussian, z,
+               measurement_model: MeasurementModel) -> Gaussian:
         """
         Performs linear/nonlinear (Extended) Kalman update step
 
@@ -176,16 +180,16 @@ class GaussianDensity:
         H_x = measurement_model.H(state_pred.x)
 
         # Innovation covariance
-        S = np.linalg.multi_dot([H_x, state_pred.P, H_x.T]) + measurement_model.R
+        S = np.linalg.multi_dot([H_x, state_pred.P, H_x.T
+                                 ]) + measurement_model.R
 
         # Make sure matrix S is positive definite
         S = 0.5 * (S + S.T)
 
         K = state_pred.P @ H_x.T @ np.linalg.inv(S)
 
-        next_x = (
-            state_pred.x + (K @ (z - measurement_model.h(state_pred.x)).T).squeeze()
-        )
+        next_x = (state_pred.x +
+                  (K @ (z - measurement_model.h(state_pred.x)).T).squeeze())
 
         assert next_x.shape == state_pred.x.shape
 
@@ -199,8 +203,8 @@ class GaussianDensity:
 
     @staticmethod
     def predict_loglikelihood(
-        state_pred: Gaussian, z: npt.ArrayLike, measurement_model: MeasurementModel
-    ) -> np.ndarray:
+            state_pred: Gaussian, z: npt.ArrayLike,
+            measurement_model: MeasurementModel) -> np.ndarray:
         """Calculates the predicted likelihood in logarithm domain
         Returns:
             predicted_loglikelihood (np.ndarray (number of measurements)): predicted likelihood
@@ -219,10 +223,12 @@ class GaussianDensity:
         # Predicted measurement
         z_bar = H_x @ state_pred.x
 
-        predicted_loglikelihood = np.zeros(z.shape[0])  # size - num of measurements
+        predicted_loglikelihood = np.zeros(
+            z.shape[0])  # size - num of measurements
 
         for idx in range(z.shape[0]):
-            predicted_loglikelihood[idx] = multivariate_normal.logpdf(z[idx], z_bar, S)
+            predicted_loglikelihood[idx] = multivariate_normal.logpdf(
+                z[idx], z_bar, S)
 
         assert predicted_loglikelihood.shape[0] == z.shape[0]
         return predicted_loglikelihood
@@ -277,7 +283,8 @@ class GaussianDensity:
         # TODO vectorize this
         for i in range(num_of_measurements):
             try:
-                Machlanobis_dist[i] = z_diff[i] @ np.linalg.inv(S) @ z_diff[i].T
+                Machlanobis_dist[i] = z_diff[i] @ np.linalg.inv(
+                    S) @ z_diff[i].T
             except:
                 logging.warning("It seems, cannot inverse S, skip step")
                 return np.array([]), []
@@ -289,7 +296,8 @@ class GaussianDensity:
         return z_ingate, indices_in_gate
 
     @staticmethod
-    def moment_matching(weights: List[float], states: List[Gaussian]) -> Gaussian:
+    def moment_matching(weights: List[float],
+                        states: List[Gaussian]) -> Gaussian:
         """Aproximates a Gaussian mixture density as a single Gaussian using moment matching
 
         Args:
@@ -325,9 +333,8 @@ class GaussianDensity:
         return matched_state
 
     @staticmethod
-    def moment_matching_vectorized(
-        log_weights: List[float], states: List[Gaussian]
-    ) -> Gaussian:
+    def moment_matching_vectorized(log_weights: List[float],
+                                   states: List[Gaussian]) -> Gaussian:
         """Aproximates a Gaussian mixture density as a single Gaussian using moment matching
 
         Args:
@@ -343,13 +350,12 @@ class GaussianDensity:
 
         weights = np.exp(log_weights)
 
-        x_bar_np = np.average(
-            np.array([state.x for state in states]), axis=0, weights=weights
-        )
+        x_bar_np = np.average(np.array([state.x for state in states]),
+                              axis=0,
+                              weights=weights)
         delta_state = x_bar_np - np.array([state.x for state in states])
         ps = np.array([state.P for state in states]).T + np.einsum(
-            "ij,ij->i", delta_state, delta_state
-        )
+            "ij,ij->i", delta_state, delta_state)
 
         P_bar_np = np.average(ps.T, axis=0, weights=weights)
         matched_state = Gaussian(x=x_bar_np, P=P_bar_np)
@@ -396,11 +402,10 @@ class GaussianDensity:
 
             # perform moment matching for states that close to state with max weights
             normalized_weights, log_sum_w = normalize_log_weights(
-                [weights[idx] for idx in idx_to_merge]
-            )
+                [weights[idx] for idx in idx_to_merge])
             merged_state = GaussianDensity.moment_matching(
-                weights=normalized_weights, states=[states[idx] for idx in idx_to_merge]
-            )
+                weights=normalized_weights,
+                states=[states[idx] for idx in idx_to_merge])
 
             # Remove merged states from original list of states
             for idx in reversed(idx_to_merge):

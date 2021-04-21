@@ -41,12 +41,14 @@ class ConstantVelocityMotionModel(MotionModel):
     def Q(self, dt):
         return self._get_motion_noise_covariance(dt=dt, sigma=self.sigma)
 
-    def move(
-        self, state: Gaussian, dt: float = None, if_noisy: bool = False
-    ) -> Gaussian:
+    def move(self,
+             state: Gaussian,
+             dt: float = None,
+             if_noisy: bool = False) -> Gaussian:
         dt = self.dt if dt is None else dt
         assert isinstance(dt, float)
-        assert isinstance(state, Gaussian), f"Argument of wrong type! Type ={type}"
+        assert isinstance(state,
+                          Gaussian), f"Argument of wrong type! Type ={type}"
         if if_noisy:
             next_state = Gaussian(
                 x=self._generator.multivariate_normal(
@@ -65,14 +67,12 @@ class ConstantVelocityMotionModel(MotionModel):
     def _transition_matrix(self, dt=None):
         dt = self.dt if dt is None else dt
         assert isinstance(dt, float)
-        F = np.array(
-            [
-                [1.0, 0.0, dt, 0.0],
-                [0.0, 1.0, 0.0, dt],
-                [0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ]
-        )
+        F = np.array([
+            [1.0, 0.0, dt, 0.0],
+            [0.0, 1.0, 0.0, dt],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
         return F
 
     def _get_motion_noise_covariance(self, dt=None, sigma=None):
@@ -82,14 +82,12 @@ class ConstantVelocityMotionModel(MotionModel):
         sigma = self.sigma if sigma is None else sigma
         assert isinstance(sigma, float)
 
-        Q = sigma ** 2 * np.array(
-            [
-                [dt ** 4 / 4.0, 0.0, dt ** 3 / 2.0, 0.0],
-                [0.0, dt ** 4.0 / 4.0, 0.0, dt ** 3.0 / 2.0],
-                [dt ** 3.0 / 2.0, 0.0, dt ** 2.0, 0.0],
-                [0.0, dt ** 3.0 / 2.0, 0.0, dt ** 2.0],
-            ]
-        )
+        Q = sigma**2 * np.array([
+            [dt**4 / 4.0, 0.0, dt**3 / 2.0, 0.0],
+            [0.0, dt**4.0 / 4.0, 0.0, dt**3.0 / 2.0],
+            [dt**3.0 / 2.0, 0.0, dt**2.0, 0.0],
+            [0.0, dt**3.0 / 2.0, 0.0, dt**2.0],
+        ])
         return Q
 
     def __repr__(self) -> str:

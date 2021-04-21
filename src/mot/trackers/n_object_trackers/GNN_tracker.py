@@ -5,11 +5,9 @@ from mot.common.gaussian_density import GaussianDensity
 from mot.common.state import Gaussian
 from mot.configs import SensorModelConfig
 from mot.measurement_models import (
-    MeasurementModel,
-)
+    MeasurementModel, )
 from mot.motion_models import (
-    MotionModel,
-)
+    MotionModel, )
 from tqdm import tqdm as tqdm
 from scipy.stats import chi2
 from .base_n_object_tracker import KnownObjectTracker
@@ -46,7 +44,10 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
     def method(self) -> str:
         return "GNN"
 
-    def estimate(self, initial_states: List[Gaussian], measurements, verbose=False):
+    def estimate(self,
+                 initial_states: List[Gaussian],
+                 measurements,
+                 verbose=False):
         """Tracks a single object using Gauss sum filtering
 
         For each filter recursion iteration implemented next steps:
@@ -75,12 +76,12 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
             ]
         return tuple(estimations)
 
-    def estimation_step(
-        self, object_states: List[Gaussian], current_measurements: np.ndarray
-    ):
+    def estimation_step(self, object_states: List[Gaussian],
+                        current_measurements: np.ndarray):
         # 1) elipsoidal gating separately for each object
         num_of_measurements = current_measurements.shape[0]
-        indices_of_objects_in_gate = np.zeros((self.n, num_of_measurements), dtype=bool)
+        indices_of_objects_in_gate = np.zeros((self.n, num_of_measurements),
+                                              dtype=bool)
 
         for object_state_idx, object_state in enumerate(object_states):
             z_ingate, indices_in_gate = GaussianDensity.ellipsoidal_gating(
@@ -99,16 +100,16 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
 
         #   3) construct 2D cost matrix of size
         #    (number of objects x number of z_ingate + number of objects)
-        cost_matrix = np.full((self.n, num_of_filtered_measurements + self.n), np.inf)
-        w_theta_factor = np.log(self.sensor_model.P_D / self.sensor_model.intensity_c)
+        cost_matrix = np.full((self.n, num_of_filtered_measurements + self.n),
+                              np.inf)
+        w_theta_factor = np.log(self.sensor_model.P_D /
+                                self.sensor_model.intensity_c)
         w_theta_0 = np.log(1 - self.sensor_model.P_D)  # misdetection
         for idx_object in range(self.n):
             for idx_meas in indices_to_keep:
-                S_i_h = (
-                    self.meas_model.H(object_states[idx_object])
-                    @ object_states[idx_object].P
-                    @ self.meas_model.H(object_states[idx_object]).T
-                )
+                S_i_h = (self.meas_model.H(object_states[idx_object])
+                         @ object_states[idx_object].P @ self.meas_model.H(
+                             object_states[idx_object]).T)
                 z_bar_i_h = self.meas_model.h(object_states[idx_object].x)
                 vec_diff = current_measurements[idx_meas] - z_bar_i_h
                 mahl = 0.5 * vec_diff @ np.linalg.inv(S_i_h) @ vec_diff.T
@@ -116,9 +117,8 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
                 cost = mahl + factor - w_theta_factor
 
                 cost_matrix[idx_object, idx_meas] = cost
-            cost_matrix[
-                idx_object, num_of_filtered_measurements + idx_object
-            ] = w_theta_0
+            cost_matrix[idx_object,
+                        num_of_filtered_measurements + idx_object] = w_theta_0
 
         # 4) find best assignment using a 2D assignment solver
 

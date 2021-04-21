@@ -22,10 +22,12 @@ class Test_Gaussian(unittest.TestCase):
 
     def test_wrong_P_dim(self):
         with pytest.raises(Exception) as e_info:
-            state = Gaussian(x=np.array([0, 0]), P=np.array([[0, 1], [0, 1], [0, 1]]))
+            state = Gaussian(x=np.array([0, 0]),
+                             P=np.array([[0, 1], [0, 1], [0, 1]]))
         assert str(e_info.value) == "Covariance matrix should be square!"
 
     def test_diffrenet_dims(self):
         with pytest.raises(Exception) as e_info:
             state = Gaussian(x=np.array([0, 0, 0]), P=np.eye(2))
-        assert str(e_info.value) == "size of vector should be equal P column size!"
+        assert str(
+            e_info.value) == "size of vector should be equal P column size!"

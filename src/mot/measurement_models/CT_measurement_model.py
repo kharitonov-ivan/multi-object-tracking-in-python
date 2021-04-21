@@ -24,8 +24,9 @@ class CoordinateTurnMeasurementModel(MeasurementModel):
         """
 
         self.d = 2
-        self.H = np.array([[1.0, 0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0, 0.0]])
-        self.R = (sigma ** 2) * np.eye(2)
+        self.H = np.array([[1.0, 0.0, 0.0, 0.0, 0.0],
+                           [0.0, 1.0, 0.0, 0.0, 0.0]])
+        self.R = (sigma**2) * np.eye(2)
 
     def __call__(self, x):
         return self.H @ x

@@ -30,7 +30,6 @@ pycycle = "^0.0.8"
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
 flake8 = "^3.8.4"
-black = "^20.8b1"
 flake8-bandit = "^2.1.2"
 flake8-black = "^0.2.1"
 flake8-bugbear = "^20.11.1"

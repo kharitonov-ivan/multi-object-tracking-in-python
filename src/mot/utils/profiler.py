@@ -48,7 +48,8 @@ class Profiler(object):
         self.profiler.disable()
 
         sort_by = self.sort_by
-        ps = pstats.Stats(self.profiler, stream=self.stream).sort_stats(sort_by)
+        ps = pstats.Stats(self.profiler,
+                          stream=self.stream).sort_stats(sort_by)
         ps.print_stats(self.fraction)
 
         self.stream.write("\nprofile: {}: exit\n".format(self.contextstr))
