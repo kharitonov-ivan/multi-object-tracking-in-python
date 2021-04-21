@@ -1,4 +1,3 @@
-import cProfile
 import logging as lg
 
 import numpy as np
@@ -18,10 +17,22 @@ from .common import (
     GlobalHypothesis,
     MultiBernouilliMixture,
     PoissonRFS,
+    assign,
 )
 from ....utils.profiler import Profiler
 
 from ....utils.timer import Timer
+from pprint import pprint
+from viztracer import VizTracer
+import itertools
+from multiprocessing import Pool
+from functools import partial
+
+from itertools import repeat
+
+
+def solve(f):
+    return f.solve()
 
 
 class PMBM:
@@ -74,6 +85,7 @@ class PMBM:
 
         self.PPP = PoissonRFS(intensity=self.birth_model.get_born_objects_intensity())
         self.MBM = MultiBernouilliMixture()
+        self.assingner_pool = Pool(processes=6)
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
@@ -127,6 +139,7 @@ class PMBM:
         lg.debug(f"\n   global hypotheses {self.MBM.global_hypotheses}")
         lg.debug(f"\n   MBM tracks {self.MBM.tracks} \n")
 
+        # with Timer(name='PPP get', logger=lg.info):
         new_tracks = self.PPP.get_targets_detected_for_first_time(
             measurements,
             self.sensor_model.intensity_c,
@@ -159,26 +172,41 @@ class PMBM:
             )
 
         else:
-            new_global_hypotheses = []
-            with Profiler(enabled=True, contextstr="test") as p2:
-                with Timer(name="Generating new Hyhpothesis"):
 
-                    for global_hypothesis in self.MBM.global_hypotheses:
-                        assigner = AssignmentSolver(
-                            global_hypothesis=global_hypothesis,
-                            old_tracks=self.MBM.tracks,
-                            new_tracks=new_tracks,
-                            measurements=measurements,
-                            num_of_desired_hypotheses=self.max_number_of_hypotheses,
-                        )
-                        next_global_hypothesis = assigner.solve()
-                        new_global_hypotheses.extend(next_global_hypothesis)
+            # assignment_problems = [
+            #     AssignmentSolver(
+            #         global_hypothesis=global_hypothesis,
+            #         old_tracks=self.MBM.tracks,
+            #         new_tracks=new_tracks,
+            #         measurements=measurements,
+            #         num_of_desired_hypotheses=self.
+            #         max_number_of_hypotheses,
+            #     ) for global_hypothesis in self.MBM.global_hypotheses
+            # ]
 
-            lg.debug(p2.get_profile_data())
+            # parallel_global_hypo = self.assingner_pool.map(
+            #     solve, assignment_problems
+
+            parallel_global_hypo = self.assingner_pool.starmap(
+                assign,
+                zip(
+                    self.MBM.global_hypotheses,
+                    repeat(self.MBM.tracks),
+                    repeat(new_tracks),
+                    repeat(measurements),
+                    repeat(self.max_number_of_hypotheses),
+                ),
+            )
+
+            # new_global_hypotheses = itertools.chain.from_iterable(
+            #     [problem.solve() for problem in assignment_problems]))
+
+            new_global_hypotheses = itertools.chain.from_iterable(parallel_global_hypo)
+
             with Timer(name="Prepation for the next step"):
                 self.update_tree()
                 self.MBM.tracks.update(new_tracks)
-                self.MBM.global_hypotheses = new_global_hypotheses
+                self.MBM.global_hypotheses = list(new_global_hypotheses)
                 self.MBM.normalize_global_hypotheses_weights()
                 self.MBM.prune_tree()
 

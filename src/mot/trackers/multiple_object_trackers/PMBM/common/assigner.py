@@ -170,3 +170,22 @@ class AssignmentSolver:
                 )
 
         return cost_undetected
+
+
+def assign(
+    global_hypothesis,
+    old_tracks,
+    new_tracks,
+    measurements,
+    num_of_desired_hypotheses,
+    max_murty_steps=None,
+):
+    problem = AssignmentSolver(
+        global_hypothesis,
+        old_tracks,
+        new_tracks,
+        measurements,
+        num_of_desired_hypotheses,
+        max_murty_steps=None,
+    )
+    return problem.solve()

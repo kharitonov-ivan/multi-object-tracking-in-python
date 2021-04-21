@@ -1,4 +1,4 @@
-from .assigner import AssignmentSolver
+from .assigner import AssignmentSolver, assign
 from .bernoulli import Bernoulli
 from .birth_model import (
     BirthModel,

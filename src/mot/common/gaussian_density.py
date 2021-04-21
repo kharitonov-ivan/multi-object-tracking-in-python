@@ -9,7 +9,8 @@ from scipy.stats import multivariate_normal
 from ..measurement_models import MeasurementModel
 from ..motion_models import MotionModel
 from .normalize_log_weights import normalize_log_weights
-from .state import Gaussian
+from .state import Gaussian, GaussianMixture
+from ..utils import vectorized_gaussian_logpdf
 
 
 class GaussianDensity:
@@ -33,6 +34,118 @@ class GaussianDensity:
         next_F = motion_model.F(state.x, dt)
         next_P = np.linalg.multi_dot([next_F, state.P, next_F.T]) + motion_model.Q(dt)
         return Gaussian(next_x, next_P)
+
+    @staticmethod
+    def update_states_with_likelihoods_by_single_measurement(
+        initial_states: GaussianMixture,
+        measurement: np.ndarray,
+        measurement_model: MeasurementModel,
+    ):
+
+        H_x = measurement_model.H(initial_states.states_np)
+        # Innovation covariance
+
+        S = H_x @ initial_states.covariances_np @ H_x.T + measurement_model.R
+
+        # Make sure matrix S is positive definite
+        S = 0.5 * (S + np.transpose(S, axes=(0, 2, 1)))
+
+        K = initial_states.covariances_np @ H_x.T @ np.linalg.inv(S)
+
+        measurement_row = np.vstack([measurement] * initial_states.size)
+        fraction = measurement_row - measurement_model.h(initial_states.states_np.T).T
+        with_K = np.einsum("ijk,ik->ij", K, fraction)
+        new_states = initial_states.states_np + with_K
+
+        state_vector_size = initial_states.states_np[0].shape[0]
+
+        next_covariances = (
+            np.eye(state_vector_size) - K @ H_x
+        ) @ initial_states.covariances_np
+
+        next_states = [
+            Gaussian(new_states[idx], next_covariances[idx])
+            for idx in range(initial_states.size)
+        ]
+
+        measurements_bar = np.expand_dims(H_x, axis=0) @ initial_states.states_np.T
+
+        # it takes 0.0277 sec
+        # TODO: clean up
+        # loglikelihoods = [
+        #     multivariate_normal.logpdf(measurement, measurements_bar[0].T[idx], S[idx])
+        #     for idx in range(initial_states.size)
+        # ]
+
+        loglikelihoods_fast = vectorized_gaussian_logpdf(
+            X=measurement_row,
+            means=measurements_bar.squeeze().T,
+            covariances=np.diagonal(S, axis1=2),
+        )
+
+        # np.testing.assert_almost_equal(loglikelihoods, loglikelihoods_fast)
+
+        return next_states, loglikelihoods_fast
+
+    @staticmethod
+    def update_state_by_multiple_measurement(
+        initial_state: GaussianMixture,
+        measurements: np.ndarray,
+        measurement_model: MeasurementModel,
+    ):
+        H_x = measurement_model.H(initial_state.x)
+        # Innovation covariance
+
+        S = H_x @ initial_state.P @ H_x.T + measurement_model.R
+
+        # Make sure matrix S is positive definite
+        S = 0.5 * (S + np.transpose(S))
+
+        K = initial_state.P @ H_x.T @ np.linalg.inv(S)
+
+        measurement_row = measurements
+        fraction = measurement_row - measurement_model.h(initial_state.x.T).T
+
+        with_K = K @ fraction.T
+
+        next_states = np.vstack([initial_state.x] * len(measurements)) + with_K.T
+
+        state_vector_size = initial_state.x.shape[0]
+
+        next_covariances = (np.eye(state_vector_size) - K @ H_x) @ initial_state.P
+
+        return next_states, next_covariances
+
+    @staticmethod
+    def update_likelihoods_vectorized(
+        updated_states,
+        updated_covariances,
+        measurements: np.ndarray,
+        measurement_model: MeasurementModel,
+    ):
+        H_x = measurement_model.H(updated_states)
+        # Innovation covariance
+
+        S = H_x @ updated_covariances @ H_x.T + measurement_model.R
+
+        # Make sure matrix S is positive definite
+        S = 0.5 * (S + np.transpose(S))
+
+        # it takes 0.0277 sec
+        # # TODO: clean up
+        bar = H_x @ updated_states.T
+
+        # loglikelihoods = [
+        #     multivariate_normal.logpdf(measurements[idx], bar.T[idx], S)
+        #     for idx in range(len(measurements))
+        # ]
+
+        loglikelihoods = vectorized_gaussian_logpdf(
+            X=measurements,
+            means=bar.T,
+            covariances=np.vstack([np.diagonal(S)] * len(measurements)),
+        )
+        return loglikelihoods
 
     @staticmethod
     def update(
@@ -80,6 +193,7 @@ class GaussianDensity:
         # TODO ndim property for state
         I = np.eye(state_pred.x.shape[0])
         next_P = (I - K @ H_x) @ state_pred.P
+
         state_upd = Gaussian(x=next_x, P=next_P)
         return state_upd
 
@@ -88,16 +202,9 @@ class GaussianDensity:
         state_pred: Gaussian, z: npt.ArrayLike, measurement_model: MeasurementModel
     ) -> np.ndarray:
         """Calculates the predicted likelihood in logarithm domain
-
-        Args:
-            state_pred (Gaussian):
-            z (np.ndarray (measurement dimension) x (number of measurements)): measurements
-            measurement_model (MeasurementModel): specifies the measurement model
-
         Returns:
             predicted_loglikelihood (np.ndarray (number of measurements)): predicted likelihood
                                                                         for each measurement
-                                                                        in logarithmic scale
         """
 
         assert z.ndim == 2
@@ -210,8 +317,42 @@ class GaussianDensity:
         for idx in range(N):
             d = x_bar - states[idx].x
             P_bar += (states[idx].P + d @ d.T) * log_weights[idx]
+            import pdb
+
+            pdb.set_trace()
 
         matched_state = Gaussian(x=x_bar, P=P_bar)
+        return matched_state
+
+    @staticmethod
+    def moment_matching_vectorized(
+        log_weights: List[float], states: List[Gaussian]
+    ) -> Gaussian:
+        """Aproximates a Gaussian mixture density as a single Gaussian using moment matching
+
+        Args:
+            weights (List(float)): normalized weight of Gaussian components
+                                   in logarithm domain
+            states (List(Gaussian)): list of Gaussians
+
+        Returns:
+            Gaussian: resulted mixture
+        """
+        if len(log_weights) == 0:
+            return
+
+        weights = np.exp(log_weights)
+
+        x_bar_np = np.average(
+            np.array([state.x for state in states]), axis=0, weights=weights
+        )
+        delta_state = x_bar_np - np.array([state.x for state in states])
+        ps = np.array([state.P for state in states]).T + np.einsum(
+            "ij,ij->i", delta_state, delta_state
+        )
+
+        P_bar_np = np.average(ps.T, axis=0, weights=weights)
+        matched_state = Gaussian(x=x_bar_np, P=P_bar_np)
         return matched_state
 
     @staticmethod

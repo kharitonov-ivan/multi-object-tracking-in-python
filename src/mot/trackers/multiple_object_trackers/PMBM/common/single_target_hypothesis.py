@@ -1,8 +1,9 @@
 import numpy as np
 
-from .....common import GaussianDensity
+from .....common import GaussianDensity, Gaussian
 from .....measurement_models import MeasurementModel
 from .bernoulli import Bernoulli
+from typing import Tuple
 
 
 class SingleTargetHypothesis:
@@ -61,6 +62,7 @@ class SingleTargetHypothesis:
         detection_log_likelihood = detection_bernoulli.detected_update_loglikelihood(
             measurement, meas_model, detection_probability, density
         )
+
         missdetection_log_likelihood = (
             self.missdetection_hypothesis.log_likelihood
             or self.bernoulli.undetected_update_loglikelihood(detection_probability)
@@ -73,3 +75,49 @@ class SingleTargetHypothesis:
             sth_id=sth_id,
         )
         return detection_hypothesis
+
+    def create_detection_hypotheses(
+        self,
+        measurements: np.ndarray,
+        detection_probability: float,
+        meas_model: MeasurementModel,
+        density: GaussianDensity,
+        sth_ids: Tuple[int],
+    ):
+
+        (
+            next_states,
+            next_covariances,
+        ) = GaussianDensity.update_state_by_multiple_measurement(
+            initial_state=self.bernoulli.state,
+            measurements=measurements,
+            measurement_model=meas_model,
+        )
+
+        missdetection_log_likelihood = (
+            self.missdetection_hypothesis.log_likelihood
+            or self.bernoulli.undetected_update_loglikelihood(detection_probability)
+        )
+
+        loglikelihoods = (
+            GaussianDensity.update_likelihoods_vectorized(
+                next_states, next_covariances, measurements, meas_model
+            )
+            + np.log(detection_probability)
+            + np.log(1.0)
+        )
+
+        detection_hypotheses = {
+            idx: SingleTargetHypothesis(
+                bernoulli=Bernoulli(
+                    state=Gaussian(x=next_states[idx], P=next_covariances),
+                    existence_probability=1.0,
+                ),
+                log_likelihood=loglikelihoods[idx],
+                cost=-(loglikelihoods[idx] - missdetection_log_likelihood),
+                sth_id=sth_ids[idx],
+            )
+            for idx in range(len(measurements))
+        }
+
+        return detection_hypotheses

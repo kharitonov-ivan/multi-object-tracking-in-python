@@ -11,6 +11,7 @@ from .....motion_models import MotionModel
 from .global_hypothesis import GlobalHypothesis
 from .track import Track
 from .....utils.timer import Timer
+import copy
 
 
 class MultiBernouilliMixture:
@@ -37,7 +38,7 @@ class MultiBernouilliMixture:
     def estimator(self, existense_probability_threshold):
         """Simply return objects set based on most probable global hypo."""
         if not self.global_hypotheses:
-            logging.info("Pool of global hypotheses is empty!")
+            logging.debug("Pool of global hypotheses is empty!")
             return None
         else:
 
@@ -103,7 +104,6 @@ class MultiBernouilliMixture:
 
         return (gating_matrix, used_measurement_detected_indices)
 
-    @Timer(name="updating current MBM forest")
     def update(
         self,
         detection_probability: float,
@@ -127,24 +127,41 @@ class MultiBernouilliMixture:
                 )
 
                 sth.missdetection_hypothesis = sth.create_missdetection_hypothesis(
-                    detection_probability, next(track.sth_id_generator)
+                    detection_probability, track.get_new_sth_id()
                 )
                 logging.debug(f"Created missdetection hypothesis {sth}")
 
-                sth.detection_hypotheses = {
-                    meas_idx: sth.create_detection_hypothesis(
-                        measurements[meas_idx],
-                        detection_probability,
-                        meas_model,
-                        density,
-                        next(track.sth_id_generator),
-                    )
-                    for meas_idx in range(len(measurements))
-                }
-                for meas_idx, detection_hypothesis in sth.detection_hypotheses.items():
-                    logging.debug(
-                        f"Created detection hypothesis for meas_idx={meas_idx} STH = {detection_hypothesis}"
-                    )
+                # sth.detection_hypotheses = {
+                #     meas_idx: sth.create_detection_hypothesis(
+                #         measurements[meas_idx],
+                #         detection_probability,
+                #         meas_model,
+                #         density,
+                #         next(track.sth_id_generator),
+                #     )
+                #     for meas_idx in range(len(measurements))
+                # }
+                # copied_sth = copy.deepcopy(sth)
+                sth.detection_hypotheses = sth.create_detection_hypotheses(
+                    measurements,
+                    detection_probability,
+                    meas_model,
+                    density,
+                    [track.get_new_sth_id() for i in range(len(measurements))],
+                )
+                # from pprint import pprint
+                # pprint([(
+                #     sth.detection_hypotheses[idx],
+                #     detection_hypotheses[idx],
+                #     None,
+                # ) for idx in range(len(measurements))])
+
+                # import pdb
+                # pdb.set_trace()
+                # for meas_idx, detection_hypothesis in sth.detection_hypotheses.items():
+                #     logging.debug(
+                #         f"Created detection hypothesis for meas_idx={meas_idx} STH = {detection_hypothesis}"
+                #     )
 
     def prune_global_hypotheses(self, log_threshold: float) -> None:
         """Removes Bernoulli components with small probability of existence and reindex the hypothesis table.

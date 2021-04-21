@@ -5,7 +5,6 @@ from typing import List, Tuple
 
 import numpy as np
 import scipy
-from joblib import Parallel, delayed
 
 from .....common import GaussianDensity, GaussianMixture, normalize_log_weights
 from .....measurement_models import MeasurementModel
@@ -14,12 +13,16 @@ from .bernoulli import Bernoulli
 from .single_target_hypothesis import SingleTargetHypothesis
 from .track import Track
 from .....utils.timer import Timer
+from .....utils.profiler import Profiler
+from pathos.threading import ThreadPool as Pool
+from functools import partial
 
 
 class PoissonRFS:
     def __init__(self, intensity: GaussianMixture, *args, **kwargs):
         assert isinstance(intensity, GaussianMixture)
         self.intensity = deepcopy(intensity)
+        # self.pool = Pool(nodes=8)
 
     def __repr__(self):
         return self.intensity.__repr__()
@@ -27,7 +30,6 @@ class PoissonRFS:
     def __len__(self):
         return len(self.intensity)
 
-    @Timer(name="get new tragets from PPP")
     def get_targets_detected_for_first_time(
         self,
         measurements: np.ndarray,
@@ -36,24 +38,54 @@ class PoissonRFS:
         detection_probability: float,
     ) -> List[Track]:
 
+        # TODO make this parallel with joblib/pathos/mp ?
+
+        # new_single_target_hypotheses = [
+        #     self.detected_update(
+        #         meas_idx=meas_idx,
+        #         measurement=measurements[meas_idx],
+        #         meas_model=meas_model,
+        #         detection_probability=detection_probability,
+        #         clutter_intensity=clutter_intensity,
+        #     ) for meas_idx in range(len(measurements))
+        # ]
+
+        detected_update_func = partial(
+            PoissonRFS.detected_update,
+            intensity=self.intensity,
+            meas_model=meas_model,
+            detection_probability=detection_probability,
+            clutter_intensity=clutter_intensity,
+        )
+
+        # new_single_target_hypotheses = self.pool.map(
+        #     detected_update_func,
+        #     [(idx, measurements[idx]) for idx in range(len(measurements))])
+
+        new_single_target_hypotheses = [
+            detected_update_func((meas_idx, measurements[meas_idx]))
+            for meas_idx in range(len(measurements))
+        ]
+        # import pdb; pdb.set_trace()
+        # new_single_target_hypotheses = Parallel(
+        #     n_jobs=-1)(delayed(self.detected_update)(
+        #         meas_idx=meas_idx,
+        #         measurement=measurements[meas_idx],
+        #         meas_model=meas_model,
+        #         detection_probability=detection_probability,
+        #         clutter_intensity=clutter_intensity)
+        #                         for meas_idx in range(len(measurements)))
+
         new_tracks = {}
         for meas_idx in range(len(measurements)):
-            new_single_target_hypothesis = self.detected_update(
-                meas_idx=meas_idx,
-                measurements=measurements,
-                meas_model=meas_model,
-                detection_probability=detection_probability,
-                clutter_intensity=clutter_intensity,
-            )
-            new_track = Track.from_sth(new_single_target_hypothesis)
-            new_track.single_target_hypotheses[0].meas_idx = meas_idx
+            new_track = Track.from_sth(new_single_target_hypotheses[meas_idx])
             new_tracks[new_track.track_id] = new_track
         return new_tracks
 
+    @staticmethod
     def detected_update(
-        self,
-        meas_idx,
-        measurements: np.ndarray,
+        meas: Tuple[int, np.ndarray],
+        intensity,
         meas_model: MeasurementModel,
         detection_probability: float,
         clutter_intensity: float,
@@ -73,37 +105,35 @@ class PoissonRFS:
         NOTE: p.152 in presentation
 
         """
+        meas_idx, measurement = meas
         assert isinstance(meas_model, MeasurementModel)
-        measurement = measurements[meas_idx]
         # 1. For each mixture component in the PPP intensity, perform Kalman update and
         # calculate the predicted likelihood for each detection inside the corresponding ellipsoidal gate.
-        gated_ppp_components = copy.deepcopy(self.intensity)
-        updated_ppp_components = [
-            GaussianDensity.update(
-                copy.deepcopy(ppp_component.gaussian),
-                np.expand_dims(measurement, axis=0),
-                meas_model,
-            )
-            for ppp_component in gated_ppp_components
-        ]
+
+        # TODO remove redundant deep copy - it takes 0.012 secs
+        (
+            updated_ppp_components,
+            loglikelihoods,
+        ) = GaussianDensity.update_states_with_likelihoods_by_single_measurement(
+            intensity, measurement, meas_model
+        )
+
+        # references = [
+        #     GaussianDensity.update(state.gaussian, measurement, meas_model)
+        #     for state in copy.deepcopy(self.intensity)
+        # ]
 
         # Compute predicted likelihood
         log_weights = np.array(
             [
-                np.log(detection_probability)
-                + ppp_component.log_weight
-                + density.predict_loglikelihood(
-                    copy.deepcopy(ppp_component).gaussian,
-                    np.expand_dims(measurement, axis=0),
-                    meas_model,
-                ).item()
-                for ppp_component in copy.deepcopy(self.intensity)
+                np.log(detection_probability) + ppp_component.log_weight + loglikelihood
+                for ppp_component, loglikelihood in zip(intensity, loglikelihoods)
             ]
         )
         # 2. Perform Gaussian moment matching for the updated object state densities
         # resulted from being updated by the same detection.
         normalized_log_weights, log_sum = normalize_log_weights(log_weights)
-        merged_state = density.moment_matching(
+        merged_state = density.moment_matching_vectorized(
             normalized_log_weights, updated_ppp_components
         )
 

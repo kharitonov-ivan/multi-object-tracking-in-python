@@ -11,16 +11,26 @@ class Track:
     """
 
     max_track_id = 1000000
-    track_id_generator = (x for x in range(max_track_id))
+    current_idx = 0
+
+    def get_id(cls):
+        returned_idx = Track.current_idx
+        Track.current_idx += 1
+        return returned_idx
 
     def __init__(self, initial_sth=None):
-        self.track_id = next(Track.track_id_generator)
-        self.max_sth_id = 1000000
-        self.sth_id_generator = (x for x in range(self.max_sth_id))
-        self.single_target_hypotheses = {next(self.sth_id_generator): initial_sth}
+        self.track_id = Track.get_id(Track)
+        self.sth_id_counter = 0
+
+        self.single_target_hypotheses = {self.get_new_sth_id(): initial_sth}
+
+    def get_new_sth_id(self):
+        returned_value = self.sth_id_counter
+        self.sth_id_counter += 1
+        return returned_value
 
     def add_sth(self, sth: SingleTargetHypothesis) -> None:
-        self.single_target_hypotheses[next(self.sth_id_generator)] = sth
+        self.single_target_hypotheses[self.get_new_sth_id()] = sth
 
     def __repr__(self) -> str:
         sth_rep = (

@@ -4,7 +4,7 @@ from functools import wraps
 
 
 class Timer:
-    def __init__(self, logger=logging.debug, time_source=time.time, name=None):
+    def __init__(self, logger=logging.debug, time_source=time.perf_counter, name=None):
         self.logger = logger
         self.time_source = time_source
         self.name = name

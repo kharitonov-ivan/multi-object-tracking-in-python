@@ -45,6 +45,14 @@ class Gaussian:
         else:
             return False
 
+    @property
+    def states_np(self):
+        return self.x
+
+    @property
+    def covariances_np(self):
+        return self.P
+
 
 @dataclass
 class WeightedGaussian:
@@ -69,8 +77,11 @@ class GaussianMixture(collections.abc.MutableSequence):
 
     @property
     def log_weights(self):
-        weights = [x.log_weight for x in self.weighted_components]
-        return weights
+        if self.weighted_components:
+            weights = [x.log_weight for x in self.weighted_components]
+            return weights
+        else:
+            return None
 
     @log_weights.setter
     def log_weights(self, log_weights):
@@ -84,8 +95,15 @@ class GaussianMixture(collections.abc.MutableSequence):
 
     @property
     def states(self):
-        states = [x.gaussian for x in self.weighted_components]
-        return states
+        return [x.gaussian for x in self.weighted_components]
+
+    @property
+    def states_np(self):
+        return np.array([state.gaussian.x for state in self.weighted_components])
+
+    @property
+    def covariances_np(self):
+        return np.array([state.gaussian.P for state in self.weighted_components])
 
     def __copy__(self):
         return GaussianMixture(weighted_components=self.weighted_components)
