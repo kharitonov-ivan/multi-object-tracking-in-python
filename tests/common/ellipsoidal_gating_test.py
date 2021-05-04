@@ -50,7 +50,7 @@ def test_ellipsoidal_gating():
 
     states = [None for i in range(grount_truth_config.total_time)]
     for timestep in range(0, grount_truth_config.total_time):
-        states[timestep] = Gaussian(x=np.array(object_data[timestep][0].x),
+        states[timestep] = Gaussian(x=np.array(object_data[timestep].x),
                                     P=np.eye(motion_model.d))
 
         if timestep == 0:
