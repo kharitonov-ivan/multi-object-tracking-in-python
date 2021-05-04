@@ -12,6 +12,8 @@ from mot.trackers.multiple_object_trackers.PMBM.common import (
     birth_model,
 )
 from scipy.special import logsumexp
+from .params.initial_PPP_intensity import initial_PPP_intensity_linear
+from .params.birth_model import birth_model_params
 
 
 @pytest.fixture
@@ -24,11 +26,18 @@ def clutter_intensity():
     return 0.7 / 100
 
 
-def test_PPP_predict_linear_motion(initial_PPP_intensity_linear, dt,
-                                   cv_motion_model, P_S):
+def test_PPP_predict_linear_motion(initial_PPP_intensity_linear,
+                                   clutter_intensity):
+
+    survival_probability = 0.9
+
+    dt = 1.0
+    sigma_q = 10.0
+    motion_model = ConstantVelocityMotionModel(dt, sigma_q)
+
     # Set Poisson RFS
-    PPP = PoissonRFS(initial_intensity=initial_PPP_intensity_linear)
-    PPP.predict(motion_model, survival_probability, dt)
+    PPP = PoissonRFS(intensity=initial_PPP_intensity_linear)
+    PPP.predict(motion_model, survival_probability, GaussianDensity, dt)
 
     # check multiply of weight in log domain
     PPP_ref_w = np.array([
@@ -37,12 +46,12 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear, dt,
     ])
 
     PPP_ref_state_x = [
-        GaussianDensity.predict(component.gaussian, cv_motion_model, dt).x
+        GaussianDensity.predict(component.gaussian, motion_model, dt).x
         for component in initial_PPP_intensity_linear.weighted_components
     ]
 
     PPP_ref_state_P = [
-        GaussianDensity.predict(component.gaussian, cv_motion_model, dt).P
+        GaussianDensity.predict(component.gaussian, motion_model, dt).P
         for component in initial_PPP_intensity_linear.weighted_components
     ]
 
@@ -59,39 +68,45 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear, dt,
         rtol=0.02)
 
 
-def test_PPP_adds_birth_components(birth_model_linear):
+def test_PPP_adds_birth_components():
+    from .params.birth_model import birth_model_params
 
     # Set Poisson RFS
-    PPP = PoissonRFS(initial_intensity=GaussianMixture([]))
-    birth_model = StaticBirthModel(birth_model_config=birth_model_linear)
+    PPP = PoissonRFS(intensity=GaussianMixture([]))
+    birth_model = StaticBirthModel(birth_model_config=birth_model_params)
     PPP.birth(new_components=birth_model.get_born_objects_intensity())
 
     np.testing.assert_allclose(
         sorted(PPP.intensity.log_weights),
-        sorted(birth_model_linear.log_weights),
+        sorted(birth_model_params.log_weights),
         rtol=0.1,
     )
     np.testing.assert_allclose(
         [gaussian.x for gaussian in PPP.intensity.states],
-        [gaussian.x for gaussian in birth_model_linear.states],
+        [gaussian.x for gaussian in birth_model_params.states],
         rtol=0.01,
     )
     np.testing.assert_allclose(
         [gaussian.P for gaussian in PPP.intensity.states],
-        [gaussian.P for gaussian in birth_model_linear.states],
+        [gaussian.P for gaussian in birth_model_params.states],
         rtol=0.02,
     )
-    assert PPP.intensity[0] == birth_model_linear[0]
+    assert PPP.intensity[0] == birth_model_params[0]
 
 
-def test_PPP_undetected_update(initial_PPP_intensity_linear, P_D):
+from .params.initial_PPP_intensity import initial_PPP_intensity_linear
 
-    PPP = PoissonRFS(initial_intensity=initial_PPP_intensity_linear)
 
-    PPP.undetected_update(P_D)
+def test_PPP_undetected_update(initial_PPP_intensity_linear):
+
+    detection_probability = 0.8
+
+    PPP = PoissonRFS(intensity=initial_PPP_intensity_linear)
+
+    PPP.undetected_update(detection_probability)
 
     PPP_weights_ref = np.array([
-        log_weight + np.log(1 - P_D)
+        log_weight + np.log(1 - detection_probability)
         for log_weight in initial_PPP_intensity_linear.log_weights
     ])
     np.testing.assert_almost_equal(
@@ -101,7 +116,10 @@ def test_PPP_undetected_update(initial_PPP_intensity_linear, P_D):
     )
 
 
-def test_PPP_detected_update():
+from .params.initial_PPP_intensity import initial_PPP_intensity_linear
+
+
+def test_PPP_detected_update(initial_PPP_intensity_linear, clutter_intensity):
     P_D = 0.8
 
     # Choose object detection probability
@@ -155,14 +173,12 @@ def test_PPP_detected_update():
     measurement_indices_in_PPP = [True, True]
 
     new_sth = PPP.detected_update(
-        z,
+        (0, z),
+        copy.deepcopy(birth_model),
         meas_model,
         P_D,
         sensor_model.intensity_c,
     )
-    import pdb
-
-    pdb.set_trace()
 
     gated_PPP_component_indices = [
         idx for idx, _ in enumerate(initial_PPP_intensity_linear)
@@ -173,19 +189,21 @@ def test_PPP_detected_update():
     for idx, component in enumerate(updated_initial_intensity):
         if idx in gated_PPP_component_indices:
             component.gaussian = GaussianDensity.update(
-                component.gaussian, z, cv_measurement_model)
+                component.gaussian, z, meas_model)
 
     log_likelihoods_per_measurement = np.array([
         np.log(P_D) +
-        component.log_weight + GaussianDensity.predicted_loglikelihood(
-            component.gaussian, z, cv_measurement_model).item()
+        component.log_weight + GaussianDensity.predict_loglikelihood(
+            component.gaussian, z, meas_model).item()
         for idx, component in enumerate(updated_initial_intensity)
         if idx in gated_PPP_component_indices
     ])
 
     log_likelihood_detection_from_object = logsumexp(
         log_likelihoods_per_measurement)
+
     log_likelihood_detection_from_clutter = np.log(clutter_intensity)
+
     ref_probability_existence = np.exp(
         log_likelihood_detection_from_object - np.logaddexp(
             log_likelihood_detection_from_object,
@@ -193,7 +211,7 @@ def test_PPP_detected_update():
         ))
 
     np.testing.assert_almost_equal(
-        bern.existence_probability,
+        new_sth.bernoulli.existence_probability,
         ref_probability_existence,
         decimal=4,
     )
@@ -215,7 +233,7 @@ def test_PPP_gating(initial_PPP_intensity_linear):
     sigma_r = 5.0
     meas_model = ConstantVelocityMeasurementModel(sigma_r)
 
-    PPP = PoissonRFS(initial_intensity=initial_PPP_intensity_linear)
+    PPP = PoissonRFS(intensity=initial_PPP_intensity_linear)
 
     z = np.array([[-410.0, 201.0], [10e6, 10e6]])
     gating_matrix_ud, meas_indices_ud = PPP.gating(z,
@@ -242,6 +260,6 @@ def test_PPP_gating(initial_PPP_intensity_linear):
 def test_PPP_pruning(initial_PPP_intensity_linear):
     modified_PPP_intensity = copy.deepcopy(initial_PPP_intensity_linear)
     modified_PPP_intensity.weighted_components[0].log_weight = -6
-    PPP = PoissonRFS(initial_intensity=modified_PPP_intensity)
+    PPP = PoissonRFS(intensity=modified_PPP_intensity)
     PPP.prune(threshold=np.log(0.01))
     assert len(PPP) == 1
