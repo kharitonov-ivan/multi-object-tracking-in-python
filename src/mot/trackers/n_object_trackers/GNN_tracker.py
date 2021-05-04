@@ -106,7 +106,7 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
                                 self.sensor_model.intensity_c)
         w_theta_0 = np.log(1 - self.sensor_model.P_D)  # misdetection
         for idx_object in range(self.n):
-            for idx_meas in indices_to_keep:
+            for enum_meas, idx_meas in enumerate(indices_to_keep):
                 S_i_h = (self.meas_model.H(object_states[idx_object])
                          @ object_states[idx_object].P @ self.meas_model.H(
                              object_states[idx_object]).T)
@@ -116,7 +116,7 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
                 factor = 0.5 * np.log(np.linalg.det(2 * np.pi * S_i_h))
                 cost = mahl + factor - w_theta_factor
 
-                cost_matrix[idx_object, idx_meas] = cost
+                cost_matrix[idx_object, enum_meas] = cost
             cost_matrix[idx_object,
                         num_of_filtered_measurements + idx_object] = w_theta_0
 
