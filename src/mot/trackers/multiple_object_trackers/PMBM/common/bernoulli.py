@@ -74,10 +74,9 @@ class Bernoulli:
         """
 
         assert isinstance(meas_model, MeasurementModel)
-        assert measurement.ndim == 1
 
         log_likelihood_detected = (density.predict_loglikelihood(
-            self.state, np.expand_dims(measurement, axis=0), meas_model) +
+            self.state, measurement, meas_model) +
                                    np.log(detection_probability) +
                                    np.log(self.existence_probability))
         return log_likelihood_detected
@@ -93,7 +92,6 @@ class Bernoulli:
 
         """
         assert isinstance(meas_model, MeasurementModel)
-        assert measurement.ndim == 1
 
         updated_density = density.update(self.state, measurement, meas_model)
         update_bern = Bernoulli(state=updated_density,
