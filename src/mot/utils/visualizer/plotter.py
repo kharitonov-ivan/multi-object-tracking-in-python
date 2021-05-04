@@ -14,16 +14,18 @@ logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
 class Plot:
-    def __init__(self,
-                 ax=None,
-                 title=None,
-                 out_path=None,
-                 show=False,
-                 is_autoscale=True,
-                 autoscale_margin=1.0,
-                 lim_x=(-1100, 1100),
-                 lim_y=(-1100, 1100),
-                 **kwargs):
+    def __init__(
+            self,
+            ax=None,
+            title=None,
+            out_path=None,
+            show=False,
+            is_autoscale=True,
+            autoscale_margin=1.0,
+            lim_x=(-1100, 1100),
+            lim_y=(-1100, 1100),
+            **kwargs,
+    ):
         set_mpl_params()
         if ax is None:
             self.fig, self.ax = create_figure(title=title, **kwargs)
@@ -54,35 +56,41 @@ class Plot:
 
 class Plotter:
     @staticmethod
-    def plot_several(data: List,
-                     title=None,
-                     ax=None,
-                     out_path=None,
-                     show=False,
-                     is_autoscale=False,
-                     *args,
-                     **kwargs):
+    def plot_several(
+        data: List,
+        title=None,
+        ax=None,
+        out_path=None,
+        show=False,
+        is_autoscale=False,
+        *args,
+        **kwargs,
+    ):
         assert isinstance(data, list)
 
-        with Plot(ax=ax,
-                  title=title,
-                  out_path=out_path,
-                  show=show,
-                  autoscale_margin=100.0,
-                  is_autoscale=is_autoscale,
-                  **kwargs) as p:
+        with Plot(
+                ax=ax,
+                title=title,
+                out_path=out_path,
+                show=show,
+                autoscale_margin=100.0,
+                is_autoscale=is_autoscale,
+                **kwargs,
+        ) as p:
             for series in data:
                 plot_series(series, p.ax)
         return p.ax
 
     @staticmethod
-    def plot(data: Union[MeasurementData, ObjectData, np.ndarray, List],
-             title=None,
-             ax=None,
-             out_path=None,
-             show=False,
-             *args,
-             **kwargs):
+    def plot(
+        data: Union[MeasurementData, ObjectData, np.ndarray, List],
+        title=None,
+        ax=None,
+        out_path=None,
+        show=False,
+        *args,
+        **kwargs,
+    ):
 
         with Plot(ax=ax,
                   title=title,

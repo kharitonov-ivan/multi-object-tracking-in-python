@@ -8,8 +8,8 @@ logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 def set_mpl_params():
 
-    assert ("matplotlib" in globals()
-            or "matplotlib" in locals()), "matplotlib not imported"
+    assert "matplotlib" in globals() or "matplotlib" in locals(
+    ), "matplotlib not imported"
 
     mpl_logger = logging.getLogger("matplotlib")
     mpl_logger.setLevel(logging.ERROR)
@@ -29,8 +29,8 @@ def set_mpl_params():
     matplotlib.rcParams[
         "legend.borderpad"] = 0.5  # border whitespace in fontsize units
     matplotlib.rcParams["font.size"] = 14
-    matplotlib.rcParams["font.family"] = "serif"
-    matplotlib.rcParams["font.serif"] = "Times"
+    # matplotlib.rcParams["font.family"] = "serif"
+    # matplotlib.rcParams["font.serif"] = "Times"
     matplotlib.rcParams["axes.labelsize"] = labelsize
     matplotlib.rcParams["axes.titlesize"] = titlesize
 
@@ -39,7 +39,7 @@ def set_mpl_params():
     matplotlib.rc("legend", fontsize=legendsize)
 
     matplotlib.rc("font", **{"family": "serif"})
-    matplotlib.rc("text", usetex=True)
+    # matplotlib.rc("text", usetex=True)
 
 
 def create_figure(
