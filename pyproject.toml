@@ -26,6 +26,9 @@ nuscenes-devkit = "^1.1.3"
 joblib = "^1.0.1"
 pathos = "^0.2.7"
 pycycle = "^0.0.8"
+black = "^21.4b2"
+nox = "^2020.12.31"
+pre-commit = "^2.12.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
@@ -67,7 +70,6 @@ log_cli_format = "%(message)s "
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 # docstring check
 
-[tool.yapf]
-based_on_style = "pep8"
-split_before_logical_operator = true
-column_limit = 300
+[tool.black] # https://black.readthedocs.io/en/stable/pyproject_toml.html#configuration-format
+line-length = 100
+target-version = ['py37']
