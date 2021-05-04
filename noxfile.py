@@ -17,3 +17,10 @@ def tests(session):
     session.run("poetry", "install", external=True)
     session.install("pytest")
     session.run("pytest", "-v", "tests")
+
+
+@nox.session
+def black(session):
+    args = session.posargs or locations
+    session.install("black")
+    session.run("black", *args)
