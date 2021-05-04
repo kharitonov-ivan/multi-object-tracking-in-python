@@ -70,6 +70,12 @@ log_cli_format = "%(message)s "
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 # docstring check
 
-[tool.black] # https://black.readthedocs.io/en/stable/pyproject_toml.html#configuration-format
+[tool.black] 
+# https://black.readthedocs.io/en/stable/pyproject_toml.html#configuration-format
+# https://black.readthedocs.io/en/stable/compatible_configs.html
 line-length = 100
+multi_line_output = 2
+include_trailing_comma = true
+use_parentheses = false
+force_grid_wrap = 0
 target-version = ['py37']
