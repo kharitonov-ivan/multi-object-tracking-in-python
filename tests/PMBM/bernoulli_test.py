@@ -84,7 +84,8 @@ def test_bern_undetected_update(initial_bernoulli, P_D):
     ref_bern_r = 0.31
     ref_lik_undetected = -0.54
 
-    new_bern, log_likelihood_undetected = bern.undetected_update_state(P_D)
+    new_bern = bern.undetected_update_state(P_D)
+    log_likelihood_undetected = bern.undetected_update_loglikelihood(P_D)
 
     np.testing.assert_allclose(new_bern.existence_probability,
                                ref_bern_r,
@@ -98,7 +99,7 @@ def test_bern_detected_update_likelihood_outlier(initial_bernoulli, P_D,
                                                  cv_measurement_model,
                                                  outlier_measurement):
 
-    likelihood_detected = initial_bernoulli.detected_update_likelihood(
+    likelihood_detected = initial_bernoulli.detected_update_loglikelihood(
         outlier_measurement, cv_measurement_model, P_D)
 
     likelihood_detected_ref = np.array([-105.7914])
@@ -111,7 +112,7 @@ def test_bern_detected_update_likelihood_target(initial_bernoulli, P_D,
                                                 cv_measurement_model,
                                                 neighbour_measurement):
 
-    log_likelihood_detected = initial_bernoulli.detected_update_likelihood(
+    log_likelihood_detected = initial_bernoulli.detected_update_loglikelihood(
         neighbour_measurement, cv_measurement_model, P_D)
 
     log_likelihood_detected_ref = np.array([-7.3304])
