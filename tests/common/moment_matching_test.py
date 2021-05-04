@@ -59,7 +59,7 @@ def test_moment_matching_big():
     num_gaussians = 5
     n_dim = 4
     states = []
-    # expected_vars = scipy.io.loadmat("tests/data/SA2Ex2Test3.mat")
+    expected_vars = scipy.io.loadmat("tests/data/SA2Ex2Test3.mat")
 
     test_w = np.array(expected_vars["w"]).squeeze()
     test_states = [
