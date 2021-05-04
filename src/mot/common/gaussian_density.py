@@ -188,8 +188,8 @@ class GaussianDensity:
 
         K = state_pred.P @ H_x.T @ np.linalg.inv(S)
 
-        next_x = (state_pred.x +
-                  (K @ (z - measurement_model.h(state_pred.x)).T).squeeze())
+        next_x = state_pred.x + (
+            K @ (z - measurement_model.h(state_pred.x)).T).squeeze()
 
         assert next_x.shape == state_pred.x.shape
 
