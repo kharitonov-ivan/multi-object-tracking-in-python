@@ -157,13 +157,14 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args,
         P_S=config.P_S,
         birth_model=birth_model,
         P_G=P_G,
+        P_D=0.6,
         w_min=w_minw,
         merging_threshold=merging_threshold,
         M=M,
     )
 
     # One step predict
-    tracker.predict_step()
+    tracker.predict_step(dt=1.0)
 
     test_measurements = np.array(
         [config.object_configs[idx].initial_state.x[0:2] for idx in range(3)])
@@ -208,7 +209,7 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args,
     )
 
     # One step predict
-    tracker.predict_step()
+    tracker.predict_step(dt=1.0)
 
     test_measurements = np.array(
         [config.object_configs[idx].initial_state.x[0:2] for idx in range(3)])
