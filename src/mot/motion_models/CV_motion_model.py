@@ -91,6 +91,4 @@ class ConstantVelocityMotionModel(MotionModel):
         return Q
 
     def __repr__(self) -> str:
-        return (
-            f"Constant velocity motion model with dt = {self.dt} siqma = {self.sigma} "
-        )
+        return f"Constant velocity motion model with dt = {self.dt} siqma = {self.sigma} "

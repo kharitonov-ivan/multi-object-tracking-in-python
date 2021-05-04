@@ -28,8 +28,8 @@ class Gaussian:
         assert self.P.ndim == 2, "P must be N x N matrix"
         assert self.P.shape[0] == self.P.shape[
             1], "Covariance matrix should be square!"
-        assert (self.P.shape[0] == self.x.shape[0]
-                ), "size of vector should be equal P column size!"
+        assert self.P.shape[0] == self.x.shape[
+            0], "size of vector should be equal P column size!"
 
     def __repr__(self) -> str:
         np.set_printoptions(linewidth=np.inf)
