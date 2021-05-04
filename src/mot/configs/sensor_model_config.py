@@ -2,8 +2,7 @@ import numpy as np
 
 
 class SensorModelConfig:
-    def __init__(self, P_D: float, lambda_c: float, range_c: np.ndarray, *args,
-                 **kwargs):
+    def __init__(self, P_D: float, lambda_c: float, range_c: np.ndarray, *args, **kwargs):
         """Creates the sensor model
 
         Parameters
@@ -34,9 +33,11 @@ class SensorModelConfig:
         )  # expected number of clutter detections per unit volume
 
     def __repr__(self) -> str:
-        return self.__class__.__name__ + (f"(P_D={self.P_D}, "
-                                          f"lambda_c={self.lambda_c}, "
-                                          f"range_c={self.range_c}, "
-                                          f"V={self.V}, "
-                                          f"pdf_c = {self.pdf_c} "
-                                          f"intensity_c = {self.intensity_c}")
+        return self.__class__.__name__ + (
+            f"(P_D={self.P_D}, "
+            f"lambda_c={self.lambda_c}, "
+            f"range_c={self.range_c}, "
+            f"V={self.V}, "
+            f"pdf_c = {self.pdf_c} "
+            f"intensity_c = {self.intensity_c}"
+        )

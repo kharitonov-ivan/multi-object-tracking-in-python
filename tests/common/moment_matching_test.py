@@ -64,8 +64,7 @@ def test_moment_matching_big():
     test_w = np.array(expected_vars["w"]).squeeze()
     test_states = [
         Gaussian(x=np.array(test_x[0]).squeeze(), P=np.array(test_P)[0])
-        for test_x, test_P in zip(expected_vars["states"]["x"],
-                                  expected_vars["states"]["P"])
+        for test_x, test_P in zip(expected_vars["states"]["x"], expected_vars["states"]["P"])
     ]
     got_state = GaussianDensity.moment_matching(test_w, test_states)
     expected_state = Gaussian(
@@ -73,5 +72,6 @@ def test_moment_matching_big():
         P=expected_vars["state_ref"]["P"][0][0],
     )
     assert np.linalg.norm(got_state.x).all() > TOL, "check calculation of mean"
-    assert (np.linalg.norm(got_state.P - expected_state.P).all() >
-            TOL), "check calculation of covariance"
+    assert (
+        np.linalg.norm(got_state.P - expected_state.P).all() > TOL
+    ), "check calculation of covariance"

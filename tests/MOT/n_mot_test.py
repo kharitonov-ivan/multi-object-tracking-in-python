@@ -32,20 +32,19 @@ from mot.trackers.n_object_trackers import GlobalNearestNeighboursTracker
     ],
 )
 @pytest.mark.parametrize("tracker", [(GlobalNearestNeighboursTracker)])
-def test_tracker(config, motion_model, meas_model, name, tracker,
-                 tracker_initial_states):
+def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initial_states):
     config = asdict(config)
     ground_truth = GroundTruthConfig(**config)
     motion_model = motion_model(**config)
     sensor_model = SensorModelConfig(**config)
     meas_model = meas_model(**config)
 
-    object_data = ObjectData(ground_truth_config=ground_truth,
-                             motion_model=motion_model,
-                             if_noisy=False)
-    meas_data = MeasurementData(object_data=object_data,
-                                sensor_model=sensor_model,
-                                meas_model=meas_model)
+    object_data = ObjectData(
+        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
+    )
+    meas_data = MeasurementData(
+        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
+    )
 
     # Single object tracker parameter setting
     P_G = 0.99  # gating size in percentage
@@ -64,7 +63,8 @@ def test_tracker(config, motion_model, meas_model, name, tracker,
     )
 
     tracker_estimations = tracker.estimate(
-        initial_states=tracker_initial_states, measurements=meas_data)
+        initial_states=tracker_initial_states, measurements=meas_data
+    )
 
     # Plotter.plot(
     #     [meas_data, object_data],

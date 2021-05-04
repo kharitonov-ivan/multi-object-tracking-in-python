@@ -21,7 +21,7 @@ class ConstantVelocityMeasurementModel(MeasurementModel):
         """
 
         self.d = 2
-        self.R = (sigma_r**2) * np.eye(2)
+        self.R = (sigma_r ** 2) * np.eye(2)
         super(ConstantVelocityMeasurementModel, self).__init__(*args, **kwargs)
 
     def __call__(self, x):

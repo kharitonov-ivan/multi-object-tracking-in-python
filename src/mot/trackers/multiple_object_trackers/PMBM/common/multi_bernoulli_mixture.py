@@ -16,14 +16,20 @@ import copy
 
 class MultiBernouilliMixture:
     """Track oriented approach using."""
+
     def __init__(self):
         self.tracks = {}
         self.global_hypotheses: List[GlobalHypothesis] = []
 
     def __repr__(self) -> str:
-        return (self.__class__.__name__ + " " +
-                (f"num of tracks= {len(self.tracks)}, "
-                 f"num global hypotheses={len(self.global_hypotheses)}, "))
+        return (
+            self.__class__.__name__
+            + " "
+            + (
+                f"num of tracks= {len(self.tracks)}, "
+                f"num global hypotheses={len(self.global_hypotheses)}, "
+            )
+        )
 
     def add_track(self, track: Track):
         assert not (track.track_id in self.tracks.keys())
@@ -36,18 +42,21 @@ class MultiBernouilliMixture:
             return None
         else:
 
-            most_probable_global_hypo = max(self.global_hypotheses,
-                                            key=lambda x: x.log_weight)
+            most_probable_global_hypo = max(self.global_hypotheses, key=lambda x: x.log_weight)
 
         object_list = []  # list of {'object_id':'object_state'}
         logging.debug(f"\n estimations")
         for (track_id, sth_id) in most_probable_global_hypo.associations:
-            if (self.tracks[track_id].single_target_hypotheses[sth_id].
-                    bernoulli.existence_probability >
-                    existense_probability_threshold and sth_id > 20):
+            if (
+                self.tracks[track_id]
+                .single_target_hypotheses[sth_id]
+                .bernoulli.existence_probability
+                > existense_probability_threshold
+                and sth_id > 20
+            ):
                 object_state = (
-                    self.tracks[track_id].single_target_hypotheses[sth_id].
-                    bernoulli.state.x)
+                    self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.state.x
+                )
                 object_list.append({track_id: object_state})
                 logging.debug(
                     f"r = {self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.existence_probability}, track id={track_id}, sth_id={sth_id}, state={object_state}"
@@ -72,18 +81,16 @@ class MultiBernouilliMixture:
                     dt,
                 )
 
-    def gating(self, z: np.ndarray, density_handler,
-               meas_model: MeasurementModel, gating_size):
+    def gating(self, z: np.ndarray, density_handler, meas_model: MeasurementModel, gating_size):
 
         gating_matrix = defaultdict(lambda: defaultdict(lambda: False))
-        used_measurement_detected_indices = np.full(shape=[len(z)],
-                                                    fill_value=False)
+        used_measurement_detected_indices = np.full(shape=[len(z)], fill_value=False)
 
         for track_id, track in self.tracks.items():
             for sth_id, sth in track.single_target_hypotheses.items():
-                gating_matrix[track_id][sth_id][
-                    1] = density_handler.ellipsoidal_gating(
-                        sth.bernoulli.state, z, meas_model, gating_size)
+                gating_matrix[track_id][sth_id][1] = density_handler.ellipsoidal_gating(
+                    sth.bernoulli.state, z, meas_model, gating_size
+                )
                 used_measurement_detected_indices = np.logical_or(
                     used_measurement_detected_indices,
                     gating_matrix[track_id][sth_id],
@@ -114,7 +121,8 @@ class MultiBernouilliMixture:
                 )
 
                 sth.missdetection_hypothesis = sth.create_missdetection_hypothesis(
-                    detection_probability, track.get_new_sth_id())
+                    detection_probability, track.get_new_sth_id()
+                )
                 logging.debug(f"Created missdetection hypothesis {sth}")
 
                 # sth.detection_hypotheses = {
@@ -156,17 +164,16 @@ class MultiBernouilliMixture:
         good choice threshold : np.log(0.05)
         """
         self.global_hypotheses = [
-            global_hypothesis for global_hypothesis in self.global_hypotheses
+            global_hypothesis
+            for global_hypothesis in self.global_hypotheses
             if global_hypothesis.log_weight > log_threshold
         ]
         self.normalize_global_hypotheses_weights()
 
     def cap_global_hypothesis(self, max_number_of_global_hypothesis: int = 50):
         if len(self.global_hypotheses) > max_number_of_global_hypothesis:
-            sorted_global_hypotheses = sorted(self.global_hypotheses,
-                                              key=lambda x: x.log_weight)
-            self.global_hypotheses = sorted_global_hypotheses[:
-                                                              max_number_of_global_hypothesis]
+            sorted_global_hypotheses = sorted(self.global_hypotheses, key=lambda x: x.log_weight)
+            self.global_hypotheses = sorted_global_hypotheses[:max_number_of_global_hypothesis]
             self.normalize_global_hypotheses_weights()
 
     def prune_tree(self):
@@ -206,12 +213,11 @@ class MultiBernouilliMixture:
 
     def normalize_global_hypotheses_weights(self) -> None:
         global_hypo_log_w_unnorm = [
-            global_hypothesis.log_weight
-            for global_hypothesis in self.global_hypotheses
+            global_hypothesis.log_weight for global_hypothesis in self.global_hypotheses
         ]
-        global_hypo_log_w_norm, _ = normalize_log_weights(
-            global_hypo_log_w_unnorm)
+        global_hypo_log_w_norm, _ = normalize_log_weights(global_hypo_log_w_unnorm)
 
-        for global_hypo, normalized_log_weight in zip(self.global_hypotheses,
-                                                      global_hypo_log_w_norm):
+        for global_hypo, normalized_log_weight in zip(
+            self.global_hypotheses, global_hypo_log_w_norm
+        ):
             global_hypo.log_weight = normalized_log_weight

@@ -42,15 +42,15 @@ def GOSPA(
         return GOSPA(estimates, targets, p, c, alpha, state_dim)
 
     elif targets_number == 0:
-        return c**p / alpha * estimates_number
+        return c ** p / alpha * estimates_number
 
     costs = scipy.spatial.distance.cdist(targets, estimates)
-    costs = np.minimum(costs, c)**p
+    costs = np.minimum(costs, c) ** p
 
     row_ind, col_ind = scipy.optimize.linear_sum_assignment(costs)
 
-    gospa_scalar = np.sum(
-        costs[row_ind,
-              col_ind]) + c**p / alpha * (estimates_number - targets_number)
+    gospa_scalar = np.sum(costs[row_ind, col_ind]) + c ** p / alpha * (
+        estimates_number - targets_number
+    )
 
     return gospa_scalar

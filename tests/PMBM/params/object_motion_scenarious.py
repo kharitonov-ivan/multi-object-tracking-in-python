@@ -93,8 +93,7 @@ many_objects_linear_motion_delayed = [
         t_death=99,
     ),
     Object(
-        initial=Gaussian(x=np.array([-800.0, -200.0, 20.0, -5.0]),
-                         P=np.eye(4)),
+        initial=Gaussian(x=np.array([-800.0, -200.0, 20.0, -5.0]), P=np.eye(4)),
         t_birth=0,
         t_death=69,
     ),
@@ -119,8 +118,7 @@ many_objects_linear_motion_delayed = [
         t_death=99,
     ),
     Object(
-        initial=Gaussian(x=np.array([-200.0, 800.0, 15.0, -10.0]),
-                         P=np.eye(4)),
+        initial=Gaussian(x=np.array([-200.0, 800.0, 15.0, -10.0]), P=np.eye(4)),
         t_birth=39,
         t_death=99,
     ),
@@ -130,8 +128,7 @@ many_objects_linear_motion_delayed = [
         t_death=99,
     ),
     Object(
-        initial=Gaussian(x=np.array([-200.0, 800.0, -3.0, -15.0]),
-                         P=np.eye(4)),
+        initial=Gaussian(x=np.array([-200.0, 800.0, -3.0, -15.0]), P=np.eye(4)),
         t_birth=59,
         t_death=99,
     ),

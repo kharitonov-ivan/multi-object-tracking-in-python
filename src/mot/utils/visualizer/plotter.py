@@ -15,16 +15,16 @@ logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 class Plot:
     def __init__(
-            self,
-            ax=None,
-            title=None,
-            out_path=None,
-            show=False,
-            is_autoscale=True,
-            autoscale_margin=1.0,
-            lim_x=(-1100, 1100),
-            lim_y=(-1100, 1100),
-            **kwargs,
+        self,
+        ax=None,
+        title=None,
+        out_path=None,
+        show=False,
+        is_autoscale=True,
+        autoscale_margin=1.0,
+        lim_x=(-1100, 1100),
+        lim_y=(-1100, 1100),
+        **kwargs,
     ):
         set_mpl_params()
         if ax is None:
@@ -69,13 +69,13 @@ class Plotter:
         assert isinstance(data, list)
 
         with Plot(
-                ax=ax,
-                title=title,
-                out_path=out_path,
-                show=show,
-                autoscale_margin=100.0,
-                is_autoscale=is_autoscale,
-                **kwargs,
+            ax=ax,
+            title=title,
+            out_path=out_path,
+            show=show,
+            autoscale_margin=100.0,
+            is_autoscale=is_autoscale,
+            **kwargs,
         ) as p:
             for series in data:
                 plot_series(series, p.ax)
@@ -92,11 +92,8 @@ class Plotter:
         **kwargs,
     ):
 
-        with Plot(ax=ax,
-                  title=title,
-                  out_path=out_path,
-                  show=show,
-                  autoscale_margin=0.1,
-                  **kwargs) as p:
+        with Plot(
+            ax=ax, title=title, out_path=out_path, show=show, autoscale_margin=0.1, **kwargs
+        ) as p:
             plot_series(data, p.ax)
         return p.ax

@@ -4,6 +4,7 @@ from ..motion_models import MotionModel
 
 class ObjectData:
     """Generate groundtruth object data"""
+
     def __init__(
         self,
         ground_truth_config: GroundTruthConfig,
@@ -37,17 +38,13 @@ class ObjectData:
         return self.objects_state_data[key]
 
     def generate_objects_data(self):
-        object_state_history = [
-            {} for timestep in range(self._ground_truth_config.total_time)
-        ]
+        object_state_history = [{} for timestep in range(self._ground_truth_config.total_time)]
         for object_config in self._ground_truth_config.object_configs:
             state = object_config.initial_state
             for timestep in range(self._ground_truth_config.total_time):
-                if timestep in range(object_config.t_birth,
-                                     object_config.t_death):
+                if timestep in range(object_config.t_birth, object_config.t_death):
                     object_state_history[timestep][object_config.id] = state
-                    next_state = self._motion_model.move(
-                        state, if_noisy=self._if_noisy)
+                    next_state = self._motion_model.move(state, if_noisy=self._if_noisy)
                     state = next_state
         return tuple(object_state_history)
 
@@ -56,7 +53,8 @@ class ObjectData:
             f"(ground_truth_config={self._ground_truth_config}, "
             f"motion_model={self._motion_model}, "
             f"if_noisy={self._if_noisy}, "
-            f"X={self.objects_state_data}, ")
+            f"X={self.objects_state_data}, "
+        )
 
     @property
     def data(self):

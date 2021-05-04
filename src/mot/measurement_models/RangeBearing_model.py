@@ -4,8 +4,7 @@ from .base_measurement_model import MeasurementModel
 
 
 class RangeBearingMeasurementModel(MeasurementModel):
-    def __init__(self, sigma_r: float, sigma_b: float, sensor_pos, *args,
-                 **kwargs):
+    def __init__(self, sigma_r: float, sigma_b: float, sensor_pos, *args, **kwargs):
         """Creats the range/bearnig measurement model
 
         Parameters
@@ -37,9 +36,7 @@ class RangeBearingMeasurementModel(MeasurementModel):
         self.d = 2
         self.sigma_r = sigma_r
         self.sigma_b = sigma_b
-        self.R = np.diag(
-            [np.power(self.sigma_r, 2),
-             np.power(self.sigma_b, 2)])
+        self.R = np.diag([np.power(self.sigma_r, 2), np.power(self.sigma_b, 2)])
         self.sensor_pos = sensor_pos
         super(RangeBearingMeasurementModel, self).__init__(*args, **kwargs)
 
@@ -55,9 +52,7 @@ class RangeBearingMeasurementModel(MeasurementModel):
         return self.R
 
     def observe(self, state_vector):
-        observation = np.array(
-            [self._get_range(state_vector),
-             self._get_bearing(state_vector)])
+        observation = np.array([self._get_range(state_vector), self._get_bearing(state_vector)])
         return observation
 
     def _get_range(self, state_vector):
@@ -65,8 +60,9 @@ class RangeBearingMeasurementModel(MeasurementModel):
         return np.linalg.norm(state_vector[:2] - self.sensor_pos)
 
     def _get_bearing(self, state_vector):
-        return np.arctan2(state_vector[1] - self.sensor_pos[1],
-                          state_vector[0] - self.sensor_pos[0])
+        return np.arctan2(
+            state_vector[1] - self.sensor_pos[1], state_vector[0] - self.sensor_pos[0]
+        )
 
     def H(self, state_vector=None):
         # yapf: disable
@@ -95,6 +91,4 @@ class RangeBearingMeasurementModel(MeasurementModel):
         np.ndarray
             state_vector
         """
-        return np.array(
-            [self._get_range(state_vector),
-             self._get_bearing(state_vector)])
+        return np.array([self._get_range(state_vector), self._get_bearing(state_vector)])

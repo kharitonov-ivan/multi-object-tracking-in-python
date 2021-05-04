@@ -5,8 +5,7 @@ from ..motion_models import MotionModel
 
 
 class CoordinateTurnMotionModel(MotionModel):
-    def __init__(self, dt: float, sigma_V: float, sigma_omega: float, *args,
-                 **kwargs):
+    def __init__(self, dt: float, sigma_V: float, sigma_omega: float, *args, **kwargs):
         """Creates a 2D coordinate turn model with nearly constant polar velocity and turn rate
 
         Note:
@@ -34,19 +33,17 @@ class CoordinateTurnMotionModel(MotionModel):
         self.sigma_omega = sigma_omega
 
     def __repr__(self) -> str:
-        return self.__class__.__name__ + (f"(d={self.d}, "
-                                          f"dt={self.dt}, "
-                                          f"sigma_V={self.sigma_V}, "
-                                          f"sigma_omega={self.sigma_omega}, ")
+        return self.__class__.__name__ + (
+            f"(d={self.d}, "
+            f"dt={self.dt}, "
+            f"sigma_V={self.sigma_V}, "
+            f"sigma_omega={self.sigma_omega}, "
+        )
 
-    def move(self,
-             state: Gaussian,
-             dt: float = None,
-             if_noisy: bool = False) -> Gaussian:
+    def move(self, state: Gaussian, dt: float = None, if_noisy: bool = False) -> Gaussian:
         dt = self.dt if dt is None else dt
         assert isinstance(dt, float)
-        assert isinstance(state,
-                          Gaussian), f"Argument of wrong type! Type ={type}"
+        assert isinstance(state, Gaussian), f"Argument of wrong type! Type ={type}"
 
         if if_noisy:
             next_state = Gaussian(
@@ -66,32 +63,33 @@ class CoordinateTurnMotionModel(MotionModel):
     def f(self, state_vector, dt):
         # TODO assert on state
         pos_x, pos_y, v, phi, omega = state_vector
-        next_state = np.array(
-            [dt * v * np.cos(phi), dt * v * np.sin(phi), 0, dt * omega, 0])
+        next_state = np.array([dt * v * np.cos(phi), dt * v * np.sin(phi), 0, dt * omega, 0])
         return state_vector + next_state
 
     def F(self, state_vector, dt):
         pos_x, pos_y, v, phi, omega = state_vector
-        return np.array([
-            [1.0, 0.0, dt * np.cos(phi), -dt * v * np.sin(phi), 0],
-            [0.0, 1.0, dt * np.sin(phi), dt * v * np.cos(phi), 0],
-            [0.0, 0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0, dt],
-            [0.0, 0.0, 0.0, 0.0, 1.0],
-        ])
+        return np.array(
+            [
+                [1.0, 0.0, dt * np.cos(phi), -dt * v * np.sin(phi), 0],
+                [0.0, 1.0, dt * np.sin(phi), dt * v * np.cos(phi), 0],
+                [0.0, 0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0, dt],
+                [0.0, 0.0, 0.0, 0.0, 1.0],
+            ]
+        )
 
     def _f(self, state, dt):
         pos_x, pos_y, v, phi, omega = state.x
 
-        next_state = np.array([
-            pos_x + ((2 * v) / omega) * np.sin(omega * dt / 2) *
-            np.cos(phi + omega * dt / 2),
-            pos_y + ((2 * v) / omega) * np.sin(omega * dt / 2) *
-            np.sin(phi + omega * dt / 2),
-            v,
-            phi + omega * dt,
-            omega,
-        ])
+        next_state = np.array(
+            [
+                pos_x + ((2 * v) / omega) * np.sin(omega * dt / 2) * np.cos(phi + omega * dt / 2),
+                pos_y + ((2 * v) / omega) * np.sin(omega * dt / 2) * np.sin(phi + omega * dt / 2),
+                v,
+                phi + omega * dt,
+                omega,
+            ]
+        )
         return next_state
 
     def Q(self, dt=None):

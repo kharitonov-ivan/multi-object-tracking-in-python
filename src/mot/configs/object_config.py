@@ -10,8 +10,7 @@ class Object:
     def restart(cls):
         cls.new_id = itertools.count(start=0, step=1)
 
-    def __init__(self, initial: Gaussian, t_birth: int, t_death: int, *args,
-                 **kwargs):
+    def __init__(self, initial: Gaussian, t_birth: int, t_death: int, *args, **kwargs):
         """Construct object configuration for ground truth config
 
         Parameters
@@ -45,4 +44,5 @@ class Object:
             f"(id={self.id}, "
             f"initial_state={self.initial_state}, "
             f"t_birth={self.t_birth}, "
-            f"t_death={self.t_death}, ")
+            f"t_death={self.t_death}, "
+        )

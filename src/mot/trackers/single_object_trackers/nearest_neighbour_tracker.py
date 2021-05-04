@@ -51,13 +51,11 @@ class NearestNeighbourTracker(SingleObjectTracker):
                 current_measurements=np.array(measurements_in_scene),
             )
             prev_state = GaussianDensity.predict(
-                state=estimations[timestep],
-                motion_model=self.motion_model,
-                dt=1.0)
+                state=estimations[timestep], motion_model=self.motion_model, dt=1.0
+            )
         return tuple(estimations)
 
-    def estimation_step(self, predicted_state: Gaussian,
-                        current_measurements: np.ndarray):
+    def estimation_step(self, predicted_state: Gaussian, current_measurements: np.ndarray):
         # 1. Gating
 
         (meas_in_gate, _) = GaussianDensity.ellipsoidal_gating(
@@ -80,8 +78,7 @@ class NearestNeighbourTracker(SingleObjectTracker):
 
             # Hypothesis evaluation
             # detection
-            w_theta_factor = np.log(self.sensor_model.P_D /
-                                    self.sensor_model.intensity_c)
+            w_theta_factor = np.log(self.sensor_model.P_D / self.sensor_model.intensity_c)
             w_theta_k = predicted_likelihood + w_theta_factor
             # misdetection
             w_theta_0 = 1 - self.sensor_model.P_D

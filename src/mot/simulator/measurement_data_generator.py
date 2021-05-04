@@ -3,6 +3,7 @@ import numpy as np
 
 class MeasurementData:
     """Generates object_generated measurements and clutter"""
+
     def __init__(
         self,
         object_data,
@@ -40,12 +41,12 @@ class MeasurementData:
         for timestep in range(len(self.object_data)):
             number_of_objects_in_scene = self.object_data.N[timestep]
             if number_of_objects_in_scene > 0:
-                detection_mask = (self._generator.uniform(
-                    size=number_of_objects_in_scene) < self.sensor_model.P_D)
+                detection_mask = (
+                    self._generator.uniform(size=number_of_objects_in_scene) < self.sensor_model.P_D
+                )
                 observed_objects = [
                     self.object_data[timestep][key]
-                    for is_observed, key in zip(
-                        detection_mask, self.object_data[timestep].keys())
+                    for is_observed, key in zip(detection_mask, self.object_data[timestep].keys())
                     if is_observed
                 ]
                 # Generate measurement
@@ -56,10 +57,8 @@ class MeasurementData:
             N_c = self._generator.poisson(lam=self.sensor_model.lambda_c)
             # Generate clutter
             # TODO keep in mind that pos of object can be vary
-            clutter_min_coord, clutter_max_coord = np.diag(
-                self.sensor_model.range_c)
-            clutter = np.random.uniform(clutter_min_coord, clutter_max_coord,
-                                        [N_c, 2])
+            clutter_min_coord, clutter_max_coord = np.diag(self.sensor_model.range_c)
+            clutter = np.random.uniform(clutter_min_coord, clutter_max_coord, [N_c, 2])
             clutter_data[timestep].append(clutter)
         return tuple(meas_data), tuple(clutter_data)
 
@@ -85,13 +84,15 @@ class MeasurementData:
         return self.__class__.__name__ + (
             f"(sensor_model={self.sensor_model}, "
             f"meas_model={self.meas_model}, "
-            f"X={self._observed_measurements}, ")
+            f"X={self._observed_measurements}, "
+        )
 
     @property
     def _observed_measurements(self):
         measurements_with_clutter = []
         for idx, (curr_measurements, curr_clutters) in enumerate(
-                zip(self.meas_data, self.clutter_data)):
+            zip(self.meas_data, self.clutter_data)
+        ):
             scene = []
             for cur_measurement in curr_measurements:
                 scene.append(cur_measurement)

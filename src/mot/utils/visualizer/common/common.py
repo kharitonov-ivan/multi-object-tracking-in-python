@@ -8,8 +8,7 @@ logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 def set_mpl_params():
 
-    assert "matplotlib" in globals() or "matplotlib" in locals(
-    ), "matplotlib not imported"
+    assert "matplotlib" in globals() or "matplotlib" in locals(), "matplotlib not imported"
 
     mpl_logger = logging.getLogger("matplotlib")
     mpl_logger.setLevel(logging.ERROR)
@@ -22,12 +21,13 @@ def set_mpl_params():
     yticksize = xticksize
     # matplotlib.use("svg")
     matplotlib.rcParams[
-        "legend.markerscale"] = 1.5  # the relative size of legend markers vs. original
+        "legend.markerscale"
+    ] = 1.5  # the relative size of legend markers vs. original
     matplotlib.rcParams["legend.handletextpad"] = 0.5
     matplotlib.rcParams[
-        "legend.labelspacing"] = 0.4  # the vertical space between the legend entries in fraction of fontsize
-    matplotlib.rcParams[
-        "legend.borderpad"] = 0.5  # border whitespace in fontsize units
+        "legend.labelspacing"
+    ] = 0.4  # the vertical space between the legend entries in fraction of fontsize
+    matplotlib.rcParams["legend.borderpad"] = 0.5  # border whitespace in fontsize units
     matplotlib.rcParams["font.size"] = 14
     # matplotlib.rcParams["font.family"] = "serif"
     # matplotlib.rcParams["font.serif"] = "Times"
@@ -42,9 +42,7 @@ def set_mpl_params():
     # matplotlib.rc("text", usetex=True)
 
 
-def create_figure(
-        figsize=(5, 5), title=None, load_mpl_params=True, dpi=100, *args,
-        **kwargs):
+def create_figure(figsize=(5, 5), title=None, load_mpl_params=True, dpi=100, *args, **kwargs):
     if load_mpl_params:
         set_mpl_params()
     fig = plt.figure(figsize=figsize, dpi=dpi, **kwargs)

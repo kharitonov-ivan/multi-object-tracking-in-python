@@ -4,10 +4,7 @@ from functools import wraps
 
 
 class Timer:
-    def __init__(self,
-                 logger=logging.debug,
-                 time_source=time.perf_counter,
-                 name=None):
+    def __init__(self, logger=logging.debug, time_source=time.perf_counter, name=None):
         self.logger = logger
         self.time_source = time_source
         self.name = name
@@ -27,9 +24,9 @@ class Timer:
         @wraps(method)
         def _whraped_method(self, *method_args, **method_kwargs):
             with Timer(
-                    logger=logging.debug,
-                    time_source=time.time,
-                    name=method.__name__,
+                logger=logging.debug,
+                time_source=time.time,
+                name=method.__name__,
             ):
                 method_output = method(self, *method_args, **method_kwargs)
             return method_output

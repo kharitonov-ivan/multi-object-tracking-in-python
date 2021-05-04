@@ -31,20 +31,23 @@ def generate_environment(config, motion_model, meas_model, *args, **kwargs):
     motion_model = motion_model(**config)
     sensor_model = SensorModelConfig(**config)
     meas_model = meas_model(**config)
-    object_data = ObjectData(ground_truth_config=ground_truth,
-                             motion_model=motion_model,
-                             if_noisy=False)
-    meas_data = MeasurementData(object_data=object_data,
-                                sensor_model=sensor_model,
-                                meas_model=meas_model)
-    estimations = [[
-        Gaussian(x=pos, P=400 * np.eye(4)) for pos in [
-            np.array([0, 0, 0, 0]),
-            np.array([400, -600, 0, 0]),
-            np.array([-800, -200, 0, 0]),
-            np.array([-200, 800, 0, 0]),
+    object_data = ObjectData(
+        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
+    )
+    meas_data = MeasurementData(
+        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
+    )
+    estimations = [
+        [
+            Gaussian(x=pos, P=400 * np.eye(4))
+            for pos in [
+                np.array([0, 0, 0, 0]),
+                np.array([400, -600, 0, 0]),
+                np.array([-800, -200, 0, 0]),
+                np.array([-200, 800, 0, 0]),
+            ]
         ]
-    ]] * 10
+    ] * 10
     env = namedtuple(
         "env",
         [
@@ -70,10 +73,8 @@ def generate_environment(config, motion_model, meas_model, *args, **kwargs):
     )
 
 
-@pytest.mark.parametrize("config, motion_model, meas_model, name",
-                         test_env_cases)
-def test_plot_object_data(config, motion_model, meas_model, name, *args,
-                          **kwargs):
+@pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
+def test_plot_object_data(config, motion_model, meas_model, name, *args, **kwargs):
     env = generate_environment(config, motion_model, meas_model)
     Plotter.plot(
         env.object_data,
@@ -81,10 +82,8 @@ def test_plot_object_data(config, motion_model, meas_model, name, *args,
     )
 
 
-@pytest.mark.parametrize("config, motion_model, meas_model, name",
-                         test_env_cases)
-def test_plot_meas_data(config, motion_model, meas_model, name, *args,
-                        **kwargs):
+@pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
+def test_plot_meas_data(config, motion_model, meas_model, name, *args, **kwargs):
     env = generate_environment(config, motion_model, meas_model)
     Plotter.plot(
         env.meas_data,
@@ -92,21 +91,17 @@ def test_plot_meas_data(config, motion_model, meas_model, name, *args,
     )
 
 
-@pytest.mark.parametrize("config, motion_model, meas_model, name",
-                         test_env_cases)
-def test_plot_object_meas_data(config, motion_model, meas_model, name, *args,
-                               **kwargs):
+@pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
+def test_plot_object_meas_data(config, motion_model, meas_model, name, *args, **kwargs):
     env = generate_environment(config, motion_model, meas_model)
     Plotter.plot_several(
         [env.meas_data, env.object_data],
-        out_path=get_images_dir(__file__) + "/" + "meas_data_and_obj_data" +
-        ".png",
+        out_path=get_images_dir(__file__) + "/" + "meas_data_and_obj_data" + ".png",
     )
 
 
 def test_plot_one_gaussian(*args, **kwargs):
-    gaussian = Gaussian(x=np.array([0, 0, 10, 10]),
-                        P=np.diag([400, 200, 0, 0]))
+    gaussian = Gaussian(x=np.array([0, 0, 10, 10]), P=np.diag([400, 200, 0, 0]))
 
     Plotter.plot(
         [gaussian],
@@ -116,10 +111,8 @@ def test_plot_one_gaussian(*args, **kwargs):
     )
 
 
-@pytest.mark.parametrize("config, motion_model, meas_model, name",
-                         test_env_cases)
-def test_plot_gaussians(config, motion_model, meas_model, name, *args,
-                        **kwargs):
+@pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
+def test_plot_gaussians(config, motion_model, meas_model, name, *args, **kwargs):
     env = generate_environment(config, motion_model, meas_model)
     Plotter.plot_several(
         [env.estimations],
@@ -127,14 +120,11 @@ def test_plot_gaussians(config, motion_model, meas_model, name, *args,
     )
 
 
-@pytest.mark.parametrize("config, motion_model, meas_model, name",
-                         test_env_cases)
-def test_animate_input_data(config, motion_model, meas_model, name, *args,
-                            **kwargs):
+@pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
+def test_animate_input_data(config, motion_model, meas_model, name, *args, **kwargs):
     env = generate_environment(config, motion_model, meas_model)
     Animator.animate(
         [env.meas_data, env.object_data],
         title=name,
-        filename=get_images_dir(__file__) + "/" + "meas_data_and_obj_data" +
-        ".gif",
+        filename=get_images_dir(__file__) + "/" + "meas_data_and_obj_data" + ".gif",
     )

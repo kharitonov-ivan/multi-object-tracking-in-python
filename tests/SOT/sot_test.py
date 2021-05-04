@@ -36,27 +36,25 @@ from mot.utils.visualizer import Plotter
             "SOT non linear case (CT)",
             Gaussian(
                 x=np.array([0, 0, 10, 0, np.pi / 180]),
-                P=np.power(
-                    np.diag([1, 1, 1, 1 * np.pi / 180, 1 * np.pi / 180]), 2),
+                P=np.power(np.diag([1, 1, 1, 1 * np.pi / 180, 1 * np.pi / 180]), 2),
             ),
         ),
     ],
 )
 @pytest.mark.parametrize("tracker", [(NearestNeighbourTracker)])
-def test_tracker(config, motion_model, meas_model, name, tracker,
-                 tracker_initial_state):
+def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initial_state):
     config = asdict(config)
     ground_truth = GroundTruthConfig(**config)
     motion_model = motion_model(**config)
     sensor_model = SensorModelConfig(**config)
     meas_model = meas_model(**config)
 
-    object_data = ObjectData(ground_truth_config=ground_truth,
-                             motion_model=motion_model,
-                             if_noisy=False)
-    meas_data = MeasurementData(object_data=object_data,
-                                sensor_model=sensor_model,
-                                meas_model=meas_model)
+    object_data = ObjectData(
+        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
+    )
+    meas_data = MeasurementData(
+        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
+    )
 
     # Single object tracker parameter setting
     P_G = 0.999  # gating size in percentage
@@ -71,8 +69,9 @@ def test_tracker(config, motion_model, meas_model, name, tracker,
         gating_size=P_G,
     )
 
-    tracker_estimations = tracker.estimate(initial_state=tracker_initial_state,
-                                           measurements=meas_data)
+    tracker_estimations = tracker.estimate(
+        initial_state=tracker_initial_state, measurements=meas_data
+    )
 
     Plotter.plot(
         [tracker_estimations, meas_data, object_data],
