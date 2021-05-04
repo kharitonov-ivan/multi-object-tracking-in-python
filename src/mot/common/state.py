@@ -115,7 +115,10 @@ class GaussianMixture(collections.abc.MutableSequence):
             raise TypeError
 
     def __len__(self):
-        return len(self.weighted_components)
+        if self.weighted_components:
+            return len(self.weighted_components)
+        else:
+            return 0
 
     def __getitem__(self, idx):
         return self.weighted_components[idx]
@@ -133,6 +136,8 @@ class GaussianMixture(collections.abc.MutableSequence):
 
     def append(self, other):
         assert isinstance(other, WeightedGaussian)
+        if not self.weighted_components:
+            self.weighted_components = []
         self.weighted_components.append(other)
 
     def extend(self, other):

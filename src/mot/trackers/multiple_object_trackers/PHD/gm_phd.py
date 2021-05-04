@@ -61,13 +61,15 @@ class GMPHD:
         # Output: estimates object states in matrix from of size (object state dimention) x (number of objects)
         # Geat a mean estimate (expected number of objects) if the cardinality of object sby takings the summation of the weights of the Gaussian components
         # (rounded to the nearest integes), denotes as n
-
-        E = np.sum(np.exp(
-            self.gmm_components.log_weights))  # number exptected value
-        n = np.min([len(self.gmm_components), int(np.round(E))])
-        top_n_hypotheses = sorted(self.gmm_components, key=lambda x: x.w)[:n]
-        estimates = [comp.gm for comp in top_n_hypotheses]
-        return estimates
+        if self.gmm_components:
+            E = np.sum(np.exp(
+                self.gmm_components.log_weights))  # number exptected value
+            n = np.min([len(self.gmm_components), int(np.round(E))])
+            top_n_hypotheses = sorted(self.gmm_components,
+                                      key=lambda x: x.log_weight)[:n]
+            estimates = [comp.gaussian for comp in top_n_hypotheses]
+            return estimates
+        return [None]
 
     def estimate(self, measurements, verbose=False):
         """Tracks multilple
@@ -85,13 +87,15 @@ class GMPHD:
         """
 
         estimations = [[] for x in range(len(measurements))]
-        for timestep, measurements_in_scene in tqdm(enumerate(measurements),
+        # TODO убрать костыль
+        for timestep, measurements_in_scene in tqdm(enumerate(
+                measurements[:10]),
                                                     total=len(measurements)):
             estimations[timestep].extend(
-                self.estimation_step(measurements_in_scene))
+                self.estimation_step(measurements_in_scene, dt=1.0))
         return tuple(estimations)
 
-    def estimation_step(self, current_measurements: np.ndarray):
+    def estimation_step(self, current_measurements: np.ndarray, dt: float):
         # PPP update
         self.update(current_measurements)
 
@@ -102,16 +106,16 @@ class GMPHD:
         estimates = self.PHD_estimator()
 
         # # PPP prediction
-        self.predict_step()
+        self.predict_step(dt)
         logging.debug(f"number of components: {len(self.gmm_components)}")
         return estimates
 
-    def predict_step(self):
+    def predict_step(self, dt):
         # surviving process - predict and store the components that survived
         for idx in range(len(self.gmm_components)):
-            self.gmm_components[idx].gm = GD.predict(
-                self.gmm_components[idx].gm, self.motion_model)
-            self.gmm_components[idx].w += np.log(self.P_S)
+            self.gmm_components[idx].gaussian = GaussianDensity.predict(
+                self.gmm_components[idx].gaussian, self.motion_model, dt)
+            self.gmm_components[idx].log_weight += np.log(self.P_S)
 
         # birth process - copy birth weight and birth states
         self.gmm_components.extend(self.birth_model)
@@ -124,8 +128,10 @@ class GMPHD:
         # Construct update components resulted from missed detection.
         # It represents objects that are undetected at time k.
         missdetection_hypotheses = GaussianMixture([
-            WeightedGaussian(weight=comp.w + np.log(1 - self.P_D), gm=comp.gm)
-            for comp in self.gmm_components
+            WeightedGaussian(
+                log_weight=comp.log_weight + np.log(1 - self.P_D),
+                gaussian=comp.gaussian,
+            ) for comp in self.gmm_components
         ])
         new_gmm_components.extend(missdetection_hypotheses)
 
@@ -134,26 +140,32 @@ class GMPHD:
             for hyp_idx in range(len(self.gmm_components)):
 
                 component = self.gmm_components[hyp_idx]
-                z_in_gate, is_meas_in_gate = GD.ellipsoidal_gating(
-                    component.gm,
+                z_in_gate, is_meas_in_gate = GaussianDensity.ellipsoidal_gating(
+                    component.gaussian,
                     np.array(measurement, ndmin=2),
                     gating_size=self.gating_size,
                     measurement_model=self.meas_model,
                 )
-                if is_meas_in_gate[0]:
-                    new_gm = GD.update(component.gm,
-                                       np.array(measurement, ndmin=2),
-                                       self.meas_model)
-                    predicted_likelihood = GD.predicted_likelihood(
-                        component.gm, np.array(measurement, ndmin=2),
-                        self.meas_model).squeeze()
-                    w = np.log(self.P_D) + predicted_likelihood + component.w
-                    new_gm_list.append(WeightedGaussian(weight=w, gm=new_gm))
+                if is_meas_in_gate:
+                    new_gm = GaussianDensity.update(
+                        component.gaussian,
+                        np.array(measurement, ndmin=2),
+                        self.meas_model,
+                    )
+                    predicted_likelihood = GaussianDensity.predict_loglikelihood(
+                        component.gaussian,
+                        np.array(measurement, ndmin=2),
+                        self.meas_model,
+                    ).squeeze()
+                    w = np.log(
+                        self.P_D) + predicted_likelihood + component.log_weight
+                    new_gm_list.append(
+                        WeightedGaussian(log_weight=w, gaussian=new_gm))
 
             W_sum = np.sum(new_gm_list.log_weights)
             for idx, _ in enumerate(new_gm_list):
-                new_gm_list[idx].w = np.log(
-                    new_gm_list[idx].w /
+                new_gm_list[idx].log_weight = np.log(
+                    new_gm_list[idx].log_weight /
                     (self.sensor_model.intensity_c + W_sum))
             if len(new_gm_list) > 0:
                 new_gmm_components.extend(new_gm_list)
