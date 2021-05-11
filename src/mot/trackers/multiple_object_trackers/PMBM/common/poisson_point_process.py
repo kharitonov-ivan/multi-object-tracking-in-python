@@ -19,7 +19,7 @@ from functools import partial
 
 
 class PoissonRFS:
-    def __init__(self, intensity: GaussianMixture, *args, **kwargs):
+    def __init__(self, intensity: GaussianMixture):
         assert isinstance(intensity, GaussianMixture)
         self.intensity = deepcopy(intensity)
         # self.pool = Pool(nodes=8)
