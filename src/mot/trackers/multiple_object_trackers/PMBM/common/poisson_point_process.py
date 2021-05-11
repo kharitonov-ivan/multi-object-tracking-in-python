@@ -202,20 +202,20 @@ class PoissonRFS:
 
     def gating(
         self,
-        z: np.ndarray,
+        measurements: np.ndarray,
         density_handler,
         meas_model: MeasurementModel,
         gating_size: float,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Returns measurement indices inside the gate of undetected objects (PPP)"""
         gating_matrix_undetected = np.full(
-            shape=[self.intensity.size, len(z)], fill_value=False
+            shape=[self.intensity.size, len(measurements)], fill_value=False
         )  # poisson size x number of measurements
-        used_measurement_undetected_indices = np.full(shape=[len(z)], fill_value=False)
+        used_measurement_undetected_indices = np.full(shape=[len(measurements)], fill_value=False)
 
         for ppp_idx in range(self.intensity.size):
-            gating_matrix_undetected[ppp_idx][1] = density_handler.ellipsoidal_gating(
-                self.intensity[ppp_idx].gaussian, z, meas_model, gating_size
+            _, gating_matrix_undetected[ppp_idx, :] = density_handler.ellipsoidal_gating(
+                self.intensity[ppp_idx].gaussian, measurements, meas_model, gating_size
             )
             used_measurement_undetected_indices = np.logical_or(
                 used_measurement_undetected_indices, gating_matrix_undetected[ppp_idx]
