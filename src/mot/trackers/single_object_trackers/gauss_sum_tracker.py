@@ -2,12 +2,8 @@ import numpy as np
 from scipy.stats import chi2
 from tqdm import tqdm as tqdm
 
-from ...common import (
-    Gaussian,
-    GaussianDensity,
-    HypothesisReduction,
-    normalize_log_weights,
-)
+from ...common import (Gaussian, GaussianDensity, HypothesisReduction,
+                       normalize_log_weights)
 from ...configs import SensorModelConfig
 from ...measurement_models import MeasurementModel
 from ...motion_models import MotionModel

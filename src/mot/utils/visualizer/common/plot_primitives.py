@@ -1,7 +1,9 @@
+import logging
+
 import numpy as np
 from matplotlib.patches import Ellipse, FancyArrow
+
 from mot.common.state import Gaussian
-import logging
 
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 

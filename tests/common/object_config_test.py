@@ -1,8 +1,10 @@
+import unittest
+
 import numpy as np
 import pytest
-import unittest
-from mot.configs import Object
+
 from mot.common.state import Gaussian
+from mot.configs import Object
 
 TOL = 1e-4
 

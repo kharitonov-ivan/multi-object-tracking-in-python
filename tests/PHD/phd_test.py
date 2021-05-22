@@ -3,6 +3,7 @@ from dataclasses import asdict
 
 import numpy as np
 import pytest
+
 from mot.common.state import Gaussian, GaussianMixture, WeightedGaussian
 from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel

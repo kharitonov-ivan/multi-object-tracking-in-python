@@ -1,11 +1,12 @@
 import numpy as np
 
-from .base_single_object_tracker import SingleObjectTracker
+from mot.common.gaussian_density import GaussianDensity
+from mot.common.state import Gaussian
+from mot.configs import SensorModelConfig
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import MotionModel
-from mot.configs import SensorModelConfig
-from mot.common.state import Gaussian
-from mot.common.gaussian_density import GaussianDensity
+
+from .base_single_object_tracker import SingleObjectTracker
 
 
 class NearestNeighbourTracker(SingleObjectTracker):

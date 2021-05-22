@@ -2,8 +2,9 @@ import unittest
 
 import numpy as np
 import pytest
-from mot.configs import GroundTruthConfig, Object
+
 from mot.common.state import Gaussian
+from mot.configs import GroundTruthConfig, Object
 
 TOL = 1e-4
 

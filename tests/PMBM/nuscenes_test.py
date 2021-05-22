@@ -1,23 +1,27 @@
 import json
 import logging as log
+import multiprocessing as mp
 from dataclasses import dataclass
 from os import wait
 from typing import Dict, List
 
-import mot
-import tqdm
+import matplotlib.pyplot as plt
 import numpy as np
-from mot.common import Gaussian, GaussianMixture, WeightedGaussian
-from mot.configs import SensorModelConfig
-import mot.motion_models
-from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
-    StaticBirthModel,
-)
-from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
+import pytest
+import tqdm
+import ujson
 from nuscenes.eval.common.data_classes import EvalBoxes
 from nuscenes.eval.detection.data_classes import DetectionBox
 from nuscenes.nuscenes import NuScenes
-import multiprocessing as mp
+
+import mot
+import mot.motion_models
+from mot.common import Gaussian, GaussianMixture, WeightedGaussian
+from mot.configs import SensorModelConfig
+from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import \
+    StaticBirthModel
+from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
+from mot.utils.get_path import get_images_dir
 
 
 @dataclass

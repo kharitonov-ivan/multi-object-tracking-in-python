@@ -1,7 +1,8 @@
+import logging
+
+import colorcet
 import matplotlib
 import matplotlib.pyplot as plt
-import colorcet
-import logging
 
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 

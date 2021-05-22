@@ -1,3 +1,4 @@
+import copy
 import logging
 from collections import defaultdict
 from typing import List
@@ -8,10 +9,9 @@ import numpy as np
 from .....common import normalize_log_weights
 from .....measurement_models import MeasurementModel
 from .....motion_models import MotionModel
+from .....utils.timer import Timer
 from .global_hypothesis import GlobalHypothesis
 from .track import Track
-from .....utils.timer import Timer
-import copy
 
 
 class MultiBernouilliMixture:

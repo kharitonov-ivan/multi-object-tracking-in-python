@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+
 from mot.configs import SensorModelConfig
 
 TOL = 1e-4

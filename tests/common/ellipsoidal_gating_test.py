@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.stats import chi2
+
 from mot.common.gaussian_density import GaussianDensity
 from mot.common.state import Gaussian
 from mot.configs import GroundTruthConfig, Object, SensorModelConfig
@@ -6,7 +8,6 @@ from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
 from mot.simulator.measurement_data_generator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
-from scipy.stats import chi2
 
 TOL = 1e-4
 

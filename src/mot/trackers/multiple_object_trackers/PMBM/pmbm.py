@@ -1,8 +1,15 @@
+import itertools
 import logging as lg
+from functools import partial
+from itertools import repeat
+from multiprocessing import Pool
+from pprint import pprint
+from typing import Dict
 
 import numpy as np
 import scipy
 import scipy.stats
+from viztracer import VizTracer
 
 from mot.common import gaussian_density
 
@@ -10,25 +17,11 @@ from ....common import GaussianDensity, GaussianMixture
 from ....configs import SensorModelConfig
 from ....measurement_models import MeasurementModel
 from ....motion_models import MotionModel
-from .common import (
-    AssignmentSolver,
-    Association,
-    BirthModel,
-    GlobalHypothesis,
-    MultiBernouilliMixture,
-    PoissonRFS,
-    assign,
-)
 from ....utils.profiler import Profiler
-
 from ....utils.timer import Timer
-from pprint import pprint
-from viztracer import VizTracer
-import itertools
-from multiprocessing import Pool
-from functools import partial
-
-from itertools import repeat
+from .common import (AssignmentSolver, Association, BirthModel,
+                     GlobalHypothesis, MultiBernouilliMixture, PoissonRFS,
+                     assign)
 
 
 def solve(f):

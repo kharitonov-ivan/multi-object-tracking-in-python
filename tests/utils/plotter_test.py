@@ -1,9 +1,10 @@
-from mot.utils.get_path import get_images_dir
-
 from collections import namedtuple
 from dataclasses import asdict
+
 import numpy as np
 import pytest
+
+from mot.common.state import Gaussian
 from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
@@ -12,8 +13,7 @@ from mot.simulator import MeasurementData
 from mot.simulator.measurement_data_generator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
 from mot.utils.get_path import get_images_dir
-from mot.common.state import Gaussian
-from mot.utils.visualizer import Plotter, Animator
+from mot.utils.visualizer import Animator, Plotter
 
 test_env_cases = [
     (

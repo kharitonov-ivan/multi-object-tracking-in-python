@@ -6,6 +6,8 @@ from typing import List
 import numpy as np
 from murty import Murty
 
+from mot.utils.time_limitter import time_limit
+
 from .global_hypothesis import Association, GlobalHypothesis
 
 

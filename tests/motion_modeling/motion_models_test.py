@@ -2,8 +2,8 @@ import unittest
 
 import numpy as np
 
-from mot.motion_models import ConstantVelocityMotionModel
 from mot.common.state import Gaussian
+from mot.motion_models import ConstantVelocityMotionModel
 
 
 class Test_MotionModels(unittest.TestCase):

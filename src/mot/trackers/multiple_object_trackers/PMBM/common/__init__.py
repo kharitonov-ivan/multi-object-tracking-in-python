@@ -1,11 +1,7 @@
 from .assigner import AssignmentSolver, assign
 from .bernoulli import Bernoulli
-from .birth_model import (
-    BirthModel,
-    MeasurementDrivenBirthModel,
-    RandomSampledBirthModel,
-    StaticBirthModel,
-)
+from .birth_model import (BirthModel, MeasurementDrivenBirthModel,
+                          RandomSampledBirthModel, StaticBirthModel)
 from .global_hypothesis import Association, GlobalHypothesis
 from .multi_bernoulli_mixture import MultiBernouilliMixture
 from .poisson_point_process import PoissonRFS

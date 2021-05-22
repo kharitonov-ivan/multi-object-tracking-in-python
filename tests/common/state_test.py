@@ -1,6 +1,8 @@
+import unittest
+
 import numpy as np
 import pytest
-import unittest
+
 from mot.common.state import Gaussian
 
 TOL = 1e-4

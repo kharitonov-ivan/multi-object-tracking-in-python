@@ -1,19 +1,16 @@
-from mot.common.gaussian_density import GaussianDensity
+from typing import List
+
 import numpy as np
-from mot.common.state import Gaussian
+from scipy.stats import chi2
+from tqdm import tqdm as tqdm
+
 from mot.common.gaussian_density import GaussianDensity
 from mot.common.state import Gaussian
 from mot.configs import SensorModelConfig
-from mot.measurement_models import (
-    MeasurementModel,
-)
-from mot.motion_models import (
-    MotionModel,
-)
-from tqdm import tqdm as tqdm
-from scipy.stats import chi2
+from mot.measurement_models import MeasurementModel
+from mot.motion_models import MotionModel
+
 from .base_n_object_tracker import KnownObjectTracker
-from typing import List
 
 
 class GlobalNearestNeighboursTracker(KnownObjectTracker):

@@ -2,12 +2,14 @@ from copy import deepcopy
 
 import numpy as np
 import pytest
+
 import mot
 from mot.common import Gaussian, GaussianDensity
 from mot.common.state import Gaussian
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli
+from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import \
+    Bernoulli
 
 
 @pytest.fixture

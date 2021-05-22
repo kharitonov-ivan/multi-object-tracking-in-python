@@ -1,5 +1,6 @@
-from mot.common import Gaussian, WeightedGaussian, GaussianMixture
 import numpy as np
+
+from mot.common import Gaussian, GaussianMixture, WeightedGaussian
 
 birth_model_params = GaussianMixture(
     [

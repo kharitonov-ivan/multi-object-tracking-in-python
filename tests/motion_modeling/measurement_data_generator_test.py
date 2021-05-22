@@ -2,8 +2,9 @@ import os
 import unittest
 
 import matplotlib.pyplot as plt
-import mot.utils as utils
 import numpy as np
+
+import mot.utils as utils
 from mot.common.state import Gaussian
 from mot.configs import GroundTruthConfig, Object, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel

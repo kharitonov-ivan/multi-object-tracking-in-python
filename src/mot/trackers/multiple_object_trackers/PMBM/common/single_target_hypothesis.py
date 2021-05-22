@@ -1,9 +1,10 @@
+from typing import Tuple
+
 import numpy as np
 
-from .....common import GaussianDensity, Gaussian
+from .....common import Gaussian, GaussianDensity
 from .....measurement_models import MeasurementModel
 from .bernoulli import Bernoulli
-from typing import Tuple
 
 
 class SingleTargetHypothesis:

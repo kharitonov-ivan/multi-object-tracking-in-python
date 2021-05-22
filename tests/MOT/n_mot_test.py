@@ -1,6 +1,7 @@
 from dataclasses import asdict
 
 import pytest
+
 from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel

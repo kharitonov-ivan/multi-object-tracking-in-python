@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Dict
 
 from .....common import GaussianMixture
 

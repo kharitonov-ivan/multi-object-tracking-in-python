@@ -1,4 +1,5 @@
 import numpy as np
+
 from mot.common import Gaussian
 from mot.configs import Object
 

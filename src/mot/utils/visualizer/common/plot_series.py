@@ -1,12 +1,12 @@
 from functools import singledispatch
 
+import colorcet
 import numpy as np
+from matplotlib.lines import Line2D
+
 from mot.common.state import Gaussian
 from mot.simulator import MeasurementData, ObjectData
 from mot.utils.visualizer.common.plot_primitives import BasicPlotter
-
-from matplotlib.lines import Line2D
-import colorcet
 
 CLUTTER_COLOR = colorcet.glasbey_category10[3]  # red
 CLUTTER_MARKER = "+"

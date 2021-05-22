@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from mot.common import Gaussian, GaussianMixture, WeightedGaussian
 
 

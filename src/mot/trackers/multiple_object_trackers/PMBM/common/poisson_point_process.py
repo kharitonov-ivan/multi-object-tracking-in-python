@@ -1,21 +1,21 @@
 import copy
 import logging
 from copy import deepcopy
+from functools import partial
 from typing import List, Tuple
 
 import numpy as np
 import scipy
+from pathos.threading import ThreadPool as Pool
 
 from .....common import GaussianDensity, GaussianMixture, normalize_log_weights
 from .....measurement_models import MeasurementModel
 from .....motion_models import MotionModel
+from .....utils.profiler import Profiler
+from .....utils.timer import Timer
 from .bernoulli import Bernoulli
 from .single_target_hypothesis import SingleTargetHypothesis
 from .track import Track
-from .....utils.timer import Timer
-from .....utils.profiler import Profiler
-from pathos.threading import ThreadPool as Pool
-from functools import partial
 
 
 class PoissonRFS:

@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 import scipy.io
+
 from mot.common.gaussian_density import GaussianDensity
 from mot.common.state import Gaussian
 

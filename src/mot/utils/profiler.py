@@ -1,6 +1,6 @@
-from io import StringIO
-import pstats
 import cProfile
+import pstats
+from io import StringIO
 
 
 class Profiler(object):

@@ -8,9 +8,9 @@ from scipy.stats import multivariate_normal
 
 from ..measurement_models import MeasurementModel
 from ..motion_models import MotionModel
+from ..utils import vectorized_gaussian_logpdf
 from .normalize_log_weights import normalize_log_weights
 from .state import Gaussian, GaussianMixture
-from ..utils import vectorized_gaussian_logpdf
 
 
 class GaussianDensity:

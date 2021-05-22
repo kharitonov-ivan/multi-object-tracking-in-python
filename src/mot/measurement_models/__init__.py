@@ -1,4 +1,4 @@
 from .base_measurement_model import MeasurementModel
-from .CV_measurement_model import ConstantVelocityMeasurementModel
 from .CT_measurement_model import CoordinateTurnMeasurementModel
+from .CV_measurement_model import ConstantVelocityMeasurementModel
 from .RangeBearing_model import RangeBearingMeasurementModel
