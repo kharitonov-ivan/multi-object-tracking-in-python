@@ -57,6 +57,12 @@ def birth_model(request):
     yield request.param
 
 
+@pytest.fixture(scope="session", autouse=True)
+def do_something_before_all_tests():
+    # prepare something ahead of all tests
+    delete_images_dir(__file__)
+
+
 def test_synthetic_scenario(
     object_motion_fixture,
     scenario_detection_probability,
@@ -158,52 +164,53 @@ def test_synthetic_scenario(
             target_ids, estimation_ids, dists=distance_matrix, frameid=timestep
         )
 
-    fig, (ax1, ax2, ax0, ax3, ax4) = plt.subplots(
-        5, 1, figsize=(8, 8 * 5), sharey=False, sharex=False
-    )
+    # fig, (ax1, ax2, ax0, ax3, ax4, ax5) = plt.subplots(
+    #     6, 1, figsize=(8, 8 * 5), sharey=False, sharex=False
+    # )
+    fig, axs = plt.subplots(2, 3, figsize=(8 * 3, 8 * 2), sharey=False, sharex=False)
 
-    ax0.grid(which="both", linestyle="-", alpha=0.5)
-    ax0.set_title(label="ground truth")
-    ax0.set_xlabel("x position")
-    ax0.set_ylabel("y position")
-    ax0 = Plotter.plot_several(
+    axs[0, 0].grid(which="both", linestyle="-", alpha=0.5)
+    axs[0, 0].set_title(label="ground truth")
+    axs[0, 0].set_xlabel("x position")
+    axs[0, 0].set_ylabel("y position")
+    axs[0, 0] = Plotter.plot_several(
         [object_data],
-        ax=ax0,
+        ax=axs[0, 0],
         out_path=None,
         is_autoscale=False,
     )
 
-    ax1.grid(which="both", linestyle="-", alpha=0.5)
-    ax1.set_title(label="measurements")
-    ax1.set_xlabel("x position")
-    ax1.set_ylabel("y position")
-    ax1 = Plotter.plot_several(
+    axs[1, 0].grid(which="both", linestyle="-", alpha=0.5)
+    axs[1, 0].set_title(label="measurements")
+    axs[1, 0].set_xlabel("x position")
+    axs[1, 0].set_ylabel("y position")
+    axs[1, 0] = Plotter.plot_several(
         [meas_data],
-        ax=ax1,
+        ax=axs[1, 0],
         out_path=None,
         is_autoscale=False,
     )
 
-    ax2.grid(which="both", linestyle="-", alpha=0.5)
-    ax2.set_title(label="estimations")
-    ax2.set_xlim([-1100, 1100])
-    ax2.set_ylim([-1100, 1100])
-    ax2.set_xlabel("x position")
-    ax2.set_ylabel("y position")
+    axs[0, 1].grid(which="both", linestyle="-", alpha=0.5)
+    axs[0, 1].set_title(label="estimations")
+    axs[0, 1].set_xlim([-1100, 1100])
+    axs[0, 1].set_ylim([-1100, 1100])
+    axs[0, 1].set_xlabel("x position")
+    axs[0, 1].set_ylabel("y position")
 
-    ax3.grid(which="both", linestyle="-", alpha=0.5)
-    ax3.set_title(label="x position over time")
-    ax3.set_xlabel("time")
-    ax3.set_ylabel("x position")
-    ax3.set_xlim([0, simulation_steps])
-    ax3.set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
+    axs[0, 2].grid(which="both", linestyle="-", alpha=0.5)
+    axs[0, 2].set_title(label="x position over time")
+    axs[0, 2].set_xlabel("time")
+    axs[0, 2].set_ylabel("x position")
+    axs[0, 2].set_xlim([0, simulation_steps])
+    axs[0, 2].set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
 
-    ax4.grid(which="both", linestyle="-", alpha=0.5)
-    ax4.set_title(label="y position over time")
-    ax4.set_xlabel("time")
-    ax4.set_ylabel("y position")
-    ax4.set_xlim([0, simulation_steps])
-    ax4.set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
+    axs[1, 2].grid(which="both", linestyle="-", alpha=0.5)
+    axs[1, 2].set_title(label="y position over time")
+    axs[1, 2].set_xlabel("time")
+    axs[1, 2].set_ylabel("y position")
+    axs[1, 2].set_xlim([0, simulation_steps])
+    axs[1, 2].set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
 
     lines = defaultdict(lambda: [])  # target_id: line
     timelines = defaultdict(lambda: [])
@@ -213,20 +220,20 @@ def test_synthetic_scenario(
                 for target_id, state_vector in estimation.items():
                     pos_x, pos_y = state_vector[:2]
                     lines[target_id].append((pos_x, pos_y))
-                    ax3.scatter(timestep, pos_x, color=object_colors[target_id % 252])
-                    ax4.scatter(timestep, pos_y, color=object_colors[target_id % 252])
+                    axs[0, 2].scatter(timestep, pos_x, color=object_colors[target_id % 252])
+                    axs[1, 2].scatter(timestep, pos_y, color=object_colors[target_id % 252])
                     timelines[target_id].append((timestep, pos_x, pos_y))
 
     for target_id, estimation_list in timelines.items():
         timesteps = [time for (time, _, _) in estimation_list]
         poses_x = [pos_x for (_, pos_x, _) in estimation_list]
         poses_y = [pos_y for (_, _, pos_y) in estimation_list]
-        ax3.plot(timesteps, poses_x, color=object_colors[target_id % 252])
-        ax4.plot(timesteps, poses_y, color=object_colors[target_id % 252])
+        axs[0, 2].plot(timesteps, poses_x, color=object_colors[target_id % 252])
+        axs[1, 2].plot(timesteps, poses_y, color=object_colors[target_id % 252])
 
     for target_id, estimation_list in lines.items():
         for (pos_x, pos_y) in estimation_list:
-            ax2.scatter(pos_x, pos_y, color=object_colors[target_id % 252])
+            axs[0, 1].scatter(pos_x, pos_y, color=object_colors[target_id % 252])
 
     # TODO check ot
     rms_gospa_scene = np.sqrt(np.mean(np.power(np.array(gospas), 2)))
@@ -247,6 +254,6 @@ def test_synthetic_scenario(
     meta = f"P_D={scenario_detection_probability},_lambda_c={scenario_clutter_rate}, {np.random.randint(100)}"
     plt.savefig(get_images_dir(__file__) + "/" + "results_" + meta + ".png")
 
-    # assert rms_gospa_scene < 2000
-    # assert summary["mota"].item() < 10
-    # if assert summary["idp"].item() < 10
+    assert rms_gospa_scene < 2000
+    assert summary["mota"].item() < 10
+    assert summary["idp"].item() < 10
