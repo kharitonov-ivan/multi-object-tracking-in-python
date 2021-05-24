@@ -4,13 +4,12 @@ from typing import List
 
 import numpy as np
 import numpy.typing as npt
-from scipy.stats import multivariate_normal
+import scipy.stats  # noqa: I201
 
-from ..measurement_models import MeasurementModel
-from ..motion_models import MotionModel
-from ..utils import vectorized_gaussian_logpdf
-from .normalize_log_weights import normalize_log_weights
-from .state import Gaussian, GaussianMixture
+from mot.common import Gaussian, GaussianMixture, normalize_log_weights
+from mot.measurement_models import MeasurementModel
+from mot.motion_models import MotionModel
+from mot.utils import vectorized_gaussian_logpdf
 
 
 class GaussianDensity:
@@ -131,7 +130,7 @@ class GaussianDensity:
         bar = H_x @ updated_states.T
 
         # loglikelihoods = [
-        #     multivariate_normal.logpdf(measurements[idx], bar.T[idx], S)
+        #     scipy.stats.multivariate_normal.logpdf(measurements[idx], bar.T[idx], S)
         #     for idx in range(len(measurements))
         # ]
 
@@ -182,7 +181,7 @@ class GaussianDensity:
 
         # Covariance update
         # TODO ndim property for state
-        I = np.eye(state_pred.x.shape[0])
+        I = np.eye(state_pred.x.shape[0])  # noqa: E741
         next_P = (I - K @ H_x) @ state_pred.P
 
         state_upd = Gaussian(x=next_x, P=next_P)
@@ -213,7 +212,7 @@ class GaussianDensity:
         predicted_loglikelihood = np.zeros(z.shape[0])  # size - num of measurements
 
         for idx in range(z.shape[0]):
-            predicted_loglikelihood[idx] = multivariate_normal.logpdf(z[idx], z_bar, S)
+            predicted_loglikelihood[idx] = scipy.stats.multivariate_normal.logpdf(z[idx], z_bar, S)
 
         assert predicted_loglikelihood.shape[0] == z.shape[0]
         return predicted_loglikelihood
@@ -241,7 +240,7 @@ class GaussianDensity:
                                                            in the gate or not
         """
         if z.size == 0:
-            logger.warning("No measurements! No updates!")
+            logging.warning("No measurements! No updates!")
             return np.array([]), None
         assert z.shape[1] == measurement_model.dim
 
@@ -269,7 +268,7 @@ class GaussianDensity:
         for i in range(num_of_measurements):
             try:
                 Machlanobis_dist[i] = z_diff[i] @ np.linalg.inv(S) @ z_diff[i].T
-            except:
+            except np.linalg.LinAlgError:
                 logging.warning("It seems, cannot inverse S, skip step")
                 return np.array([]), []
         # Machlanobis_dist = mln(z, z_bar, S) # z_diff @ np.linalg.inv(S) @ z_diff.Tx
@@ -300,7 +299,7 @@ class GaussianDensity:
         N = len(weights)
         x_bar = np.zeros(states[0].x.shape[0])
 
-        for idx, state, weight in zip(range(N), states, log_weights):
+        for state, weight in zip(states, log_weights):
             x_bar += weight * state.x
 
         # Covariance
@@ -360,7 +359,7 @@ class GaussianDensity:
             max_weight_idx = np.argmax(weights)
             try:
                 S = np.linalg.inv(states[max_weight_idx].P)
-            except:
+            except np.linalg.LinAlgError:
                 logging.error(f"Linalg error \n{states[max_weight_idx].P}")
                 logging.warning("Get pseudo inverse matrix")
                 S = np.linalg.pinv(states[max_weight_idx].P)
