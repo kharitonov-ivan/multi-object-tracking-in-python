@@ -1,10 +1,17 @@
 import numpy as np
 
-from ...common import Gaussian, GaussianDensity, HypothesisReduction, normalize_log_weights
-from ...configs import SensorModelConfig
-from ...measurement_models import MeasurementModel
-from ...motion_models import MotionModel
-from .base_single_object_tracker import SingleObjectTracker
+from mot.common import (
+    Gaussian,
+    GaussianDensity,
+    HypothesisReduction,
+    normalize_log_weights,
+)
+from mot.configs import SensorModelConfig
+from mot.measurement_models import MeasurementModel
+from mot.motion_models import MotionModel
+from mot.trackers.single_object_trackers.base_single_object_tracker import (
+    SingleObjectTracker,
+)
 
 
 class ProbabilisticDataAssociationTracker(SingleObjectTracker):
@@ -91,7 +98,7 @@ class ProbabilisticDataAssociationTracker(SingleObjectTracker):
 
             hypotheses_weights_log = [np.log(w_theta_0), w_theta_k]
             log_w, log_sum_ = normalize_log_weights(hypotheses_weights_log)
-            hypotheses_weight_log, multi_hypotheses = Hypothesisreduction.prune(
+            hypotheses_weight_log, multi_hypotheses = HypothesisReduction.prune(
                 hypotheses_weights=log_w,
                 multi_hypotheses=multi_hypotheses,
                 threshold=self.w_min,

@@ -2,7 +2,12 @@ import numpy as np
 from scipy.stats import chi2
 from tqdm import tqdm as tqdm
 
-from ...common import Gaussian, GaussianDensity, HypothesisReduction, normalize_log_weights
+from ...common import (
+    Gaussian,
+    GaussianDensity,
+    HypothesisReduction,
+    normalize_log_weights,
+)
 from ...configs import SensorModelConfig
 from ...measurement_models import MeasurementModel
 from ...motion_models import MotionModel
@@ -70,7 +75,7 @@ class GaussSumTracker(SingleObjectTracker):
         w_theta_factor = np.log(self.sensor_model.P_D / self.sensor_model.intensity_c)
         w_theta_0 = np.log(1 - self.sensor_model.P_D)  # misdetection
 
-        for old_idx, (curr_weight, curr_hypothesis) in enumerate(
+        for _old_idx, (curr_weight, curr_hypothesis) in enumerate(
             zip(self.hypotheses_weight, self.multi_hypotheses_bank)
         ):
             # 1) for each hypothesis, create missed detection hypothesis
@@ -102,13 +107,13 @@ class GaussSumTracker(SingleObjectTracker):
         self.hypotheses_weight, _ = normalize_log_weights(self.hypotheses_weight)
 
         # 4. Prune hypotheses with small weights and then re-normalise the weights
-        self.hypotheses_weight, self.multi_hypotheses_bank = Hypothesisreduction.prune(
+        self.hypotheses_weight, self.multi_hypotheses_bank = HypothesisReduction.prune(
             self.hypotheses_weight, self.multi_hypotheses_bank, threshold=self.w_min
         )
         self.hypotheses_weight, _ = normalize_log_weights(self.hypotheses_weight)
 
         # 5. Hypotheses merging and normalize
-        self.hypotheses_weight, self.multi_hypotheses_bank = Hypothesisreduction.merge(
+        self.hypotheses_weight, self.multi_hypotheses_bank = HypothesisReduction.merge(
             self.hypotheses_weight,
             self.multi_hypotheses_bank,
             threshold=self.merging_threshold,
@@ -116,7 +121,7 @@ class GaussSumTracker(SingleObjectTracker):
         self.hypotheses_weight, _ = normalize_log_weights(self.hypotheses_weight)
 
         # 6. Cap the number of the hypotheses and then re-normalise the weights
-        self.hypotheses_weight, self.multi_hypotheses_bank = Hypothesisreduction.cap(
+        self.hypotheses_weight, self.multi_hypotheses_bank = HypothesisReduction.cap(
             self.hypotheses_weight, self.multi_hypotheses_bank, top_k=self.M
         )
         self.hypotheses_weight, _ = normalize_log_weights(self.hypotheses_weight)
