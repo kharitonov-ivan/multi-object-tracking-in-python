@@ -31,10 +31,7 @@ class Gaussian:
 
     def __repr__(self) -> str:
         np.set_printoptions(linewidth=np.inf)
-        return (
-            f"{self.__class__.__name__} "
-            f"x = {np.array2string(self.x, max_line_width=np.inf, precision =1)}"
-        )
+        return f"{self.__class__.__name__} " f"x = {np.array2string(self.x, max_line_width=np.inf, precision =1)}"
 
     def __eq__(self, other) -> bool:
         assert isinstance(other, Gaussian)

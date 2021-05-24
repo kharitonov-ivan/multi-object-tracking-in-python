@@ -96,8 +96,6 @@ class Plotter:
         **kwargs,
     ):
 
-        with Plot(
-            ax=ax, title=title, out_path=out_path, show=show, autoscale_margin=0.1, **kwargs
-        ) as p:
+        with Plot(ax=ax, title=title, out_path=out_path, show=show, autoscale_margin=0.1, **kwargs) as p:
             plot_series(data, p.ax)
         return p.ax

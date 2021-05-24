@@ -5,11 +5,13 @@ import numpy as np
 
 from mot.configs import Object
 
-from .initial_conditions import (linear_big_params,
-                                 linear_n_mot_object_life_params,
-                                 linear_sot_object_life_params,
-                                 nonlinear_n_mot_object_life_params,
-                                 nonlinear_sot_object_life_params)
+from .initial_conditions import (
+    linear_big_params,
+    linear_n_mot_object_life_params,
+    linear_sot_object_life_params,
+    nonlinear_n_mot_object_life_params,
+    nonlinear_sot_object_life_params,
+)
 
 
 @dataclass

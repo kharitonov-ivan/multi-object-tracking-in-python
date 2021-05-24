@@ -31,12 +31,8 @@ def generate_environment(config, motion_model, meas_model, *args, **kwargs):
     motion_model = motion_model(**config)
     sensor_model = SensorModelConfig(**config)
     meas_model = meas_model(**config)
-    object_data = ObjectData(
-        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
-    )
-    meas_data = MeasurementData(
-        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
-    )
+    object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
+    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
     env = namedtuple(
         "env",
         [
@@ -164,9 +160,7 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs
     # One step predict
     tracker.predict_step(dt=1.0)
 
-    test_measurements = np.array(
-        [config.object_configs[idx].initial_state.x[0:2] for idx in range(3)]
-    )
+    test_measurements = np.array([config.object_configs[idx].initial_state.x[0:2] for idx in range(3)])
     # One step update
     tracker.update(z=test_measurements)
 
@@ -209,9 +203,7 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwarg
     # One step predict
     tracker.predict_step(dt=1.0)
 
-    test_measurements = np.array(
-        [config.object_configs[idx].initial_state.x[0:2] for idx in range(3)]
-    )
+    test_measurements = np.array([config.object_configs[idx].initial_state.x[0:2] for idx in range(3)])
     # One step update
     tracker.update(z=test_measurements)
 

@@ -8,15 +8,15 @@ repos:
         language: system
         types: [python]
         stages: [commit]
-      - id: flake8
-        name: flake8
-        language: system
-        entry: flake8
-        types: [python]
-        stages: [commit]
       - id: black
         name: black
         language: system
         entry: black
+        types: [python]
+        stages: [commit]
+      - id: flake8
+        name: flake8
+        language: system
+        entry: flake8
         types: [python]
         stages: [commit]

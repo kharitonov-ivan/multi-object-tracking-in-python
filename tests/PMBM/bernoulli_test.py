@@ -8,8 +8,7 @@ from mot.common import Gaussian, GaussianDensity
 from mot.common.state import Gaussian
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import \
-    Bernoulli
+from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli
 
 
 @pytest.fixture
@@ -89,9 +88,7 @@ def test_bern_undetected_update(initial_bernoulli, P_D):
     np.testing.assert_allclose(log_likelihood_undetected, ref_lik_undetected, rtol=0.05)
 
 
-def test_bern_detected_update_likelihood_outlier(
-    initial_bernoulli, P_D, cv_measurement_model, outlier_measurement
-):
+def test_bern_detected_update_likelihood_outlier(initial_bernoulli, P_D, cv_measurement_model, outlier_measurement):
 
     likelihood_detected = initial_bernoulli.detected_update_loglikelihood(
         outlier_measurement, cv_measurement_model, P_D
@@ -101,9 +98,7 @@ def test_bern_detected_update_likelihood_outlier(
     np.testing.assert_allclose(likelihood_detected, likelihood_detected_ref, rtol=0.05)
 
 
-def test_bern_detected_update_likelihood_target(
-    initial_bernoulli, P_D, cv_measurement_model, neighbour_measurement
-):
+def test_bern_detected_update_likelihood_target(initial_bernoulli, P_D, cv_measurement_model, neighbour_measurement):
 
     log_likelihood_detected = initial_bernoulli.detected_update_loglikelihood(
         neighbour_measurement, cv_measurement_model, P_D
@@ -115,9 +110,7 @@ def test_bern_detected_update_likelihood_target(
 
 def test_bern_update_state(initial_bernoulli, neighbour_measurement, cv_measurement_model):
 
-    new_bernoulli = Bernoulli.detected_update_state(
-        initial_bernoulli, neighbour_measurement, cv_measurement_model
-    )
+    new_bernoulli = Bernoulli.detected_update_state(initial_bernoulli, neighbour_measurement, cv_measurement_model)
 
     ref_r = 1.0
     ref_state_x = np.array([0.0099, 0.0099, 10.0, 10.0])

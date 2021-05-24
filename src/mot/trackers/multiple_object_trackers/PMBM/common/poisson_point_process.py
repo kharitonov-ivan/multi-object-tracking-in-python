@@ -63,8 +63,7 @@ class PoissonRFS:
         #     [(idx, measurements[idx]) for idx in range(len(measurements))])
 
         new_single_target_hypotheses = [
-            detected_update_func((meas_idx, measurements[meas_idx]))
-            for meas_idx in range(len(measurements))
+            detected_update_func((meas_idx, measurements[meas_idx])) for meas_idx in range(len(measurements))
         ]
         # import pdb; pdb.set_trace()
         # new_single_target_hypotheses = Parallel(
@@ -114,9 +113,7 @@ class PoissonRFS:
         (
             updated_ppp_components,
             loglikelihoods,
-        ) = GaussianDensity.update_states_with_likelihoods_by_single_measurement(
-            intensity, measurement, meas_model
-        )
+        ) = GaussianDensity.update_states_with_likelihoods_by_single_measurement(intensity, measurement, meas_model)
 
         # references = [
         #     GaussianDensity.update(state.gaussian, measurement, meas_model)
@@ -133,9 +130,7 @@ class PoissonRFS:
         # 2. Perform Gaussian moment matching for the updated object state densities
         # resulted from being updated by the same detection.
         normalized_log_weights, log_sum = normalize_log_weights(log_weights)
-        merged_state = density.moment_matching_vectorized(
-            normalized_log_weights, updated_ppp_components
-        )
+        merged_state = density.moment_matching_vectorized(normalized_log_weights, updated_ppp_components)
 
         # 3. The returned likelihood should be the sum of the predicted likelihoods calculated f
         # or each mixture component in the PPP intensity and the clutter intensity.

@@ -2,8 +2,7 @@ import numpy as np
 from scipy.stats import chi2
 from tqdm import tqdm as tqdm
 
-from ...common import (Gaussian, GaussianDensity, HypothesisReduction,
-                       normalize_log_weights)
+from ...common import Gaussian, GaussianDensity, HypothesisReduction, normalize_log_weights
 from ...configs import SensorModelConfig
 from ...measurement_models import MeasurementModel
 from ...motion_models import MotionModel
@@ -63,9 +62,7 @@ class GaussSumTracker(SingleObjectTracker):
                 predicted_state=prev_state,
                 current_measurements=np.array(measurements_in_scene),
             )
-            prev_state = GaussianDensity.predict(
-                state=estimations[timestep], motion_model=self.motion_model
-            )
+            prev_state = GaussianDensity.predict(state=estimations[timestep], motion_model=self.motion_model)
         return tuple(estimations)
 
     def estimation_step(self, predicted_state: Gaussian, current_measurements: np.ndarray):
@@ -90,15 +87,11 @@ class GaussSumTracker(SingleObjectTracker):
                 self.gating_size,
             )
 
-            predicted_likelihood = GaussianDensity.predicted_likelihood(
-                curr_hypothesis, z_ingate, self.meas_model
-            )
+            predicted_likelihood = GaussianDensity.predicted_likelihood(curr_hypothesis, z_ingate, self.meas_model)
 
             # for each measurement create detection hypotheses
             for idx, meausurement in z_ingate:
-                new_hypotheses.append(
-                    GaussianDensity.update(curr_hypothesis, meausurement, self.meas_model)
-                )
+                new_hypotheses.append(GaussianDensity.update(curr_hypothesis, meausurement, self.meas_model))
                 new_weights.append(predicted_likelihood[idx] + w_theta_factor)
 
         self.hypotheses_weight.extend(new_weights)
@@ -137,8 +130,7 @@ class GaussSumTracker(SingleObjectTracker):
 
         # 8. For each hypotheses do prediction
         self.updated_states = [
-            GaussianDensity.predict(hypothesis, self.motion_model)
-            for hypothesis in self.multi_hypotheses_bank
+            GaussianDensity.predict(hypothesis, self.motion_model) for hypothesis in self.multi_hypotheses_bank
         ]
         self.multi_hypotheses_bank = self.updated_states
         return estimation

@@ -51,9 +51,7 @@ class NearestNeighbourTracker(SingleObjectTracker):
                 predicted_state=prev_state,
                 current_measurements=np.array(measurements_in_scene),
             )
-            prev_state = GaussianDensity.predict(
-                state=estimations[timestep], motion_model=self.motion_model, dt=1.0
-            )
+            prev_state = GaussianDensity.predict(state=estimations[timestep], motion_model=self.motion_model, dt=1.0)
         return tuple(estimations)
 
     def estimation_step(self, predicted_state: Gaussian, current_measurements: np.ndarray):

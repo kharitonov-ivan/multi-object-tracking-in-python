@@ -35,9 +35,7 @@ class SingleTargetHypothesis:
 
     def create_missdetection_hypothesis(self, detection_probability: float, sth_id):
         missdetection_bernoulli = self.bernoulli.undetected_update_state(detection_probability)
-        missdetection_loglikelihood = self.bernoulli.undetected_update_loglikelihood(
-            detection_probability
-        )
+        missdetection_loglikelihood = self.bernoulli.undetected_update_loglikelihood(detection_probability)
         missdetection_hypothesis = SingleTargetHypothesis(
             bernoulli=missdetection_bernoulli,
             log_likelihood=missdetection_loglikelihood.item(),
@@ -94,9 +92,7 @@ class SingleTargetHypothesis:
         )
 
         loglikelihoods = (
-            GaussianDensity.update_likelihoods_vectorized(
-                next_states, next_covariances, measurements, meas_model
-            )
+            GaussianDensity.update_likelihoods_vectorized(next_states, next_covariances, measurements, meas_model)
             + np.log(detection_probability)
             + np.log(1.0)
         )

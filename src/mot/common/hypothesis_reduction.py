@@ -79,7 +79,8 @@ class HypothesisReduction:
         new_multi_hypotheses : List
             hypotheses after merging
         """
-        (new_hypotheses_weights, new_multi_hypotheses,) = GaussianDensity.mixture_reduction(
-            weights=hypotheses_weights, states=multi_hypotheses, threshold=threshold
-        )
+        (
+            new_hypotheses_weights,
+            new_multi_hypotheses,
+        ) = GaussianDensity.mixture_reduction(weights=hypotheses_weights, states=multi_hypotheses, threshold=threshold)
         return new_hypotheses_weights, new_multi_hypotheses

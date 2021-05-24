@@ -41,9 +41,7 @@ class MeasurementData:
         for timestep in range(len(self.object_data)):
             number_of_objects_in_scene = self.object_data.N[timestep]
             if number_of_objects_in_scene > 0:
-                detection_mask = (
-                    self._generator.uniform(size=number_of_objects_in_scene) < self.sensor_model.P_D
-                )
+                detection_mask = self._generator.uniform(size=number_of_objects_in_scene) < self.sensor_model.P_D
                 observed_objects = [
                     self.object_data[timestep][key]
                     for is_observed, key in zip(detection_mask, self.object_data[timestep].keys())
@@ -90,9 +88,7 @@ class MeasurementData:
     @property
     def _observed_measurements(self):
         measurements_with_clutter = []
-        for idx, (curr_measurements, curr_clutters) in enumerate(
-            zip(self.meas_data, self.clutter_data)
-        ):
+        for idx, (curr_measurements, curr_clutters) in enumerate(zip(self.meas_data, self.clutter_data)):
             scene = []
             for cur_measurement in curr_measurements:
                 scene.append(cur_measurement)

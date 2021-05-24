@@ -24,15 +24,11 @@ class Test_SensorModelConfig(unittest.TestCase):
         sensor_model = SensorModelConfig(P_D=test_P_D, lambda_c=test_lambda_c, range_c=test_range_c)
 
         assert abs(sensor_model.pdf_c - expected_pdf_c) < TOL, (
-            f"The value of clutter pdf 2D case: "
-            f"Expected {expected_pdf_c} "
-            f"Got {sensor_model.pdf_c}"
+            f"The value of clutter pdf 2D case: " f"Expected {expected_pdf_c} " f"Got {sensor_model.pdf_c}"
         )
 
         assert abs(sensor_model.intensity_c - expected_intensity_c) < TOL, (
-            f"Clutter intensity 2D case: "
-            f"Expected {expected_intensity_c}, "
-            f"got {sensor_model.intensity_c}"
+            f"Clutter intensity 2D case: " f"Expected {expected_intensity_c}, " f"got {sensor_model.intensity_c}"
         )
 
     def test_sensor_model_config_1D(self):
@@ -46,12 +42,8 @@ class Test_SensorModelConfig(unittest.TestCase):
         sensor_model = SensorModelConfig(P_D=test_P_D, lambda_c=test_lambda_c, range_c=test_range_c)
 
         assert abs(sensor_model.pdf_c - expected_pdf_c) < TOL, (
-            f"The value of clutter pdf 2D case: "
-            f"Expected {expected_pdf_c} "
-            f"Got {sensor_model.pdf_c}"
+            f"The value of clutter pdf 2D case: " f"Expected {expected_pdf_c} " f"Got {sensor_model.pdf_c}"
         )
         assert abs(sensor_model.intensity_c - expected_intensity_c) < TOL, (
-            f"Clutter intensity 2D case: "
-            f"Expected {expected_intensity_c}, "
-            f"Got {sensor_model.intensity_c}"
+            f"Clutter intensity 2D case: " f"Expected {expected_intensity_c}, " f"Got {sensor_model.intensity_c}"
         )

@@ -21,9 +21,7 @@ class Bernoulli:
         self.existence_probability: float = existence_probability
 
     def __repr__(self) -> str:
-        return self.__class__.__name__ + (
-            f"(r={self.existence_probability:.4f}, " f"state={self.state}"
-        )
+        return self.__class__.__name__ + (f"(r={self.existence_probability:.4f}, " f"state={self.state}")
 
     def predict(
         self,
@@ -47,21 +45,15 @@ class Bernoulli:
         NOTE: from page 88 lecture 04
         """
 
-        posterior_existence_probability = (
-            self.existence_probability * (1 - detection_probability)
-        ) / (
-            1
-            - self.existence_probability
-            + self.existence_probability * (1 - detection_probability)
+        posterior_existence_probability = (self.existence_probability * (1 - detection_probability)) / (
+            1 - self.existence_probability + self.existence_probability * (1 - detection_probability)
         )
         posterior_bern = Bernoulli(self.state, posterior_existence_probability)
         return posterior_bern
 
     def undetected_update_loglikelihood(self, detection_probability: float):
         missdetecion_probability = 1 - detection_probability
-        likelihood_predicted = (
-            1 - self.existence_probability + self.existence_probability * missdetecion_probability
-        )
+        likelihood_predicted = 1 - self.existence_probability + self.existence_probability * missdetecion_probability
         log_likelihood_predicted = np.log(likelihood_predicted)
         return log_likelihood_predicted
 

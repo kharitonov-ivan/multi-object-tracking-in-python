@@ -168,9 +168,7 @@ class PMBM:
                 for sth_id, sth in track.single_target_hypotheses.items():
                     hypo_list.append(Association(track_id, sth_id))
 
-            self.MBM.global_hypotheses.append(
-                GlobalHypothesis(log_weight=0.0, associations=hypo_list)
-            )
+            self.MBM.global_hypotheses.append(GlobalHypothesis(log_weight=0.0, associations=hypo_list))
 
         else:
             parrallel_assignment = False
@@ -216,9 +214,7 @@ class PMBM:
 
     @Timer(name="PMBM estimation step")
     def estimator(self):
-        estimates = self.MBM.estimator(
-            existense_probability_threshold=self.existense_probability_threshold
-        )
+        estimates = self.MBM.estimator(existense_probability_threshold=self.existense_probability_threshold)
         return estimates
 
     @Timer(name="PMBM reduction step")

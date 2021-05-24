@@ -25,10 +25,7 @@ class MultiBernouilliMixture:
         return (
             self.__class__.__name__
             + " "
-            + (
-                f"num of tracks= {len(self.tracks)}, "
-                f"num global hypotheses={len(self.global_hypotheses)}, "
-            )
+            + (f"num of tracks= {len(self.tracks)}, " f"num global hypotheses={len(self.global_hypotheses)}, ")
         )
 
     def add_track(self, track: Track):
@@ -48,15 +45,11 @@ class MultiBernouilliMixture:
         logging.debug(f"\n estimations")
         for (track_id, sth_id) in most_probable_global_hypo.associations:
             if (
-                self.tracks[track_id]
-                .single_target_hypotheses[sth_id]
-                .bernoulli.existence_probability
+                self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.existence_probability
                 > existense_probability_threshold
                 and sth_id > 20
             ):
-                object_state = (
-                    self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.state.x
-                )
+                object_state = self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.state.x
                 object_list.append({track_id: object_state})
                 logging.debug(
                     f"r = {self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.existence_probability}, track id={track_id}, sth_id={sth_id}, state={object_state}"
@@ -116,9 +109,7 @@ class MultiBernouilliMixture:
         logging.debug("\n Creating new STH in MBM")
         for track in self.tracks.values():
             for sth in track.single_target_hypotheses.values():
-                logging.debug(
-                    f"\n For hypothesis: track_id={track.track_id} sth_id={sth.sth_id} {sth}"
-                )
+                logging.debug(f"\n For hypothesis: track_id={track.track_id} sth_id={sth.sth_id} {sth}")
 
                 sth.missdetection_hypothesis = sth.create_missdetection_hypothesis(
                     detection_probability, track.get_new_sth_id()
@@ -184,8 +175,7 @@ class MultiBernouilliMixture:
 
         for track_id, track in self.tracks.items():
             track.single_target_hypotheses = {
-                sth_id: track.single_target_hypotheses[sth_id]
-                for sth_id in used_associations[track_id]
+                sth_id: track.single_target_hypotheses[sth_id] for sth_id in used_associations[track_id]
             }
 
     def remove_unused_tracks(self):
@@ -194,9 +184,7 @@ class MultiBernouilliMixture:
             for (track_id, sth_id) in global_hypothesis.associations:
                 used_associations[track_id] |= set([sth_id])
         self.tracks = {
-            track_id: track
-            for (track_id, track) in self.tracks.items()
-            if track_id in used_associations.keys()
+            track_id: track for (track_id, track) in self.tracks.items() if track_id in used_associations.keys()
         }
 
     def remove_unused_bernoullies(self):
@@ -212,12 +200,8 @@ class MultiBernouilliMixture:
             }
 
     def normalize_global_hypotheses_weights(self) -> None:
-        global_hypo_log_w_unnorm = [
-            global_hypothesis.log_weight for global_hypothesis in self.global_hypotheses
-        ]
+        global_hypo_log_w_unnorm = [global_hypothesis.log_weight for global_hypothesis in self.global_hypotheses]
         global_hypo_log_w_norm, _ = normalize_log_weights(global_hypo_log_w_unnorm)
 
-        for global_hypo, normalized_log_weight in zip(
-            self.global_hypotheses, global_hypo_log_w_norm
-        ):
+        for global_hypo, normalized_log_weight in zip(self.global_hypotheses, global_hypo_log_w_norm):
             global_hypo.log_weight = normalized_log_weight

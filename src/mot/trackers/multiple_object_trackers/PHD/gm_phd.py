@@ -4,8 +4,7 @@ import numpy as np
 from scipy.stats import chi2
 from tqdm import tqdm as tqdm
 
-from ....common import (GaussianDensity, GaussianMixture, HypothesisReduction,
-                        WeightedGaussian)
+from ....common import GaussianDensity, GaussianMixture, HypothesisReduction, WeightedGaussian
 from ....configs import SensorModelConfig
 from ....measurement_models import MeasurementModel
 from ....motion_models import MotionModel
@@ -84,9 +83,7 @@ class GMPHD:
 
         estimations = [[] for x in range(len(measurements))]
         # TODO убрать костыль
-        for timestep, measurements_in_scene in tqdm(
-            enumerate(measurements[:10]), total=len(measurements)
-        ):
+        for timestep, measurements_in_scene in tqdm(enumerate(measurements[:10]), total=len(measurements)):
             estimations[timestep].extend(self.estimation_step(measurements_in_scene, dt=1.0))
         return tuple(estimations)
 
@@ -179,10 +176,7 @@ class GMPHD:
             )
 
             self.gmm_components = GaussianMixture(
-                [
-                    WeightedGaussian(w, gm)
-                    for (w, gm) in zip(pruned_hypotheses_weight, pruned_hypotheses)
-                ]
+                [WeightedGaussian(w, gm) for (w, gm) in zip(pruned_hypotheses_weight, pruned_hypotheses)]
             )
 
             # Hypotheses merging
@@ -194,22 +188,17 @@ class GMPHD:
                 )
 
                 self.gmm_components = GaussianMixture(
-                    [
-                        WeightedGaussian(w, gm)
-                        for (w, gm) in zip(merged_hypotheses_weights, merged_hypotheses)
-                    ]
+                    [WeightedGaussian(w, gm) for (w, gm) in zip(merged_hypotheses_weights, merged_hypotheses)]
                 )
 
             # Cap the number of the hypotheses and then re-normalise the weights
-            (capped_hypotheses_weights, capped_hypotheses,) = Hypothesisreduction.cap(
-                self.gmm_components.weights, self.gmm_components.states, top_k=self.M
-            )
+            (
+                capped_hypotheses_weights,
+                capped_hypotheses,
+            ) = Hypothesisreduction.cap(self.gmm_components.weights, self.gmm_components.states, top_k=self.M)
 
             self.gmm_components = GaussianMixture(
-                [
-                    WeightedGaussian(w, gm)
-                    for (w, gm) in zip(capped_hypotheses_weights, capped_hypotheses)
-                ]
+                [WeightedGaussian(w, gm) for (w, gm) in zip(capped_hypotheses_weights, capped_hypotheses)]
             )
         except:
             print("Empty hupotheses")

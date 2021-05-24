@@ -60,9 +60,7 @@ class RangeBearingMeasurementModel(MeasurementModel):
         return np.linalg.norm(state_vector[:2] - self.sensor_pos)
 
     def _get_bearing(self, state_vector):
-        return np.arctan2(
-            state_vector[1] - self.sensor_pos[1], state_vector[0] - self.sensor_pos[0]
-        )
+        return np.arctan2(state_vector[1] - self.sensor_pos[1], state_vector[0] - self.sensor_pos[0])
 
     def H(self, state_vector=None):
         # yapf: disable

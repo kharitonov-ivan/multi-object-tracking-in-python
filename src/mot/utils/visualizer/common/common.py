@@ -21,9 +21,7 @@ def set_mpl_params():
     xticksize = 14
     yticksize = xticksize
     # matplotlib.use("svg")
-    matplotlib.rcParams[
-        "legend.markerscale"
-    ] = 1.5  # the relative size of legend markers vs. original
+    matplotlib.rcParams["legend.markerscale"] = 1.5  # the relative size of legend markers vs. original
     matplotlib.rcParams["legend.handletextpad"] = 0.5
     matplotlib.rcParams[
         "legend.labelspacing"

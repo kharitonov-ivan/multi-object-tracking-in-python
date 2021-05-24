@@ -34,9 +34,7 @@ class Track:
 
     def __repr__(self) -> str:
         sth_rep = (
-            f"STH: \n {pprint.pformat(self.single_target_hypotheses)}"
-            if len(self.single_target_hypotheses) < 3
-            else ""
+            f"STH: \n {pprint.pformat(self.single_target_hypotheses)}" if len(self.single_target_hypotheses) < 3 else ""
         )
         return (
             self.__class__.__name__

@@ -34,10 +34,7 @@ class CoordinateTurnMotionModel(MotionModel):
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
-            f"(d={self.d}, "
-            f"dt={self.dt}, "
-            f"sigma_V={self.sigma_V}, "
-            f"sigma_omega={self.sigma_omega}, "
+            f"(d={self.d}, " f"dt={self.dt}, " f"sigma_V={self.sigma_V}, " f"sigma_omega={self.sigma_omega}, "
         )
 
     def move(self, state: Gaussian, dt: float = None, if_noisy: bool = False) -> Gaussian:

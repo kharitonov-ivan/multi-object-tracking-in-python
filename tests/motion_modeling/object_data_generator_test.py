@@ -4,12 +4,9 @@ from dataclasses import asdict
 import pytest
 
 from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import (ConstantVelocityMeasurementModel,
-                                    RangeBearingMeasurementModel)
-from mot.motion_models import (ConstantVelocityMotionModel,
-                               CoordinateTurnMotionModel)
-from mot.scenarios.scenario_configs import (linear_n_mot, linear_sot,
-                                            nonlinear_n_mot, nonlinear_sot)
+from mot.measurement_models import ConstantVelocityMeasurementModel, RangeBearingMeasurementModel
+from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
+from mot.scenarios.scenario_configs import linear_n_mot, linear_sot, nonlinear_n_mot, nonlinear_sot
 from mot.simulator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
 from mot.utils.visualizer import Animator, Plotter
@@ -50,16 +47,12 @@ def test_linear_model_without_noise(config, motion_model, output_image_name, mea
     ground_truth = GroundTruthConfig(**config)
     motion_model = motion_model(**config)
 
-    object_data = ObjectData(
-        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
-    )
+    object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
 
     sensor_model = SensorModelConfig(**config)
 
     meas_model = meas_model(**config)
-    meas_data = MeasurementData(
-        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
-    )
+    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
 
     Plotter.plot([meas_data[0]], title=output_image_name, out_path="meas_" + output_image_name)
 

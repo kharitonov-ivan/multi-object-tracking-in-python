@@ -33,7 +33,5 @@ class GroundTruthConfig:
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
-            f"(n_births={self.n_births}, "
-            f"object_configs={self.object_configs}, "
-            f"total_time={self.total_time}, "
+            f"(n_births={self.n_births}, " f"object_configs={self.object_configs}, " f"total_time={self.total_time}, "
         )

@@ -17,6 +17,4 @@ class GlobalHypothesis:
     associations: Tuple[Association]
 
     def __repr__(self) -> str:
-        return self.__class__.__name__ + (
-            f"(w={self.log_weight:.2f}, " f"(track_id, sth_id)={self.associations}, "
-        )
+        return self.__class__.__name__ + (f"(w={self.log_weight:.2f}, " f"(track_id, sth_id)={self.associations}, ")

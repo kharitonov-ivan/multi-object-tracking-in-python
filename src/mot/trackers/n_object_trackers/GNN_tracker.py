@@ -67,8 +67,7 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
                 current_measurements=np.array(measurements_in_scene),
             )
             previous_states = [
-                GaussianDensity.predict(state, self.motion_model, dt=1.0)
-                for state in estimations[timestep]
+                GaussianDensity.predict(state, self.motion_model, dt=1.0) for state in estimations[timestep]
             ]
         return tuple(estimations)
 

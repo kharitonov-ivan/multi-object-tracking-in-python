@@ -98,9 +98,7 @@ def __plot_series(series: MeasurementData, ax, *args, **kwargs):
         plot_measurement_scene(ax, series, timestep)
 
     legend_elements, labels = ax.get_legend_handles_labels()
-    legend_elements.append(
-        Line2D([0], [0], marker=CLUTTER_MARKER, color=CLUTTER_COLOR, label="clutter")
-    )
+    legend_elements.append(Line2D([0], [0], marker=CLUTTER_MARKER, color=CLUTTER_COLOR, label="clutter"))
     lgd = ax.legend(handles=legend_elements, loc="best", bbox_to_anchor=(1, 0.815))
     return ax
 

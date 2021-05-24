@@ -1,7 +1,6 @@
 import numpy as np
 
-from ...common import (Gaussian, GaussianDensity, HypothesisReduction,
-                       normalize_log_weights)
+from ...common import Gaussian, GaussianDensity, HypothesisReduction, normalize_log_weights
 from ...configs import SensorModelConfig
 from ...measurement_models import MeasurementModel
 from ...motion_models import MotionModel
@@ -51,9 +50,7 @@ class ProbabilisticDataAssociationTracker(SingleObjectTracker):
                 predicted_state=prev_state,
                 current_measurements=np.array(measurements_in_scene),
             )
-            prev_state = GaussianDensity.predict(
-                state=estimations[timestep], motion_model=self.motion_model
-            )
+            prev_state = GaussianDensity.predict(state=estimations[timestep], motion_model=self.motion_model)
         return tuple(estimations)
 
     def estimation_step(self, predicted_state: Gaussian, current_measurements: np.ndarray):
@@ -102,9 +99,7 @@ class ProbabilisticDataAssociationTracker(SingleObjectTracker):
 
             log_w, log_sum_ = normalize_log_weights(hypotheses_weights_log)
             # def moment_matching(weights: List[float], states: List[Gaussian]) -> Gaussian:
-            current_step_state = GaussianDensity.moment_matching(
-                weights=log_w, states=multi_hypotheses
-            )
+            current_step_state = GaussianDensity.moment_matching(weights=log_w, states=multi_hypotheses)
 
         estimation = current_step_state
         return estimation

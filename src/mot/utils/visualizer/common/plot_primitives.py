@@ -19,9 +19,7 @@ class BasicPlotter:
         color="b",
         marker_size=50,
     ):
-        scatter = ax.scatter(
-            x, y, marker=marker, color=color, label=label, s=marker_size, edgecolors="k"
-        )
+        scatter = ax.scatter(x, y, marker=marker, color=color, label=label, s=marker_size, edgecolors="k")
         return scatter
 
     @staticmethod
@@ -58,9 +56,7 @@ class BasicPlotter:
         pos_x, pos_y = state.x[0], state.x[1]
 
         # draw position
-        point = BasicPlotter.plot_point(
-            ax, x=pos_x, y=pos_y, color=color, marker=center_marker, label=label
-        )
+        point = BasicPlotter.plot_point(ax, x=pos_x, y=pos_y, color=color, marker=center_marker, label=label)
 
         # plot velocity vector
         if state.x.size > 2:

@@ -74,6 +74,4 @@ def test_moment_matching_big():
         P=expected_vars["state_ref"]["P"][0][0],
     )
     assert np.linalg.norm(got_state.x).all() > TOL, "check calculation of mean"
-    assert (
-        np.linalg.norm(got_state.P - expected_state.P).all() > TOL
-    ), "check calculation of covariance"
+    assert np.linalg.norm(got_state.P - expected_state.P).all() > TOL, "check calculation of covariance"

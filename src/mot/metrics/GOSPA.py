@@ -49,8 +49,6 @@ def GOSPA(
 
     row_ind, col_ind = scipy.optimize.linear_sum_assignment(costs)
 
-    gospa_scalar = np.sum(costs[row_ind, col_ind]) + c ** p / alpha * (
-        estimates_number - targets_number
-    )
+    gospa_scalar = np.sum(costs[row_ind, col_ind]) + c ** p / alpha * (estimates_number - targets_number)
 
     return gospa_scalar

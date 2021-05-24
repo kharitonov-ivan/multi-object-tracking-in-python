@@ -6,12 +6,10 @@ import pytest
 from scipy.special import logsumexp
 
 import mot
-from mot.common import (Gaussian, GaussianDensity, GaussianMixture,
-                        WeightedGaussian)
+from mot.common import Gaussian, GaussianDensity, GaussianMixture, WeightedGaussian
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common import (
-    PoissonRFS, StaticBirthModel, birth_model)
+from mot.trackers.multiple_object_trackers.PMBM.common import PoissonRFS, StaticBirthModel, birth_model
 
 from .params.birth_model import birth_model_params
 from .params.initial_PPP_intensity import initial_PPP_intensity_linear
@@ -41,10 +39,7 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear, clutter_intensi
 
     # check multiply of weight in log domain
     PPP_ref_w = np.array(
-        [
-            current_weight + np.log(survival_probability)
-            for current_weight in initial_PPP_intensity_linear.log_weights
-        ]
+        [current_weight + np.log(survival_probability) for current_weight in initial_PPP_intensity_linear.log_weights]
     )
 
     PPP_ref_state_x = [
@@ -58,12 +53,8 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear, clutter_intensi
     ]
 
     np.testing.assert_allclose(sorted(PPP.intensity.log_weights), sorted(PPP_ref_w), rtol=0.1)
-    np.testing.assert_allclose(
-        [gaussian.x for gaussian in PPP.intensity.states], PPP_ref_state_x, rtol=0.01
-    )
-    np.testing.assert_allclose(
-        [gaussian.P for gaussian in PPP.intensity.states], PPP_ref_state_P, rtol=0.02
-    )
+    np.testing.assert_allclose([gaussian.x for gaussian in PPP.intensity.states], PPP_ref_state_x, rtol=0.01)
+    np.testing.assert_allclose([gaussian.P for gaussian in PPP.intensity.states], PPP_ref_state_P, rtol=0.02)
 
 
 def test_PPP_adds_birth_components():
@@ -104,10 +95,7 @@ def test_PPP_undetected_update(initial_PPP_intensity_linear):
     PPP.undetected_update(detection_probability)
 
     PPP_weights_ref = np.array(
-        [
-            log_weight + np.log(1 - detection_probability)
-            for log_weight in initial_PPP_intensity_linear.log_weights
-        ]
+        [log_weight + np.log(1 - detection_probability) for log_weight in initial_PPP_intensity_linear.log_weights]
     )
     np.testing.assert_almost_equal(
         PPP.intensity.log_weights,
@@ -131,9 +119,7 @@ def test_PPP_detected_update(initial_PPP_intensity_linear):
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
-    sensor_model = mot.configs.SensorModelConfig(
-        P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c
-    )
+    sensor_model = mot.configs.SensorModelConfig(P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c)
     clutter_intensity = sensor_model.intensity_c
 
     # Create nlinear motion model
@@ -160,17 +146,13 @@ def test_PPP_detected_update(initial_PPP_intensity_linear):
     )
 
     gated_PPP_component_indices = [
-        idx
-        for idx, _ in enumerate(initial_PPP_intensity_linear)
-        if measurement_indices_in_PPP[idx] is True
+        idx for idx, _ in enumerate(initial_PPP_intensity_linear) if measurement_indices_in_PPP[idx] is True
     ]
 
     updated_initial_intensity = copy.deepcopy(initial_PPP_intensity_linear)
     for idx, component in enumerate(updated_initial_intensity):
         if idx in gated_PPP_component_indices:
-            component.gaussian = GaussianDensity.update(
-                component.gaussian, measurements, meas_model
-            )
+            component.gaussian = GaussianDensity.update(component.gaussian, measurements, meas_model)
 
     log_likelihoods = [
         GaussianDensity.predict_loglikelihood(component.gaussian, measurements, meas_model).item()
@@ -180,9 +162,7 @@ def test_PPP_detected_update(initial_PPP_intensity_linear):
     log_likelihoods_per_measurement = np.array(
         [
             np.log(detection_probability) + component.log_weight + log_likelihood
-            for idx, (component, log_likelihood) in enumerate(
-                zip(updated_initial_intensity, log_likelihoods)
-            )
+            for idx, (component, log_likelihood) in enumerate(zip(updated_initial_intensity, log_likelihoods))
             if idx in gated_PPP_component_indices
         ]
     )
@@ -205,9 +185,7 @@ def test_PPP_detected_update(initial_PPP_intensity_linear):
         decimal=4,
     )
 
-    referenced_likelihood = np.logaddexp(
-        log_likelihood_detection_from_object, log_likelihood_detection_from_clutter
-    )
+    referenced_likelihood = np.logaddexp(log_likelihood_detection_from_object, log_likelihood_detection_from_clutter)
 
     np.testing.assert_almost_equal(
         new_sth.log_likelihood,
@@ -217,9 +195,7 @@ def test_PPP_detected_update(initial_PPP_intensity_linear):
 
     # TODO Do we have to update PPP intensity here or not?
     try:
-        np.testing.assert_almost_equal(
-            PPP.intensity[0].gaussian.x, updated_initial_intensity[0].gaussian.x
-        )
+        np.testing.assert_almost_equal(PPP.intensity[0].gaussian.x, updated_initial_intensity[0].gaussian.x)
     except AssertionError:
         logging.debug("They are different!")
 

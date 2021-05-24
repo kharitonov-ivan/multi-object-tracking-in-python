@@ -23,9 +23,7 @@ def test_ellipsoidal_gating():
         )
     ]
 
-    grount_truth_config = GroundTruthConfig(
-        n_births=n_births, object_configs=objects, total_time=total_time
-    )
+    grount_truth_config = GroundTruthConfig(n_births=n_births, object_configs=objects, total_time=total_time)
     test_dt = 1.0
     test_sigma_q = 2.0
     motion_model = ConstantVelocityMotionModel(dt=test_dt, sigma_q=test_sigma_q)
@@ -40,9 +38,7 @@ def test_ellipsoidal_gating():
 
     object_data = ObjectData(grount_truth_config, motion_model, if_noisy=False)
 
-    meas_data = MeasurementData(
-        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
-    )
+    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
 
     gating_size = chi2.ppf(0.99, df=meas_model.d)
 

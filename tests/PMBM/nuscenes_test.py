@@ -18,8 +18,7 @@ import mot
 import mot.motion_models
 from mot.common import Gaussian, GaussianMixture, WeightedGaussian
 from mot.configs import SensorModelConfig
-from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import \
-    StaticBirthModel
+from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import StaticBirthModel
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from mot.utils.get_path import get_images_dir
 
@@ -149,9 +148,7 @@ class NuscenesTrackerEvaluator:
 
         for sample_token in self.detection_results.sample_tokens:
             try:
-                scene_token = self.nuscenes_helper.get(table_name="sample", token=sample_token)[
-                    "scene_token"
-                ]
+                scene_token = self.nuscenes_helper.get(table_name="sample", token=sample_token)["scene_token"]
                 scene_tokens.add(scene_token)
             except KeyError:
                 log.debug("This token is not exist!")

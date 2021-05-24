@@ -61,9 +61,7 @@ class GaussianDensity:
 
         next_covariances = (np.eye(state_vector_size) - K @ H_x) @ initial_states.covariances_np
 
-        next_states = [
-            Gaussian(new_states[idx], next_covariances[idx]) for idx in range(initial_states.size)
-        ]
+        next_states = [Gaussian(new_states[idx], next_covariances[idx]) for idx in range(initial_states.size)]
 
         measurements_bar = np.expand_dims(H_x, axis=0) @ initial_states.states_np.T
 
@@ -333,9 +331,7 @@ class GaussianDensity:
 
         x_bar_np = np.average(np.array([state.x for state in states]), axis=0, weights=weights)
         delta_state = x_bar_np - np.array([state.x for state in states])
-        ps = np.array([state.P for state in states]).T + np.einsum(
-            "ij,ij->i", delta_state, delta_state
-        )
+        ps = np.array([state.P for state in states]).T + np.einsum("ij,ij->i", delta_state, delta_state)
 
         P_bar_np = np.average(ps.T, axis=0, weights=weights)
         matched_state = Gaussian(x=x_bar_np, P=P_bar_np)
@@ -381,9 +377,7 @@ class GaussianDensity:
                     idx_to_merge.append(idx)
 
             # perform moment matching for states that close to state with max weights
-            normalized_weights, log_sum_w = normalize_log_weights(
-                [weights[idx] for idx in idx_to_merge]
-            )
+            normalized_weights, log_sum_w = normalize_log_weights([weights[idx] for idx in idx_to_merge])
             merged_state = GaussianDensity.moment_matching(
                 weights=normalized_weights, states=[states[idx] for idx in idx_to_merge]
             )
