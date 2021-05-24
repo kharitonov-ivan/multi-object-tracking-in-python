@@ -49,6 +49,7 @@ gprof2dot = "^2021.2.21"
 snakeviz = "^2.1.0"
 functiontrace = "^0.3.4"
 viztracer = "^0.12.3"
+vulture = "^2.3"
 isort = "^5.8.0"
 
 [build-system]
