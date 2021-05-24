@@ -15,7 +15,16 @@ class StaticBirthModel(BirthModel):
         super(StaticBirthModel, self).__init__()
 
     def get_born_objects_intensity(self, params=None) -> GaussianMixture:
-        return self.birth_model_config
+        birth_model = deepcopy(self.birth_model_config)
+
+        if params is not None:
+            ego_pose = params["ego_pose"]
+            translation, rotation = ego_pose["translation"], ego_pose["rotation"]
+
+            for i, birth_component in enumerate(birth_model):
+                birth_model[i].gaussian.x[:2] += translation[:2]
+
+        return birth_model
 
 
 class RandomSampledBirthModel(BirthModel):
