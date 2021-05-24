@@ -3,6 +3,7 @@ import numpy as np
 from mot.common.state import Gaussian
 from mot.configs import Object
 
+
 linear_sot_object_life_params = [
     Object(
         initial=Gaussian(x=np.array([0.0, 0.0, 10.0, 10.0]), P=np.eye(4)),

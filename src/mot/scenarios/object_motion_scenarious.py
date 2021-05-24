@@ -3,6 +3,7 @@ import numpy as np
 from mot.common import Gaussian
 from mot.configs import Object
 
+
 COMMON_BIRTH_TIME = 10
 COMMON_DEATH_TIME = 80
 
