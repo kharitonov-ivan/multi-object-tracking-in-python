@@ -5,6 +5,7 @@ from matplotlib.patches import Ellipse, FancyArrow
 
 from mot.common.state import Gaussian
 
+
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 

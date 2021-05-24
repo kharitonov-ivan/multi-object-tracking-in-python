@@ -1,3 +1,4 @@
+import logging
 from functools import singledispatch
 
 import colorcet
@@ -8,13 +9,13 @@ from mot.common.state import Gaussian
 from mot.simulator import MeasurementData, ObjectData
 from mot.utils.visualizer.common.plot_primitives import BasicPlotter
 
+
 CLUTTER_COLOR = colorcet.glasbey_category10[3]  # red
 CLUTTER_MARKER = "+"
 OBJECT_COLORS = colorcet.glasbey_category10[4:]
 OBJECT_MARKER = "s"
 OBJECT_MEASUREMENT_MARKER = "o"
 OBJECT_MEASUREMENT_COLOR = "b"
-import logging
 
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
@@ -88,7 +89,7 @@ def _plot_series(series: ObjectData, ax, *args, **kwargs):
             for object_id in range(series._ground_truth_config.n_births)
         ]
     )
-    lgd = ax.legend(handles=legend_elements, loc="best", bbox_to_anchor=(1, 0.815))
+    lgd = ax.legend(handles=legend_elements, loc="best", bbox_to_anchor=(1, 0.815))  # noqa
     return ax
 
 
@@ -99,7 +100,7 @@ def __plot_series(series: MeasurementData, ax, *args, **kwargs):
 
     legend_elements, labels = ax.get_legend_handles_labels()
     legend_elements.append(Line2D([0], [0], marker=CLUTTER_MARKER, color=CLUTTER_COLOR, label="clutter"))
-    lgd = ax.legend(handles=legend_elements, loc="best", bbox_to_anchor=(1, 0.815))
+    lgd = ax.legend(handles=legend_elements, loc="best", bbox_to_anchor=(1, 0.815))  # noqa
     return ax
 
 

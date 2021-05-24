@@ -1,18 +1,16 @@
+import logging
 from typing import List, Union
 
 import matplotlib.pyplot as plt
-
-from mot.utils.visualizer.common.common import create_figure, set_mpl_params
-
-set_mpl_params()
-import logging
-
 import numpy as np
 
 from mot.simulator import MeasurementData, ObjectData
 from mot.utils.visualizer.common.autoscale import autoscale
+from mot.utils.visualizer.common.common import create_figure, set_mpl_params
+from mot.utils.visualizer.common.plot_series import plot_series
 
-from .common.plot_series import plot_series
+
+set_mpl_params()
 
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 

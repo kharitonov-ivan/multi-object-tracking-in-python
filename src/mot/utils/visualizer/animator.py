@@ -1,17 +1,16 @@
-import matplotlib
-import matplotlib.pyplot as plt
-
-from mot.utils.visualizer.common.common import set_mpl_params
-
-set_mpl_params()
-plt.set_loglevel("info")
 import logging
 
+import matplotlib
+import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 from mot.simulator.measurement_data_generator import MeasurementData
-from mot.utils.visualizer.common.common import create_figure
+from mot.utils.visualizer.common.common import create_figure, set_mpl_params
 from mot.utils.visualizer.common.plot_primitives import BasicPlotter
+
+
+set_mpl_params()
+plt.set_loglevel("info")
 
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 

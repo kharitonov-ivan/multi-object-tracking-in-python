@@ -1,2 +1,4 @@
-from .animator import Animator
-from .plotter import Plotter
+# flake8: noqa
+
+from mot.utils.visualizer.animator import Animator
+from mot.utils.visualizer.plotter import Plotter
