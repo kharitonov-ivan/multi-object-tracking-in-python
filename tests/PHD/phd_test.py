@@ -11,9 +11,9 @@ from mot.motion_models import ConstantVelocityMotionModel
 from mot.scenarios.scenario_configs import linear_full_mot
 from mot.simulator import MeasurementData, ObjectData
 from mot.trackers.multiple_object_trackers.PHD import GMPHD
-from mot.utils import Plotter
 from mot.utils.get_path import get_images_dir
 from mot.utils.visualizer import Plotter
+
 
 test_env_cases = [
     (
@@ -58,19 +58,15 @@ def generate_environment(config, motion_model, meas_model, *args, **kwargs):
 
 @pytest.mark.parametrize("config,motion_model,meas_model,name", test_env_cases)
 def test_generate_environment(config, motion_model, meas_model, name, *args, **kwargs):
-    env = generate_environment(config, motion_model, meas_model)
+    try:
+        env = generate_environment(config, motion_model, meas_model)  # noqa F841
+        pass
+    except Exception:
+        raise AssertionError
 
 
 @pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
 def test_components_list_operations(config, motion_model, meas_model, name, *args, **kwargs):
-    env = generate_environment(config, motion_model, meas_model)
-
-    # Single object tracker parameter setting
-    P_G = 0.99  # gating size in percentage
-    w_minw = 1e-4  # hypothesis pruning threshold
-    merging_threshold = 2  # hypothesis merging threshold
-    M = 100  # maximum number of hypotheses kept in MHT
-
     birth_model = GaussianMixture(
         [
             WeightedGaussian(log_weight=np.log(0.03), gaussian=Gaussian(x=pos, P=400 * np.eye(4)))
@@ -87,7 +83,7 @@ def test_components_list_operations(config, motion_model, meas_model, name, *arg
 
 
 @pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
-def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs):
+def test_tracker_predict_step(config, motion_model, meas_model, name, *args, **kwargs):
     env = generate_environment(config, motion_model, meas_model)
 
     # Single object tracker parameter setting
@@ -124,7 +120,7 @@ def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs
 
 
 @pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
-def test_tracker_predict(config, motion_model, meas_model, name, *args, **kwargs):
+def test_tracker_predict_and_update_step(config, motion_model, meas_model, name, *args, **kwargs):
     env = generate_environment(config, motion_model, meas_model)
 
     # Single object tracker parameter setting
@@ -208,7 +204,7 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwarg
     tracker.update(z=test_measurements)
 
     # One step estimate
-    estimates = tracker.PHD_estimator()
+    estimates = tracker.PHD_estimator()  # noqa F841
 
 
 @pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)

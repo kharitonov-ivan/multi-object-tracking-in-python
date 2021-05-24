@@ -2,6 +2,7 @@
 
 import nox
 
+
 locations = "src", "tests", "noxfile.py"
 
 

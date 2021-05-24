@@ -45,11 +45,13 @@ class Test_MeasurementData(unittest.TestCase):
         sigma_r = 10.0
         meas_model = ConstantVelocityMeasurementModel(sigma_r=sigma_r)
 
-        meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+        meas_data = MeasurementData(  # noqa F841
+            object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
+        )  # noqa F841
 
         OUTPUT_PICTURE = "measurements.png"
-        picture_path = os.path.join(utils.get_output_dir(), OUTPUT_PICTURE)
+        picture_path = os.path.join(utils.get_output_dir(), OUTPUT_PICTURE)  # noqa F841
 
-        fig = plt.figure(figsize=(5, 5))
+        fig = plt.figure(figsize=(5, 5))  # noqa F841
         ax = plt.subplot(111, aspect="equal")
         ax.grid(which="both", linestyle="--", alpha=0.5)

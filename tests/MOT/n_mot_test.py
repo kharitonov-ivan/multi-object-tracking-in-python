@@ -8,7 +8,6 @@ from mot.motion_models import ConstantVelocityMotionModel
 from mot.scenarios.initial_conditions import linear_n_mot_object_life_params
 from mot.scenarios.scenario_configs import linear_n_mot
 from mot.simulator import MeasurementData
-from mot.simulator.measurement_data_generator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
 from mot.trackers.n_object_trackers import GlobalNearestNeighboursTracker
 
@@ -59,7 +58,7 @@ def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initia
         M=M,
     )
 
-    tracker_estimations = tracker.estimate(initial_states=tracker_initial_states, measurements=meas_data)
+    tracker_estimations = tracker.estimate(initial_states=tracker_initial_states, measurements=meas_data)  # noqa F841
 
     # Plotter.plot(
     #     [meas_data, object_data],

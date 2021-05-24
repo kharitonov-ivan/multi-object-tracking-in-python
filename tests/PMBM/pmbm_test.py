@@ -8,16 +8,18 @@ import numpy as np
 import pytest
 from tqdm import trange
 
-import mot
 import mot.scenarios.object_motion_scenarious as object_motion_scenarious
-from mot.common import Gaussian, GaussianDensity, GaussianMixture, WeightedGaussian
+from mot.common import GaussianDensity
+from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.metrics import GOSPA
 from mot.motion_models import ConstantVelocityMotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import StaticBirthModel
+from mot.simulator import MeasurementData, ObjectData
+from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
+    StaticBirthModel,
+)
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from mot.utils import Plotter, delete_images_dir, get_images_dir
-from mot.utils.timer import Timer
 from mot.utils.visualizer.common.plot_series import OBJECT_COLORS as object_colors
 
 from .params.birth_model import birth_model_params
@@ -89,12 +91,12 @@ def test_synthetic_scenario(
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
-    sensor_model = mot.configs.SensorModelConfig(P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c)
+    sensor_model = SensorModelConfig(P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c)
 
     # Generate true object data (noisy or noiseless) and measurement data
-    ground_truth = mot.configs.GroundTruthConfig(object_motion_fixture, total_time=simulation_steps)
-    object_data = mot.simulator.ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
-    meas_data = mot.simulator.MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+    ground_truth = GroundTruthConfig(object_motion_fixture, total_time=simulation_steps)
+    object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
+    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
 
     logging.debug(f"object motion config {pprint.pformat(object_motion_fixture)}")
 

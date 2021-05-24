@@ -9,11 +9,10 @@ from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
 from mot.scenarios.scenario_configs import linear_full_mot
-from mot.simulator import MeasurementData
-from mot.simulator.measurement_data_generator import MeasurementData
-from mot.simulator.object_data_generator import ObjectData
+from mot.simulator import MeasurementData, ObjectData
 from mot.utils.get_path import get_images_dir
 from mot.utils.visualizer import Animator, Plotter
+
 
 test_env_cases = [
     (

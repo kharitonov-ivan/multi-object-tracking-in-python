@@ -1,9 +1,5 @@
-import json
 import logging as log
-import multiprocessing as mp
 from dataclasses import dataclass
-from os import wait
-from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,11 +10,12 @@ from nuscenes.eval.common.data_classes import EvalBoxes
 from nuscenes.eval.detection.data_classes import DetectionBox
 from nuscenes.nuscenes import NuScenes
 
-import mot
 import mot.motion_models
 from mot.common import Gaussian, GaussianMixture, WeightedGaussian
 from mot.configs import SensorModelConfig
-from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import StaticBirthModel
+from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
+    StaticBirthModel,
+)
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from mot.utils.get_path import get_images_dir
 
@@ -128,6 +125,7 @@ class NuscenesTrackerEvaluator:
                 self.nuscenes_helper.get("sample_annotation", annotation_token)
                 for annotation_token in current_sample_data["anns"]
             ]
+            gt.append(annotations)
             if not annotations:
                 print("annotation empty")
 
@@ -211,14 +209,14 @@ class NuscenesTrackerEvaluator:
 @pytest.fixture
 def nuscenes_config():
     yield NuscenesDatasetConfig(
-        data_path="/Users/a18677982/repos/Multi-Object-Tracking-for-Automotive-Systems-in-python/data/nuscenes/dataset/v1.0-mini",
+        data_path="/Users/a18677982/repos/Multi-Object-Tracking-for-Automotive-Systems-in-python/data/nuscenes/dataset/v1.0-mini",  # noqa
         version="v1.0-mini",
     )
 
 
 def test_nuscenes(nuscenes_config):
     evaluator = NuscenesTrackerEvaluator(
-        detection_filepath="/Users/a18677982/repos/Multi-Object-Tracking-for-Automotive-Systems-in-python/data/nuscenes/detection-megvii/megvii_val.json",
+        detection_filepath="/Users/a18677982/repos/Multi-Object-Tracking-for-Automotive-Systems-in-python/data/nuscenes/detection-megvii/megvii_val.json",  # noqa
         nuscens_config=nuscenes_config,
     )
     evaluator.evaluate()

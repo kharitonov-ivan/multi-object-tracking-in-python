@@ -5,14 +5,13 @@ import pytest
 
 from mot.common import Gaussian
 from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import ConstantVelocityMeasurementModel, RangeBearingMeasurementModel
+from mot.measurement_models import (
+    ConstantVelocityMeasurementModel,
+    RangeBearingMeasurementModel,
+)
 from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
 from mot.scenarios.scenario_configs import linear_sot, nonlinear_sot
-from mot.simulator import MeasurementData
-from mot.simulator.measurement_data_generator import MeasurementData
-from mot.simulator.object_data_generator import ObjectData
-from mot.trackers.single_object_trackers import GaussSumTracker, NearestNeighbourTracker
-from mot.utils import Plotter
+from mot.simulator import MeasurementData, ObjectData
 from mot.utils.get_path import get_images_dir
 from mot.utils.visualizer import Plotter
 
@@ -39,7 +38,7 @@ from mot.utils.visualizer import Plotter
         ),
     ],
 )
-@pytest.mark.parametrize("tracker", [(NearestNeighbourTracker)])
+@pytest.mark.parametrize("tracker", [(NearestNeighbourTracker)])  # noqa
 def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initial_state):
     config = asdict(config)
     ground_truth = GroundTruthConfig(**config)
@@ -52,9 +51,6 @@ def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initia
 
     # Single object tracker parameter setting
     P_G = 0.999  # gating size in percentage
-    w_minw = 1e-3  # hypothesis pruning threshold
-    merging_threshold = 2  # hypothesis merging threshold
-    M = 100  # maximum number of hypotheses kept in MHT
 
     tracker = tracker(
         meas_model=meas_model,

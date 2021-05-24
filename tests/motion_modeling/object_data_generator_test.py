@@ -4,12 +4,21 @@ from dataclasses import asdict
 import pytest
 
 from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import ConstantVelocityMeasurementModel, RangeBearingMeasurementModel
+from mot.measurement_models import (
+    ConstantVelocityMeasurementModel,
+    RangeBearingMeasurementModel,
+)
 from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
-from mot.scenarios.scenario_configs import linear_n_mot, linear_sot, nonlinear_n_mot, nonlinear_sot
+from mot.scenarios.scenario_configs import (
+    linear_n_mot,
+    linear_sot,
+    nonlinear_n_mot,
+    nonlinear_sot,
+)
 from mot.simulator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
 from mot.utils.visualizer import Animator, Plotter
+
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 

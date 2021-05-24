@@ -5,14 +5,15 @@ import numpy as np
 import pytest
 from scipy.special import logsumexp
 
-import mot
-from mot.common import Gaussian, GaussianDensity, GaussianMixture, WeightedGaussian
+from mot.common import GaussianDensity, GaussianMixture
+from mot.configs import SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common import PoissonRFS, StaticBirthModel, birth_model
-
-from .params.birth_model import birth_model_params
-from .params.initial_PPP_intensity import initial_PPP_intensity_linear
+from mot.trackers.multiple_object_trackers.PMBM.common import (
+    PoissonRFS,
+    StaticBirthModel,
+)
+from tests.PMBM.params.birth_model import birth_model_params
 
 
 @pytest.fixture
@@ -58,7 +59,6 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear, clutter_intensi
 
 
 def test_PPP_adds_birth_components():
-    from .params.birth_model import birth_model_params
 
     # Set Poisson RFS
     PPP = PoissonRFS(intensity=GaussianMixture([]))
@@ -83,9 +83,6 @@ def test_PPP_adds_birth_components():
     assert PPP.intensity[0] == birth_model_params[0]
 
 
-from .params.initial_PPP_intensity import initial_PPP_intensity_linear
-
-
 def test_PPP_undetected_update(initial_PPP_intensity_linear):
 
     detection_probability = 0.8
@@ -104,9 +101,6 @@ def test_PPP_undetected_update(initial_PPP_intensity_linear):
     )
 
 
-from .params.initial_PPP_intensity import initial_PPP_intensity_linear
-
-
 def test_PPP_detected_update(initial_PPP_intensity_linear):
     # Choose object detection probability
     detection_probability = 0.8
@@ -114,18 +108,15 @@ def test_PPP_detected_update(initial_PPP_intensity_linear):
     # Choose clutter rate (aka lambda_c)
     clutter_rate = 1.0
 
-    # Choose object survival probability
-    survival_probability = 0.9
-
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
-    sensor_model = mot.configs.SensorModelConfig(P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c)
+    sensor_model = SensorModelConfig(P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c)
     clutter_intensity = sensor_model.intensity_c
 
     # Create nlinear motion model
     dt = 1.0
     sigma_q = 10.0
-    motion_model = ConstantVelocityMotionModel(dt, sigma_q)
+    motion_model = ConstantVelocityMotionModel(dt, sigma_q)  # noqa F841
 
     # Create linear measurement model
     sigma_r = 10.0
