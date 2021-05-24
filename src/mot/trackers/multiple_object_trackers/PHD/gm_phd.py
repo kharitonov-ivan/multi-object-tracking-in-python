@@ -4,16 +4,24 @@ import numpy as np
 from scipy.stats import chi2
 from tqdm import tqdm as tqdm
 
-from ....common import GaussianDensity, GaussianMixture, HypothesisReduction, WeightedGaussian
-from ....configs import SensorModelConfig
-from ....measurement_models import MeasurementModel
-from ....motion_models import MotionModel
+from mot.common import (
+    GaussianDensity,
+    GaussianMixture,
+    HypothesisReduction,
+    WeightedGaussian,
+)
+from mot.configs import SensorModelConfig
+from mot.measurement_models import MeasurementModel
+from mot.motion_models import MotionModel
 
 
 class GMPHD:
-    """Tracks multiple objects using Gaussian Mixture Probanility Hypothesis Density filter"""
+    """Tracks multiple objects using Gaussian Mixture Probanility Hypothesis Density filter
 
-    """Vo, B.-N., & Ma, W.-K. (2006). The Gaussian Mixture Probability Hypothesis Density Filter. IEEE Transactions on Signal Processing, 54(11), 4091–4104. doi:10.1109/TSP.2006.881190"""
+    Vo, B.-N., & Ma, W.-K. (2006).
+    The Gaussian Mixture Probability Hypothesis Density Filter.
+    IEEE Transactions on Signal Processing, 54(11),
+    4091–4104. doi:10.1109/TSP.2006.881190"""
 
     def __init__(
         self,
@@ -55,8 +63,11 @@ class GMPHD:
             [description]
         """
         # Performs obhect state estimation in the GM PHD filetes
-        # Output: estimates object states in matrix from of size (object state dimention) x (number of objects)
-        # Geat a mean estimate (expected number of objects) if the cardinality of object sby takings the summation of the weights of the Gaussian components
+        # Output: estimates object states in matrix from of size
+        # (object state dimention) x (number of objects)
+        # Geat a mean estimate (expected number of objects)
+        # if the cardinality of object sby takings the summation of
+        # the weights of the Gaussian components
         # (rounded to the nearest integes), denotes as n
         if self.gmm_components:
             E = np.sum(np.exp(self.gmm_components.log_weights))  # number exptected value
@@ -131,7 +142,7 @@ class GMPHD:
         )
         new_gmm_components.extend(missdetection_hypotheses)
 
-        for meas_idx, measurement in enumerate(z):
+        for _meas_idx, measurement in enumerate(z):
             new_gm_list = GaussianMixture([])
             for hyp_idx in range(len(self.gmm_components)):
 
@@ -169,7 +180,7 @@ class GMPHD:
     def components_reduction(self):
         # apptoximates the PPP by represingti its intensity with fewer parameters
         try:
-            (pruned_hypotheses_weight, pruned_hypotheses,) = Hypothesisreduction.prune(
+            (pruned_hypotheses_weight, pruned_hypotheses,) = HypothesisReduction.prune(
                 self.gmm_components.weights,
                 self.gmm_components.states,
                 threshold=self.w_min,
@@ -181,7 +192,7 @@ class GMPHD:
 
             # Hypotheses merging
             if len(self.gmm_components.log_weights) > 1:
-                (merged_hypotheses_weights, merged_hypotheses,) = Hypothesisreduction.merge(
+                (merged_hypotheses_weights, merged_hypotheses,) = HypothesisReduction.merge(
                     self.gmm_components.weights,
                     self.gmm_components.states,
                     threshold=self.merging_threshold,
@@ -195,10 +206,10 @@ class GMPHD:
             (
                 capped_hypotheses_weights,
                 capped_hypotheses,
-            ) = Hypothesisreduction.cap(self.gmm_components.weights, self.gmm_components.states, top_k=self.M)
+            ) = HypothesisReduction.cap(self.gmm_components.weights, self.gmm_components.states, top_k=self.M)
 
             self.gmm_components = GaussianMixture(
                 [WeightedGaussian(w, gm) for (w, gm) in zip(capped_hypotheses_weights, capped_hypotheses)]
             )
-        except:
+        except Exception:
             print("Empty hupotheses")
