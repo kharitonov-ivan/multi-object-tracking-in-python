@@ -29,6 +29,7 @@ class AssignmentSolver:
         self.num_of_desired_hypotheses = num_of_desired_hypotheses
         self.num_of_old_tracks = len(list(self.global_hypothesis.associations))
         self.max_murty_steps = max_murty_steps or self.get_murty_steps()
+        lg.info(f"murty steps = {self.max_murty_steps}")
         self.column_row_to_detected_child_sth = defaultdict(defaultdict)
         self.column_row_to_new_detected_sth = defaultdict(defaultdict)
         self.cost_matrix = self.create_cost_matrix()
@@ -53,18 +54,36 @@ class AssignmentSolver:
         lg.debug(f"\n Current global hypo = \n{self.global_hypothesis}")
         lg.debug(f"\n Cost matrix = \n{self.cost_matrix}")
 
+        np.savetxt("cost.txt", self.cost_matrix)
         murty_solver = Murty(self.cost_matrix)
+        new_global_hypotheses = []
 
         # each solution is a tuple(status, solution_cost, solution)
-        murty_solutions = [murty_solver.draw() for murty_step in range(self.max_murty_steps)]
-        new_global_hypotheses = [
-            GlobalHypothesis(
-                log_weight=self.global_hypothesis.log_weight - solution_cost,
-                associations=self.optimized_assignment_to_associations(solution),
+        import signal
+
+        def signal_handler(signum, frame):
+            raise Exception("Timed out!")
+
+        signal.signal(signal.SIGALRM, signal_handler)
+        signal.alarm(10)  # Ten seconds
+
+        for murty_iteration in range(self.max_murty_steps):
+            try:
+                status, solution_cost, murty_solution = murty_solver.draw()
+            except Exception:
+                print("Timed out!")
+
+            if not status:
+                lg.info("Murty was broken")
+                break
+
+            new_global_hypotheses.append(
+                GlobalHypothesis(
+                    log_weight=self.global_hypothesis.log_weight - solution_cost,
+                    associations=self.optimized_assignment_to_associations(murty_solution),
+                )
             )
-            for (status, solution_cost, solution) in murty_solutions
-            if status
-        ]
+
         return new_global_hypotheses
 
     def optimized_assignment_to_associations(self, solution):
