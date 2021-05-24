@@ -1,23 +1,13 @@
 # .pre-commit-config.yaml
--   repo: local
+repos:
+  - repo: local
     hooks:
-    -   id: black
-        ...
-    -   id: isort
-        ...
-    -   id: flake8
+      - id: black
+      - id: isort
+      - id: flake8
         name: flake8
         entry: poetry run flake8
         language: system
         types: [python]
-        ...
-    - id: vulture
-        name: vulture
-        language: python
-        entry: vulture
-        description: Find unused Python code.
-        types: [python]
-        pass_filenames: false
-        require_serial: true
-        ...
-    -   id: mypy
+      - id: mypy
+      - id: vulture
