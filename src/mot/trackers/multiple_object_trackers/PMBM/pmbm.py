@@ -19,9 +19,15 @@ from ....measurement_models import MeasurementModel
 from ....motion_models import MotionModel
 from ....utils.profiler import Profiler
 from ....utils.timer import Timer
-from .common import (AssignmentSolver, Association, BirthModel,
-                     GlobalHypothesis, MultiBernouilliMixture, PoissonRFS,
-                     assign)
+from .common import (
+    AssignmentSolver,
+    Association,
+    BirthModel,
+    GlobalHypothesis,
+    MultiBernouilliMixture,
+    PoissonRFS,
+    assign,
+)
 
 
 def solve(f):
@@ -86,10 +92,12 @@ class PMBM:
             f"PPP components={len(self.PPP.intensity)}, "
         )
 
-    def step(self, measurements: np.ndarray, dt: float):
+    def step(self, measurements: np.ndarray, dt: float, ego_pose: Dict = None):
+        if ego_pose is None:
+            ego_pose = {"translation": (0.0, 0.0, 0.0), "rotation": (0.0, 0.0, 0.0, 0.0)}
         self.increment_timestep()
         self.predict(
-            self.birth_model,
+            self.birth_model.get_born_objects_intensity(params={"ego_pose": ego_pose}),
             self.motion_model,
             self.survival_probability,
             self.density,
@@ -98,6 +106,7 @@ class PMBM:
         self.update(measurements)
         estimates = self.estimator()
         self.reduction()
+        print(estimates)
         return estimates
 
     def increment_timestep(self):
@@ -112,16 +121,17 @@ class PMBM:
         density: GaussianDensity,
         dt: float,
     ) -> None:
-        assert isinstance(birth_model, BirthModel)
+        assert isinstance(birth_model, GaussianMixture)
         assert isinstance(motion_model, MotionModel)
         assert isinstance(survival_probability, float)
 
         self.MBM.predict(motion_model, survival_probability, density, dt)
         self.PPP.predict(motion_model, survival_probability, density, dt)
-        self.PPP.birth(self.birth_model.get_born_objects_intensity())
+        self.PPP.birth(birth_model)
 
     @Timer(name="PMBM update step")
     def update(self, measurements: np.ndarray) -> None:
+
         if len(measurements) == 0:
             lg.debug(f"\n no measurements!")
             return
@@ -163,36 +173,34 @@ class PMBM:
             )
 
         else:
-
-            # assignment_problems = [
-            #     AssignmentSolver(
-            #         global_hypothesis=global_hypothesis,
-            #         old_tracks=self.MBM.tracks,
-            #         new_tracks=new_tracks,
-            #         measurements=measurements,
-            #         num_of_desired_hypotheses=self.
-            #         max_number_of_hypotheses,
-            #     ) for global_hypothesis in self.MBM.global_hypotheses
-            # ]
-
-            # parallel_global_hypo = self.assingner_pool.map(
-            #     solve, assignment_problems
-
-            parallel_global_hypo = self.assingner_pool.starmap(
-                assign,
-                zip(
-                    self.MBM.global_hypotheses,
-                    repeat(self.MBM.tracks),
-                    repeat(new_tracks),
-                    repeat(measurements),
-                    repeat(self.max_number_of_hypotheses),
-                ),
-            )
-
-            # new_global_hypotheses = itertools.chain.from_iterable(
-            #     [problem.solve() for problem in assignment_problems]))
-
-            new_global_hypotheses = itertools.chain.from_iterable(parallel_global_hypo)
+            parrallel_assignment = False
+            if parrallel_assignment:
+                parallel_global_hypo = self.assingner_pool.starmap(
+                    assign,
+                    zip(
+                        self.MBM.global_hypotheses,
+                        repeat(self.MBM.tracks),
+                        repeat(new_tracks),
+                        repeat(measurements),
+                        repeat(self.max_number_of_hypotheses),
+                    ),
+                )
+                # parallel_global_hypo = self.assingner_pool.map(solve, assignment_problems
+                new_global_hypotheses = itertools.chain.from_iterable(parallel_global_hypo)
+            else:
+                assignment_problems = [
+                    AssignmentSolver(
+                        global_hypothesis=global_hypothesis,
+                        old_tracks=self.MBM.tracks,
+                        new_tracks=new_tracks,
+                        measurements=measurements,
+                        num_of_desired_hypotheses=self.max_number_of_hypotheses,
+                    )
+                    for global_hypothesis in self.MBM.global_hypotheses
+                ]
+                new_global_hypotheses = itertools.chain.from_iterable(
+                    [problem.solve() for problem in assignment_problems]
+                )
 
             with Timer(name="Prepation for the next step"):
                 self.update_tree()
