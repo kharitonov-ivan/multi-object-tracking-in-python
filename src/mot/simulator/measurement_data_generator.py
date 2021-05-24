@@ -88,7 +88,7 @@ class MeasurementData:
     @property
     def _observed_measurements(self):
         measurements_with_clutter = []
-        for idx, (curr_measurements, curr_clutters) in enumerate(zip(self.meas_data, self.clutter_data)):
+        for _idx, (curr_measurements, curr_clutters) in enumerate(zip(self.meas_data, self.clutter_data)):
             scene = []
             for cur_measurement in curr_measurements:
                 scene.append(cur_measurement)
