@@ -24,7 +24,8 @@ def GOSPA(
     c : float
         The maximum allowable localization error, and also determines the cost of a cardinality missmatch.
     alpha : float, optional
-        Defines the cost of a missing target or false estimate along with c. Tht default value is 2, which is the most suited value for tracking algorithms.
+        Defines the cost of a missing target or false estimate along with c.
+        The default value is 2, which is the most suited value for tracking algorithms.
     state_dim : int
         [description]
 
