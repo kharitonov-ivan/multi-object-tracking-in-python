@@ -4,6 +4,7 @@ from mot.common.gaussian_density import GaussianDensity
 from mot.common.state import Gaussian
 from mot.measurement_models import ConstantVelocityMeasurementModel
 
+
 TOL = 1e-4
 
 

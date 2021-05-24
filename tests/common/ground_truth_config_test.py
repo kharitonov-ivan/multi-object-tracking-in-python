@@ -6,6 +6,7 @@ import pytest
 from mot.common.state import Gaussian
 from mot.configs import GroundTruthConfig, Object
 
+
 TOL = 1e-4
 
 
@@ -21,7 +22,7 @@ class Test_GroundTruthConfig(unittest.TestCase):
             )
         ]
 
-        got_ground_truth_config = GroundTruthConfig(
+        got_ground_truth_config = GroundTruthConfig(  # noqa F841
             n_births=test_n_birth,
             object_configs=test_objects,
             total_time=test_total_time,
@@ -38,7 +39,7 @@ class Test_GroundTruthConfig(unittest.TestCase):
             )
         ]
         with pytest.raises(Exception):
-            got_ground_truth_config = GroundTruthConfig(
+            got_ground_truth_config = GroundTruthConfig(  # noqa F841
                 n_births=test_n_birth,
                 object_configs=test_objects,
                 total_time=test_total_time,

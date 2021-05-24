@@ -5,6 +5,7 @@ import scipy.io
 from mot.common.gaussian_density import GaussianDensity
 from mot.common.state import Gaussian
 
+
 TOL = 1e-4
 
 
@@ -53,13 +54,13 @@ def test_moment_matching_small():
              0         0         0    1.0000         0
              0         0         0         0    1.0000
     """
-    raise NotImplemented
+    raise NotImplementedError
 
 
 def test_moment_matching_big():
-    num_gaussians = 5
-    n_dim = 4
-    states = []
+    num_gaussians = 5  # noqa F841
+    n_dim = 4  # noqa F841
+    states = []  # noqa F841
     raise NotImplementedError
     expected_vars = scipy.io.loadmat("tests/data/SA2Ex2Test3.mat")
 

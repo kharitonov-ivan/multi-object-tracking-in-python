@@ -9,6 +9,7 @@ from mot.motion_models import ConstantVelocityMotionModel
 from mot.simulator.measurement_data_generator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
 
+
 TOL = 1e-4
 
 
