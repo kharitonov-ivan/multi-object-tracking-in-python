@@ -59,6 +59,7 @@ class NuscenesTrackerEvaluator:
             self.estimatios[scene_token] = self.process_scene(scene_token)
 
     def process_scene(self, scene_token: str):
+
         scene_object = self.nuscenes_helper.get(table_name="scene", token=scene_token)
         log.debug(f"Process scene with name {scene_object['name']}")
         first_sample_token = scene_object["first_sample_token"]
@@ -95,19 +96,45 @@ class NuscenesTrackerEvaluator:
             ),
             motion_model=mot.motion_models.ConstantVelocityMotionModel(dt, sigma_q=5.0),
             birth_model=StaticBirthModel(birth_model),
-            max_number_of_hypotheses=5,
+            max_number_of_hypotheses=3,
             gating_percentage=1.0,
             detection_probability=detection_probability,
             survival_probability=0.9,
             existense_probability_threshold=0.7,
-            density=mot.GaussianDensity,
+            density=mot.common.GaussianDensity,
         )
-        estimations = []
+        scene_estimations = []
+        scene_measurements = []
+        gt = []
+
+        log.info(f"Tracking {scene_token} scene")
+
+        fig, axs = plt.subplots(2, 3, figsize=(8 * 3, 8 * 2), sharey=False, sharex=False)
         for sample_token in tqdm.tqdm(scene_sample_tokens):
             measurements = self.get_measurements_for_one_sample(token=sample_token)
-            estimation = tracker.step(measurements, dt)
-            estimations.append(estimation)
-        return estimations
+            log.info(f"tracker condition: {tracker}")
+            log.info(f"got {len(measurements)} measurements")
+
+            current_sample_data = self.nuscenes_helper.get("sample", sample_token)
+            lidar_top_data_token = current_sample_data["data"]["LIDAR_TOP"]
+            lidar_data = self.nuscenes_helper.get("sample_data", lidar_top_data_token)
+            lidar_top_ego_pose = self.nuscenes_helper.get("ego_pose", lidar_data["ego_pose_token"])
+            current_ego_pose = lidar_top_ego_pose
+            estimation = tracker.step(measurements, dt, current_ego_pose)
+
+            scene_measurements.append(measurements)
+            scene_estimations.append(estimation)
+
+            annotations = [
+                self.nuscenes_helper.get("sample_annotation", annotation_token)
+                for annotation_token in current_sample_data["anns"]
+            ]
+            if not annotations:
+                print("annotation empty")
+
+        meta = f"scene_token={scene_token}"
+        plt.savefig(get_images_dir(__file__) + "/" + "results_" + meta + ".png")
+        return scene_estimations
 
     def get_measurements_for_one_sample(self, token):
         detection_results = self.detection_results[token]
@@ -121,16 +148,23 @@ class NuscenesTrackerEvaluator:
         scene_tokens = set()
 
         for sample_token in self.detection_results.sample_tokens:
-            scene_token = self.nuscenes_helper.get(table_name="sample", token=sample_token)[
-                "scene_token"
-            ]
-            scene_tokens.add(scene_token)
+            try:
+                scene_token = self.nuscenes_helper.get(table_name="sample", token=sample_token)[
+                    "scene_token"
+                ]
+                scene_tokens.add(scene_token)
+            except KeyError:
+                log.debug("This token is not exist!")
+                continue
+        log.info(f"Tokens: {scene_tokens}")
+        # TODO убрать костыль
+        scene_tokens = set(["fcbccedd61424f1b85dcbf8f897f9754"])
         return scene_tokens
 
     def read_detection_file(self, detection_filespath: str):
         print("Reading detection file")
         with open(detection_filespath) as file:
-            detection_data = json.load(file)
+            detection_data = ujson.load(file)
         metadata = detection_data["meta"]
         results = EvalBoxes.deserialize(detection_data["results"], DetectionBox)
         return detection_data, metadata, results
@@ -177,16 +211,21 @@ class NuscenesTrackerEvaluator:
             return sequence
 
 
-def main_test():
+@pytest.fixture
+def nuscenes_config():
+    yield NuscenesDatasetConfig(
+        data_path="/Users/a18677982/repos/Multi-Object-Tracking-for-Automotive-Systems-in-python/data/nuscenes/dataset/v1.0-mini",
+        version="v1.0-mini",
+    )
+
+
+def test_nuscenes(nuscenes_config):
     evaluator = NuscenesTrackerEvaluator(
         detection_filepath="/Users/a18677982/repos/Multi-Object-Tracking-for-Automotive-Systems-in-python/data/nuscenes/detection-megvii/megvii_val.json",
-        nuscens_config=NuscenesDatasetConfig(
-            data_path="/Users/a18677982/repos/Multi-Object-Tracking-for-Automotive-Systems-in-python/data/nuscenes/dataset",
-            version="v1.0-trainval",
-        ),
+        nuscens_config=nuscenes_config,
     )
     evaluator.evaluate()
 
 
 if __name__ == "__main__":
-    main_test()
+    test_nuscenes()
