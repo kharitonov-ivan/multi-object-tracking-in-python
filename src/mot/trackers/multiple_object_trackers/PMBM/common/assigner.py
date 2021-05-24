@@ -6,8 +6,6 @@ from typing import List
 import numpy as np
 from murty import Murty
 
-from mot.utils.time_limitter import time_limit
-
 from .global_hypothesis import Association, GlobalHypothesis
 
 
@@ -65,7 +63,7 @@ class AssignmentSolver:
         signal.signal(signal.SIGALRM, signal_handler)
         signal.alarm(10)  # Ten seconds
 
-        for murty_iteration in range(self.max_murty_steps):
+        for _murty_iteration in range(self.max_murty_steps):
             try:
                 status, solution_cost, murty_solution = murty_solver.draw()
             except Exception:

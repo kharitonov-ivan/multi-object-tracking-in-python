@@ -1,7 +1,6 @@
 from copy import deepcopy
-from typing import Dict
 
-from .....common import GaussianMixture
+from mot.common import GaussianMixture
 
 
 class BirthModel:
@@ -19,9 +18,9 @@ class StaticBirthModel(BirthModel):
 
         if params is not None:
             ego_pose = params["ego_pose"]
-            translation, rotation = ego_pose["translation"], ego_pose["rotation"]
+            translation, rotation = ego_pose["translation"], ego_pose["rotation"]  # noqa
 
-            for i, birth_component in enumerate(birth_model):
+            for i, _birth_component in enumerate(birth_model):
                 birth_model[i].gaussian.x[:2] += translation[:2]
 
         return birth_model

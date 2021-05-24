@@ -1,15 +1,12 @@
-import copy
 import logging
 from collections import defaultdict
 from typing import List
 
-import joblib
 import numpy as np
 
 from .....common import normalize_log_weights
 from .....measurement_models import MeasurementModel
 from .....motion_models import MotionModel
-from .....utils.timer import Timer
 from .global_hypothesis import GlobalHypothesis
 from .track import Track
 
@@ -42,7 +39,7 @@ class MultiBernouilliMixture:
             most_probable_global_hypo = max(self.global_hypotheses, key=lambda x: x.log_weight)
 
         object_list = []  # list of {'object_id':'object_state'}
-        logging.debug(f"\n estimations")
+        logging.debug("\n estimations")
         for (track_id, sth_id) in most_probable_global_hypo.associations:
             if (
                 self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.existence_probability
@@ -52,7 +49,8 @@ class MultiBernouilliMixture:
                 object_state = self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.state.x
                 object_list.append({track_id: object_state})
                 logging.debug(
-                    f"r = {self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.existence_probability}, track id={track_id}, sth_id={sth_id}, state={object_state}"
+                    f"r = {self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.existence_probability}, \
+                    track id={track_id}, sth_id={sth_id}, state={object_state}"
                 )
 
         return object_list

@@ -1,25 +1,18 @@
 import itertools
 import logging as lg
-from functools import partial
 from itertools import repeat
 from multiprocessing import Pool
-from pprint import pprint
 from typing import Dict
 
 import numpy as np
 import scipy
 import scipy.stats
-from viztracer import VizTracer
 
-from mot.common import gaussian_density
-
-from ....common import GaussianDensity, GaussianMixture
-from ....configs import SensorModelConfig
-from ....measurement_models import MeasurementModel
-from ....motion_models import MotionModel
-from ....utils.profiler import Profiler
-from ....utils.timer import Timer
-from .common import (
+from mot.common import GaussianDensity, GaussianMixture
+from mot.configs import SensorModelConfig
+from mot.measurement_models import MeasurementModel
+from mot.motion_models import MotionModel
+from mot.trackers.multiple_object_trackers.PMBM.common import (
     AssignmentSolver,
     Association,
     BirthModel,
@@ -28,6 +21,7 @@ from .common import (
     PoissonRFS,
     assign,
 )
+from mot.utils.timer import Timer
 
 
 def solve(f):
@@ -133,7 +127,7 @@ class PMBM:
     def update(self, measurements: np.ndarray) -> None:
 
         if len(measurements) == 0:
-            lg.debug(f"\n no measurements!")
+            lg.debug("\n no measurements!")
             return
         lg.debug(f"\n===current timestep: {self.timestep}===")
         lg.debug(f"\n   Observable measurements: \n {measurements}")
@@ -165,7 +159,7 @@ class PMBM:
             self.MBM.tracks.update(new_tracks)
             hypo_list = []
             for track_id, track in self.MBM.tracks.items():
-                for sth_id, sth in track.single_target_hypotheses.items():
+                for sth_id, _sth in track.single_target_hypotheses.items():
                     hypo_list.append(Association(track_id, sth_id))
 
             self.MBM.global_hypotheses.append(GlobalHypothesis(log_weight=0.0, associations=hypo_list))
