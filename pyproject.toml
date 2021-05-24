@@ -29,6 +29,7 @@ pycycle = "^0.0.8"
 black = "^21.4b2"
 nox = "^2020.12.31"
 pre-commit = "^2.12.1"
+ujson = "^4.0.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
