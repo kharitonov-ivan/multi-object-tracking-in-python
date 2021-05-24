@@ -310,9 +310,6 @@ class GaussianDensity:
         for idx in range(N):
             d = x_bar - states[idx].x
             P_bar += (states[idx].P + d @ d.T) * log_weights[idx]
-            import pdb
-
-            pdb.set_trace()
 
         matched_state = Gaussian(x=x_bar, P=P_bar)
         return matched_state
