@@ -214,7 +214,7 @@ def nuscenes_config():
     )
 
 
-def test_nuscenes(nuscenes_config):
+def nuscenes(nuscenes_config):
     evaluator = NuscenesTrackerEvaluator(
         detection_filepath="/Users/a18677982/repos/Multi-Object-Tracking-for-Automotive-Systems-in-python/data/nuscenes/detection-megvii/megvii_val.json",  # noqa
         nuscens_config=nuscenes_config,
@@ -223,4 +223,4 @@ def test_nuscenes(nuscenes_config):
 
 
 if __name__ == "__main__":
-    test_nuscenes()
+    nuscenes()
