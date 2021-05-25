@@ -11,6 +11,7 @@ jobs:
           python-version: 3.8
           architecture: x64
       - run: sudo apt -y install libeigen3-dev
+      - run: cd /usr/include && sudo ln -sf eigen3/Eigen Eigen
       - run: sudo apt -y install ninja-build
       - run: pip install nox==2020.12.31
       - run: pip install poetry==1.1.6
