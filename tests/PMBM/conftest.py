@@ -1,8 +1,6 @@
 import numpy as np
 import pytest
 
-from mot.common import Gaussian, GaussianMixture, WeightedGaussian
-
 
 @pytest.fixture(scope="function")
 def initial_PPP_intensity_linear():

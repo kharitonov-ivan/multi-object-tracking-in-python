@@ -5,7 +5,6 @@ from mot.common.state import Gaussian
 from mot.configs import SensorModelConfig
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import MotionModel
-
 from .base_single_object_tracker import SingleObjectTracker
 
 

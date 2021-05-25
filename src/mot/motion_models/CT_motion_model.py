@@ -1,7 +1,7 @@
 import numpy as np
 
-from ..common import Gaussian
-from ..motion_models import MotionModel
+from mot.common.state import Gaussian
+from mot.motion_models import MotionModel
 
 
 class CoordinateTurnMotionModel(MotionModel):

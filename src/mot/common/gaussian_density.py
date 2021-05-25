@@ -6,7 +6,8 @@ import numpy as np
 import numpy.typing as npt
 import scipy.stats  # noqa: I201
 
-from mot.common import Gaussian, GaussianMixture, normalize_log_weights
+from mot.common.normalize_log_weights import normalize_log_weights
+from mot.common.state import Gaussian, GaussianMixture
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import MotionModel
 from mot.utils import vectorized_gaussian_logpdf

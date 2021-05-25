@@ -14,7 +14,7 @@ from mot.scenarios.scenario_configs import linear_sot, nonlinear_sot
 from mot.simulator import MeasurementData, ObjectData
 from mot.utils.get_path import get_images_dir
 from mot.utils.visualizer import Plotter
-
+from mot.trackers.single_object_trackers.nearest_neighbour_tracker import NearestNeighbourTracker
 
 @pytest.mark.parametrize(
     "config, motion_model, meas_model, name, tracker_initial_state",

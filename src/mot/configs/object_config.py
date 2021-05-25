@@ -1,6 +1,6 @@
 import itertools
 
-from ..common import Gaussian
+from mot.common.state import Gaussian
 
 
 class Object:
