@@ -31,7 +31,7 @@ two_static_objects = [
 ]
 
 # TODO three static objects (no motion)
-tree_static_objects = [
+three_static_objects = [
     Object(
         initial=Gaussian(x=np.array([-250.0, 250.0, 0.0, 0.0]), P=np.eye(4)),
         t_birth=COMMON_BIRTH_TIME,
