@@ -8,7 +8,15 @@ import numpy as np
 import pytest
 from tqdm import trange
 
-import mot.scenarios.object_motion_scenarious as object_motion_scenarious
+from mot.scenarios.object_motion_scenarious import (
+    single_static_object,
+    two_static_objects,
+    three_static_objects,
+    single_object_linear_motion,
+    two_objects_linear_motion,
+    two_objects_linear_motion_delayed,
+    many_objects_linear_motion_delayed,
+)
 from mot.common import GaussianDensity
 from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
@@ -32,8 +40,8 @@ def scenario_detection_probability(request):
 
 @pytest.fixture(
     params=[
-        0.5,
-        5.0,
+        0.1,
+        10.0,
     ]
 )
 def scenario_clutter_rate(request):
@@ -42,9 +50,13 @@ def scenario_clutter_rate(request):
 
 @pytest.fixture(
     params=[
-        object_motion_scenarious.single_static_object,
-        object_motion_scenarious.single_object_linear_motion,
-        object_motion_scenarious.many_objects_linear_motion_delayed,
+        single_static_object,
+        two_static_objects,
+        three_static_objects,
+        single_object_linear_motion,
+        two_objects_linear_motion,
+        two_objects_linear_motion_delayed,
+        many_objects_linear_motion_delayed,
     ]
 )
 def object_motion_fixture(request):
@@ -62,21 +74,23 @@ def do_something_before_all_tests():
     delete_images_dir(__file__)
 
 
+@pytest.fixture(
+    params=[
+        0.99,
+        0.8,
+    ]
+)
+def scenario_survival_probability(request):
+    yield request.param
+
+
 def test_synthetic_scenario(
     object_motion_fixture,
     scenario_detection_probability,
     scenario_clutter_rate,
     birth_model,
+    scenario_survival_probability,
 ):
-
-    # Choose object detection probability
-    detection_probability = scenario_detection_probability
-
-    # Choose clutter rate (aka lambda_c)
-    clutter_rate = scenario_clutter_rate
-
-    # Choose object survival probability
-    survival_probability = 0.9
     # Create nlinear motion model
     dt = 1.0
     sigma_q = 10.0
@@ -91,7 +105,9 @@ def test_synthetic_scenario(
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
-    sensor_model = SensorModelConfig(P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c)
+    sensor_model = SensorModelConfig(
+        P_D=scenario_detection_probability, lambda_c=scenario_clutter_rate, range_c=range_c
+    )
 
     # Generate true object data (noisy or noiseless) and measurement data
     ground_truth = GroundTruthConfig(object_motion_fixture, total_time=simulation_steps)
@@ -112,8 +128,8 @@ def test_synthetic_scenario(
         birth_model=StaticBirthModel(birth_model),
         max_number_of_hypotheses=max_hypothesis_kept,
         gating_percentage=gating_percentage,
-        detection_probability=detection_probability,
-        survival_probability=survival_probability,
+        detection_probability=scenario_detection_probability,
+        survival_probability=scenario_survival_probability,
         existense_probability_threshold=existense_probability_threshold,
         density=GaussianDensity,
     )
@@ -154,7 +170,7 @@ def test_synthetic_scenario(
     # fig, (ax1, ax2, ax0, ax3, ax4, ax5) = plt.subplots(
     #     6, 1, figsize=(8, 8 * 5), sharey=False, sharex=False
     # )
-    fig, axs = plt.subplots(2, 3, figsize=(8 * 3, 8 * 2), sharey=False, sharex=False)
+    fig, axs = plt.subplots(2, 4, figsize=(8 * 4, 8 * 2), sharey=False, sharex=False)
 
     axs[0, 0].grid(which="both", linestyle="-", alpha=0.5)
     axs[0, 0].set_title(label="ground truth")
@@ -198,6 +214,40 @@ def test_synthetic_scenario(
     axs[1, 2].set_ylabel("y position")
     axs[1, 2].set_xlim([0, simulation_steps])
     axs[1, 2].set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
+
+    axs[0, 3].get_shared_y_axes().join(axs[0, 3], axs[0, 2])
+    axs[0, 3].grid(which="both", linestyle="-", alpha=0.5)
+    axs[0, 3].set_title(label="GT x position over time")
+    axs[0, 3].set_xlabel("time")
+    axs[0, 3].set_ylabel("x position")
+    axs[0, 3].set_xlim([0, simulation_steps])
+    axs[0, 3].set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
+
+    axs[0, 3].get_shared_y_axes().join(axs[1, 3], axs[1, 2])
+    axs[1, 3].grid(which="both", linestyle="-", alpha=0.5)
+    axs[1, 3].set_title(label="GT y position over time")
+    axs[1, 3].set_xlabel("time")
+    axs[1, 3].set_ylabel("y position")
+    axs[1, 3].set_xlim([0, simulation_steps])
+    axs[1, 3].set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
+
+    from mot.utils.visualizer.common.plot_series import OBJECT_MARKER, OBJECT_COLORS
+
+    for timestep in range(len(object_data)):
+        objects_in_scene = object_data[timestep]
+        for object_id in objects_in_scene.keys():
+            state = objects_in_scene[object_id]
+            curr_color, curr_marker = (
+                OBJECT_COLORS[object_id],
+                OBJECT_MARKER,
+            )
+            gt_pos_x, gt_pos_y = state.x[:2]
+            axs[0, 3].scatter(timestep, gt_pos_x, color=object_colors[object_id % 252])
+            axs[1, 3].scatter(timestep, gt_pos_y, color=object_colors[object_id % 252])
+        for measurement in meas_data[timestep]:
+            meas_x, meas_y = measurement
+            axs[0, 3].scatter(timestep, meas_x, color="r", marker="+")
+            axs[1, 3].scatter(timestep, meas_y, color="r", marker="+")
 
     lines = defaultdict(lambda: [])  # target_id: line
     timelines = defaultdict(lambda: [])
