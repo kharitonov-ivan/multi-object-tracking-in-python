@@ -18,3 +18,7 @@ class GlobalHypothesis:
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (f"(w={self.log_weight:.2f}, " f"(track_id, sth_id)={self.associations}, ")
+
+    def __post_init__(self) -> None:
+        if not self.associations:
+            raise ValueError("Global hypothesis can not be without any association!")
