@@ -100,7 +100,6 @@ class PMBM:
         self.update(measurements)
         estimates = self.estimator()
         self.reduction()
-        print(estimates)
         return estimates
 
     def increment_timestep(self):

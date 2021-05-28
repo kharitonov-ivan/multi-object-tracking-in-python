@@ -212,4 +212,4 @@ class GMPHD:
                 [WeightedGaussian(w, gm) for (w, gm) in zip(capped_hypotheses_weights, capped_hypotheses)]
             )
         except Exception:
-            print("Empty hupotheses")
+            logging.info("Empty hupotheses")

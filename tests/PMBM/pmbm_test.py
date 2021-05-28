@@ -125,7 +125,7 @@ def test_synthetic_scenario(
     motmetrics_accumulator = mm.MOTAccumulator()
 
     for timestep in trange(simulation_time):
-        logging.debug(f"===========current timestep{timestep}============")
+        logging.debug(f"===========current timestep {timestep}============")
         # with Timer(name="One iterations takes time:", logger=logging.info):
         current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
 

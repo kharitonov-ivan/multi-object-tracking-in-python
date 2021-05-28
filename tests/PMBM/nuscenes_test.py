@@ -127,7 +127,7 @@ class NuscenesTrackerEvaluator:
             ]
             gt.append(annotations)
             if not annotations:
-                print("annotation empty")
+                logging.info("annotation empty")
 
         meta = f"scene_token={scene_token}"
         plt.savefig(get_images_dir(__file__) + "/" + "results_" + meta + ".png")
