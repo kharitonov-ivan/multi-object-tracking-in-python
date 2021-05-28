@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from mot.common.state import GaussianMixture, WeightedGaussian, Gaussian
 
 
 @pytest.fixture(scope="function")
