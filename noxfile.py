@@ -17,7 +17,7 @@ def lint(session):
 def tests(session):
     session.run("poetry", "install", external=True)
     session.install("pytest")
-    session.run("pytest", "-v", "tests")
+    session.run("pytest", "-v", "tests/PMBM")
 
 
 @nox.session
