@@ -202,14 +202,14 @@ def test_synthetic_scenario(
     axs[0, 1].set_ylabel("y position")
 
     axs[0, 2].grid(which="both", linestyle="-", alpha=0.5)
-    axs[0, 2].set_title(label="x position over time")
+    axs[0, 2].set_title(label="estimated x position over time")
     axs[0, 2].set_xlabel("time")
     axs[0, 2].set_ylabel("x position")
     axs[0, 2].set_xlim([0, simulation_steps])
     axs[0, 2].set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
 
     axs[1, 2].grid(which="both", linestyle="-", alpha=0.5)
-    axs[1, 2].set_title(label="y position over time")
+    axs[1, 2].set_title(label="estimated y position over time")
     axs[1, 2].set_xlabel("time")
     axs[1, 2].set_ylabel("y position")
     axs[1, 2].set_xlim([0, simulation_steps])
