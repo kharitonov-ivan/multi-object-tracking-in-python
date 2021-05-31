@@ -17,7 +17,6 @@ from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
     StaticBirthModel,
 )
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
-from mot.utils.get_path import get_images_dir
 
 
 @dataclass
@@ -129,8 +128,8 @@ class NuscenesTrackerEvaluator:
             if not annotations:
                 logging.info("annotation empty")
 
-        meta = f"scene_token={scene_token}"
-        plt.savefig(get_images_dir(__file__) + "/" + "results_" + meta + ".png")
+        # meta = f"scene_token={scene_token}"
+        # plt.savefig(get_images_dir(__file__) + "/" + "results_" + meta + ".png")
         return scene_estimations
 
     def get_measurements_for_one_sample(self, token):
@@ -214,7 +213,7 @@ def nuscenes_config():
     )
 
 
-def nuscenes(nuscenes_config):
+def test_nuscenes(nuscenes_config):
     evaluator = NuscenesTrackerEvaluator(
         detection_filepath="/Users/a18677982/repos/Multi-Object-Tracking-for-Automotive-Systems-in-python/data/nuscenes/detection-megvii/megvii_val.json",  # noqa
         nuscens_config=nuscenes_config,
@@ -223,4 +222,4 @@ def nuscenes(nuscenes_config):
 
 
 if __name__ == "__main__":
-    nuscenes()
+    test_nuscenes()

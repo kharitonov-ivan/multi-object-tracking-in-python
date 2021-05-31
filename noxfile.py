@@ -4,6 +4,7 @@ import nox
 
 
 locations = "src", "tests", "noxfile.py"
+nox.options.sessions = "lint", "black", "tests"
 
 
 @nox.session
