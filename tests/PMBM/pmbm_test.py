@@ -8,20 +8,20 @@ import numpy as np
 import pytest
 from tqdm import trange
 
-from mot.scenarios.object_motion_scenarious import (
-    single_static_object,
-    two_static_objects,
-    three_static_objects,
-    single_object_linear_motion,
-    two_objects_linear_motion,
-    two_objects_linear_motion_delayed,
-    many_objects_linear_motion_delayed,
-)
 from mot.common import GaussianDensity
 from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.metrics import GOSPA
 from mot.motion_models import ConstantVelocityMotionModel
+from mot.scenarios.object_motion_scenarious import (
+    many_objects_linear_motion_delayed,
+    single_object_linear_motion,
+    single_static_object,
+    three_static_objects,
+    two_objects_linear_motion,
+    two_objects_linear_motion_delayed,
+    two_static_objects,
+)
 from mot.simulator import MeasurementData, ObjectData
 from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
     StaticBirthModel,
