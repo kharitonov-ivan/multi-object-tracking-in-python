@@ -1,7 +1,7 @@
 import logging
+from collections import UserDict
 from dataclasses import dataclass
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import tqdm
@@ -18,6 +18,8 @@ from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
 )
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 
+from .evaluator import OneSceneMOTevaluator
+
 
 @dataclass
 class NuscenesDatasetConfig:
@@ -26,11 +28,23 @@ class NuscenesDatasetConfig:
 
 
 # @dataclass
-# class ObjectDetection3D:
-#     center_position:
+# class ObjectGroundTruth:
+#     center_translation:
+#     center_roatation
 #     velocity:
 #     object_class:
 #     size:
+
+
+class NuscenceInstanceTokenReidentification(UserDict):
+    def __init__(self):
+        self.max_id = 0
+        self.data = {}
+
+    def add_id(self, instance_token):
+        if instance_token not in self.data.keys():
+            self.data[instance_token] = self.max_id
+            self.max_id += 1
 
 
 class NuscenesTrackerEvaluator:
@@ -101,11 +115,12 @@ class NuscenesTrackerEvaluator:
         scene_estimations = []
         scene_measurements = []
         gt = []
+        id_pool = NuscenceInstanceTokenReidentification()
 
         logging.info(f"Tracking {scene_token} scene")
+        evaluator = OneSceneMOTevaluator()
 
-        fig, axs = plt.subplots(2, 3, figsize=(8 * 3, 8 * 2), sharey=False, sharex=False)
-        for sample_token in tqdm.tqdm(scene_sample_tokens):
+        for timestep, sample_token in tqdm.tqdm(enumerate(scene_sample_tokens[:10])):
             measurements = self.get_measurements_for_one_sample(token=sample_token)
             logging.info(f"tracker condition: {tracker}")
             logging.info(f"got {len(measurements)} measurements")
@@ -119,15 +134,27 @@ class NuscenesTrackerEvaluator:
 
             scene_measurements.append(measurements)
             scene_estimations.append(estimation)
-
             annotations = [
                 self.nuscenes_helper.get("sample_annotation", annotation_token)
                 for annotation_token in current_sample_data["anns"]
             ]
+
+            scene_data = {}
+            for annotation in annotations:
+                id_pool.add_id(annotation["instance_token"])
+                object_id = id_pool.data[annotation["instance_token"]]
+                object_pos_x, object_pos_y = annotation["translation"][:2]
+                scene_data[object_id] = Gaussian(x=np.array([object_pos_x, object_pos_y, 0.0, 0.0]), P=np.eye(4))
+
+            evaluator.step(
+                sample_measurements=measurements, sample_estimates=estimation, sample_gt=scene_data, timestep=timestep
+            )
+
             gt.append(annotations)
             if not annotations:
                 logging.info("annotation empty")
 
+        evaluator.post_processing()
         # meta = f"scene_token={scene_token}"
         # plt.savefig(get_images_dir(__file__) + "/" + "results_" + meta + ".png")
         return scene_estimations
