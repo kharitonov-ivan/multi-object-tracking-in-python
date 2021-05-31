@@ -1,4 +1,4 @@
-import logging as log
+import logging
 from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
@@ -57,7 +57,7 @@ class NuscenesTrackerEvaluator:
     def process_scene(self, scene_token: str):
 
         scene_object = self.nuscenes_helper.get(table_name="scene", token=scene_token)
-        log.debug(f"Process scene with name {scene_object['name']}")
+        logging.debug(f"Process scene with name {scene_object['name']}")
         first_sample_token = scene_object["first_sample_token"]
         scene_sample_tokens = self.get_scene_token_list(firts_frame_token=first_sample_token)
 
@@ -103,13 +103,13 @@ class NuscenesTrackerEvaluator:
         scene_measurements = []
         gt = []
 
-        log.info(f"Tracking {scene_token} scene")
+        logging.info(f"Tracking {scene_token} scene")
 
         fig, axs = plt.subplots(2, 3, figsize=(8 * 3, 8 * 2), sharey=False, sharex=False)
         for sample_token in tqdm.tqdm(scene_sample_tokens):
             measurements = self.get_measurements_for_one_sample(token=sample_token)
-            log.info(f"tracker condition: {tracker}")
-            log.info(f"got {len(measurements)} measurements")
+            logging.info(f"tracker condition: {tracker}")
+            logging.info(f"got {len(measurements)} measurements")
 
             current_sample_data = self.nuscenes_helper.get("sample", sample_token)
             lidar_top_data_token = current_sample_data["data"]["LIDAR_TOP"]
@@ -149,9 +149,9 @@ class NuscenesTrackerEvaluator:
                 scene_token = self.nuscenes_helper.get(table_name="sample", token=sample_token)["scene_token"]
                 scene_tokens.add(scene_token)
             except KeyError:
-                log.debug("This token is not exist!")
+                logging.debug("This token is not exist!")
                 continue
-        log.info(f"Tokens: {scene_tokens}")
+        logging.info(f"Tokens: {scene_tokens}")
         # TODO убрать костыль
         scene_tokens = set(["fcbccedd61424f1b85dcbf8f897f9754"])
         return scene_tokens
