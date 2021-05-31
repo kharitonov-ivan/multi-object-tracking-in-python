@@ -231,16 +231,10 @@ def test_synthetic_scenario(
     axs[1, 3].set_xlim([0, simulation_steps])
     axs[1, 3].set_xticks(np.arange(0, simulation_time, step=int(simulation_time / 10)))
 
-    from mot.utils.visualizer.common.plot_series import OBJECT_MARKER, OBJECT_COLORS
-
     for timestep in range(len(object_data)):
         objects_in_scene = object_data[timestep]
         for object_id in objects_in_scene.keys():
             state = objects_in_scene[object_id]
-            curr_color, curr_marker = (
-                OBJECT_COLORS[object_id],
-                OBJECT_MARKER,
-            )
             gt_pos_x, gt_pos_y = state.x[:2]
             axs[0, 3].scatter(timestep, gt_pos_x, color=object_colors[object_id % 252])
             axs[1, 3].scatter(timestep, gt_pos_y, color=object_colors[object_id % 252])
