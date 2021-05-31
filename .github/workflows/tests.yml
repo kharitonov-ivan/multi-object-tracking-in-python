@@ -16,3 +16,8 @@ jobs:
       - run: pip install nox==2020.12.31
       - run: pip install poetry==1.1.6
       - run: nox
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-pmbm-plots
+          path: tests/PMBM/.images/*.png
