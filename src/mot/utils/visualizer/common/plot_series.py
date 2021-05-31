@@ -113,15 +113,16 @@ def ___plot_series(series: list, ax, *args, **kwargs):
                 ax.add_artist(patch)
 
         elif isinstance(scene, np.ndarray):
-            ax.add_artist(
-                BasicPlotter.plot_point(
-                    x=scene.squeeze()[0],
-                    y=scene.squeeze()[1],
-                    ax=ax,
-                    color="r",
-                    marker="x",
+            if len(scene) > 0:
+                ax.add_artist(
+                    BasicPlotter.plot_point(
+                        x=scene.squeeze()[0],
+                        y=scene.squeeze()[1],
+                        ax=ax,
+                        color="r",
+                        marker="x",
+                    )
                 )
-            )
         elif isinstance(scene, list):
             if scene:
                 for curr_object in scene:
