@@ -1,9 +1,44 @@
 import collections
+from collections import UserList
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import List
 
 import numpy as np
+
+
+@dataclass
+class ObjectMetadata:
+    object_class: str
+    confidence: float
+    size: np.ndarray
+
+
+class EstimationObjectMetadata(ObjectMetadata):
+    track_id: int
+
+
+@dataclass
+class Observation:
+    measurement: np.ndarray
+    metadata: ObjectMetadata
+
+
+@dataclass
+class Estimation:
+    state: np.ndarray
+    covariance: np.ndarray
+    metadata: EstimationObjectMetadata
+
+
+class ObservationList(UserList):
+    def __init__(self, initial_data):
+        self.data = initial_data
+
+    @property
+    def states(self):
+        measurements = [observation.measurement for observation in self.data]
+        return np.array(measurements)
 
 
 @dataclass
@@ -66,7 +101,42 @@ class WeightedGaussian:
         )
 
 
-class GaussianMixture(collections.abc.MutableSequence):
+class GaussianMixture(UserList):
+    def __init__(self, initial_components: List[WeightedGaussian] = None):
+        self.data = initial_components
+
+    @property
+    def log_weights(self):
+        if self.data:
+            weights = [x.log_weight for x in self.data]
+            return weights
+        else:
+            return None
+
+    @log_weights.setter
+    def log_weights(self, log_weights):
+        assert len(log_weights) == len(self.data)
+        for idx in range(len(self.data)):
+            self.weighted_components[idx].log_weights = log_weights[idx]
+
+    @property
+    def size(self):
+        return len(self.data)
+
+    @property
+    def states(self):
+        return [x.gaussian for x in self.data]
+
+    @property
+    def states_np(self):
+        return np.array([state.gaussian.x for state in self.data])
+
+    @property
+    def covariances_np(self):
+        return np.array([state.gaussian.P for state in self.data])
+
+
+class _GaussianMixture(collections.abc.MutableSequence):
     def __init__(self, weighted_components: List[WeightedGaussian] = (None)):
         self.weighted_components = deepcopy(weighted_components)
 
@@ -140,3 +210,37 @@ class GaussianMixture(collections.abc.MutableSequence):
 
     def __repr__(self) -> str:
         return f"Gaussian Mixture " f"components={self.weighted_components}"
+
+
+class NumpyGaussian(np.recarray):
+    def __new__(cls, mean, covariance, ndim):
+        # Input array is an already formed ndarray instance
+        # We first cast to be our class type
+        dtype = np.dtype([("means", np.float32, (ndim,)), ("covariances", np.float32, (ndim, ndim))])
+        obj = np.asarray((mean, covariance), dtype=dtype).view(cls)
+        # Finally, we must return the newly created object:
+        return obj
+
+    def __array_finalize__(self, obj):
+        # see InfoArray.__array_finalize__ for comments
+        if obj is None:
+            return
+        self.info = getattr(obj, "info", None)
+
+
+class NumpyWeightedGaussian(np.recarray):
+    def __new__(cls, log_weight, gaussian):
+        # Input array is an already formed ndarray instance
+        # We first cast to be our class type
+        dtype = np.dtype([("log_weight", log_weight.dtype), ("gaussian", gaussian.dtype)])
+        obj = np.asarray((log_weight, gaussian), dtype=dtype).view(cls)
+        # Finally, we must return the newly created object:
+        return obj
+
+
+if __name__ == "__main__":
+    a = Gaussian(mean=[2.0, 2.0, 3.0], covariance=np.eye(3), ndim=3)
+    b = WeightedGaussian(log_weight=0.03)
+    import pdb
+
+    pdb.set_trace()
