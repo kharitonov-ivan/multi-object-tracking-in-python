@@ -44,7 +44,6 @@ class GaussianDensity:
 
         H_x = measurement_model.H(initial_states.states_np)
         # Innovation covariance
-
         S = H_x @ initial_states.covariances_np @ H_x.T + measurement_model.R
 
         # Make sure matrix S is positive definite
@@ -80,6 +79,68 @@ class GaussianDensity:
 
         # np.testing.assert_almost_equal(loglikelihoods, loglikelihoods_fast)
 
+        return next_states, loglikelihoods_fast
+
+    @staticmethod
+    def numpy_get_Kalman_gain(initial_states: GaussianMixture, measurement_model: MeasurementModel):
+        H_x = measurement_model.H(initial_states["gaussian"]["means"])
+
+        # Innovation covariance
+        states_dot_H_x = initial_states["gaussian"]["covariances"] @ H_x.T
+        S = H_x @ states_dot_H_x + measurement_model.R
+
+        # Make sure matrix S is positive definite
+        S = 0.5 * (S + np.transpose(S, axes=(0, 2, 1)))
+
+        K = states_dot_H_x @ np.linalg.inv(S)
+
+        return H_x, S, K
+
+    @staticmethod
+    def numpy_update_states_with_likelihoods_by_single_measurement(
+        initial_states: GaussianMixture,
+        measurement: np.ndarray,
+        measurement_model: MeasurementModel,
+    ):
+        H_x = measurement_model.H(initial_states["gaussian"]["means"])
+
+        # Innovation covariance
+        states_dot_H_x = initial_states["gaussian"]["covariances"] @ H_x.T
+        S = H_x @ states_dot_H_x + measurement_model.R
+
+        # Make sure matrix S is positive definite
+        S = 0.5 * (S + np.transpose(S, axes=(0, 2, 1)))
+
+        K = states_dot_H_x @ np.linalg.inv(S)
+
+        measurement_row = np.tile(measurement, (initial_states.shape[0], 1))
+        fraction = measurement_row - measurement_model.h(initial_states["gaussian"]["means"].T).T
+        fraction_with_K = np.einsum("ijk,ik->ij", K, fraction)
+
+        new_states = initial_states["gaussian"]["means"] + fraction_with_K
+
+        state_vector_size = initial_states["gaussian"]["means"][0].shape[0]
+
+        next_covariances = (np.eye(state_vector_size) - K @ H_x) @ initial_states["gaussian"]["covariances"]
+
+        next_states = np.zeros(initial_states.size, dtype=initial_states["gaussian"].dtype)
+        next_states["means"], next_states["covariances"] = new_states, next_covariances
+        measurements_bar = np.expand_dims(H_x, axis=0) @ initial_states["gaussian"]["means"].T
+
+        # it takes 0.0277 sec
+        # TODO: clean up
+        # loglikelihoods = [
+        #     multivariate_normal.logpdf(measurement, measurements_bar[0].T[idx], S[idx])
+        #     for idx in range(initial_states.size)
+        # ]
+
+        loglikelihoods_fast = vectorized_gaussian_logpdf(
+            X=measurement_row,
+            means=measurements_bar.squeeze().T,
+            covariances=np.diagonal(S, axis1=2),
+        )
+
+        # np.testing.assert_almost_equal(loglikelihoods, loglikelihoods_fast)
         return next_states, loglikelihoods_fast
 
     @staticmethod
