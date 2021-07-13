@@ -5,7 +5,7 @@ import motmetrics
 import numpy as np
 
 from mot.metrics import GOSPA
-from mot.utils import Plotter, get_images_dir
+from mot.utils import get_images_dir
 from mot.utils.visualizer.common.plot_series import OBJECT_COLORS as object_colors
 
 
@@ -48,7 +48,8 @@ class OneSceneMOTevaluator:
         self.mot_metric_accumulator.update(target_ids, estimation_ids, dists=distance_matrix, frameid=timestep)
 
     def post_processing(self):
-        self._metrics_calculation_over_scene()
+        # pass
+        # self._metrics_calculation_over_scene()
         self._plot_result()
 
     def _metrics_calculation_over_scene(self):
@@ -65,7 +66,7 @@ class OneSceneMOTevaluator:
         self.scene_metric["idp"] = summary["mota"].item()
 
     def _plot_result(self):
-        fig, axs = plt.subplots(2, 4, figsize=(8 * 4, 8 * 2), sharey=False, sharex=False)
+        fig, axs = plt.subplots(2, 5, figsize=(8 * 5, 8 * 2), sharey=False, sharex=False)
         simulation_steps = len(self.measurements)
         axs[0, 0].grid(which="both", linestyle="-", alpha=0.5)
         axs[0, 0].set_title(label="ground truth")
@@ -84,19 +85,26 @@ class OneSceneMOTevaluator:
         #     out_path=None,
         #     is_autoscale=False,
         # )
-
+        axs[1, 0].get_shared_x_axes().join(axs[1, 0], axs[0, 0])
+        axs[1, 0].get_shared_y_axes().join(axs[1, 0], axs[0, 0])
         axs[1, 0].grid(which="both", linestyle="-", alpha=0.5)
         axs[1, 0].set_title(label="measurements")
         axs[1, 0].set_xlabel("x position")
         axs[1, 0].set_ylabel("y position")
+        for sample_measurements in self.measurements:
+            if len(sample_measurements) > 0:
+                axs[1, 0].scatter(
+                    sample_measurements.states[:, 0], sample_measurements.states[:, 1], color="r", marker="x"
+                )
 
-        axs[1, 0] = Plotter.plot_several(
-            [self.measurements],
-            ax=axs[1, 0],
-            out_path=None,
-            is_autoscale=False,
-        )
-
+        # axs[1, 0] = Plotter.plot_several(
+        # [self.measurements],
+        # ax=axs[1, 0],
+        # out_path=None,
+        # is_autoscale=False,
+        # )
+        axs[0, 1].get_shared_x_axes().join(axs[0, 1], axs[0, 0])
+        axs[0, 1].get_shared_y_axes().join(axs[0, 1], axs[0, 0])
         axs[0, 1].grid(which="both", linestyle="-", alpha=0.5)
         axs[0, 1].set_title(label="estimations")
         # axs[0, 1].set_xlim([-1100, 1100])
@@ -141,10 +149,29 @@ class OneSceneMOTevaluator:
                 gt_pos_x, gt_pos_y = state.x[:2]
                 axs[0, 3].scatter(timestep, gt_pos_x, color=object_colors[object_id % 252])
                 axs[1, 3].scatter(timestep, gt_pos_y, color=object_colors[object_id % 252])
+
+        axs[0, 4].get_shared_y_axes().join(axs[0, 4], axs[0, 3])
+        axs[0, 4].grid(which="both", linestyle="-", alpha=0.5)
+        axs[0, 4].set_title(label="x measurements over time")
+        axs[0, 4].set_xlabel("time")
+        axs[0, 4].set_ylabel("x position")
+        axs[0, 4].set_xlim([0, simulation_steps])
+        axs[0, 4].set_xticks(np.arange(0, simulation_steps, step=int(simulation_steps / 10)))
+
+        axs[1, 4].get_shared_y_axes().join(axs[1, 3], axs[1, 2])
+        axs[1, 4].grid(which="both", linestyle="-", alpha=0.5)
+        axs[1, 4].set_title(label="y measurements over time")
+        axs[1, 4].set_xlabel("time")
+        axs[1, 4].set_ylabel("y position")
+        axs[1, 4].set_xlim([0, simulation_steps])
+        axs[1, 4].set_xticks(np.arange(0, simulation_steps, step=int(simulation_steps / 10)))
+
+        for timestep in range(simulation_steps):
+            objects_in_scene = self.gt[timestep]
             for measurement in self.measurements[timestep]:
-                meas_x, meas_y = measurement
-                axs[0, 3].scatter(timestep, meas_x, color="r", marker="+")
-                axs[1, 3].scatter(timestep, meas_y, color="r", marker="+")
+                meas_x, meas_y = measurement.measurement
+                axs[0, 4].scatter(timestep, meas_x, color="r", marker="+")
+                axs[1, 4].scatter(timestep, meas_y, color="r", marker="+")
 
         lines = defaultdict(lambda: [])  # target_id: line
         timelines = defaultdict(lambda: [])
@@ -169,12 +196,12 @@ class OneSceneMOTevaluator:
             for (pos_x, pos_y) in estimation_list:
                 axs[0, 1].scatter(pos_x, pos_y, color=object_colors[target_id % 252])
 
-        fig.suptitle(
-            f"RMS GOSPA ={self.scene_metric['rms_gospa']:.1f} "
-            f"MOTA ={self.scene_metric['mota']:.1f} "
-            f"MOTP ={self.scene_metric['motp']:.1f} "
-            f"IDP ={self.scene_metric['idp']:.1f} ",
-            fontweight="bold",
-        )
+        # fig.suptitle(
+        #     f"RMS GOSPA ={self.scene_metric['rms_gospa']:.1f} "
+        #     f"MOTA ={self.scene_metric['mota']:.1f} "
+        #     f"MOTP ={self.scene_metric['motp']:.1f} "
+        #     f"IDP ={self.scene_metric['idp']:.1f} ",
+        #     fontweight="bold",
+        # )
         meta = f"{np.random.randint(100)}"
         plt.savefig(get_images_dir(__file__) + "/" + "results_" + meta + ".png")
