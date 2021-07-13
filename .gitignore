@@ -142,6 +142,11 @@ tests/SOT/.DS_Store
 
 # dataset
 data/*
+*.json
 
 # profilers metadata
 *.profile
+
+# results
+*.csv
+*.pdf
