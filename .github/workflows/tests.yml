@@ -2,7 +2,7 @@
 name: Tests
 on: push
 jobs:
-  tests:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -15,6 +15,7 @@ jobs:
       - run: sudo apt -y install ninja-build
       - run: pip install nox==2020.12.31
       - run: pip install poetry==1.1.6
+  tests:
       - run: nox
       - name: Archive code coverage results
         uses: actions/upload-artifact@v2
