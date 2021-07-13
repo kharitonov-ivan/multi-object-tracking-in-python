@@ -1,8 +1,8 @@
 import numpy as np
 
-from .....common import Gaussian, GaussianDensity
-from .....measurement_models import MeasurementModel
-from .....motion_models import MotionModel
+from mot.common import Gaussian, GaussianDensity, ObjectMetadata
+from mot.measurement_models import MeasurementModel
+from mot.motion_models import MotionModel
 
 
 class Bernoulli:
@@ -16,9 +16,10 @@ class Bernoulli:
         probability of existence
     """
 
-    def __init__(self, state: Gaussian, existence_probability: float):
+    def __init__(self, state: Gaussian, existence_probability: float, metadata: ObjectMetadata = None):
         self.state: Gaussian = state
         self.existence_probability: float = existence_probability
+        self.metadata = metadata
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (f"(r={self.existence_probability:.4f}, " f"state={self.state}")
