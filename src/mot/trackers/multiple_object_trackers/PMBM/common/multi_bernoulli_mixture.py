@@ -4,6 +4,7 @@ from typing import List
 
 import numpy as np
 
+# TODO make it ok
 from .....common import normalize_log_weights
 from .....measurement_models import MeasurementModel
 from .....motion_models import MotionModel
@@ -29,9 +30,8 @@ class MultiBernouilliMixture:
         assert not (track.track_id in self.tracks.keys())
         self.tracks[track.track_id] = track
 
-    def estimator(self, existense_probability_threshold):
+    def estimator(self, existense_probability_threshold, track_history_length_threshold):
         """Simply return objects set based on most probable global hypo."""
-        # import pdb; pdb.set_trace()
         if not self.global_hypotheses:
             logging.debug("Pool of global hypotheses is empty!")
             return None
@@ -46,7 +46,7 @@ class MultiBernouilliMixture:
             if (
                 self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.existence_probability
                 > existense_probability_threshold
-                and sth_id > 20
+                and sth_id > track_history_length_threshold
             ):
                 object_state = self.tracks[track_id].single_target_hypotheses[sth_id].bernoulli.state.x
                 object_list.append({track_id: object_state})
@@ -141,8 +141,6 @@ class MultiBernouilliMixture:
                 #     None,
                 # ) for idx in range(len(measurements))])
 
-                # import pdb
-                # pdb.set_trace()
                 # for meas_idx, detection_hypothesis in sth.detection_hypotheses.items():
                 #     logging.debug(
                 #         f"Created detection hypothesis for meas_idx={meas_idx} STH = {detection_hypothesis}"
