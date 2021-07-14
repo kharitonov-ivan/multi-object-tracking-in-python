@@ -8,7 +8,7 @@ import numpy as np
 import scipy
 import scipy.stats
 
-from mot.common import GaussianDensity, GaussianMixture
+from mot.common import GaussianDensity, GaussianMixture, ObservationList
 from mot.configs import SensorModelConfig
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import MotionModel
@@ -40,7 +40,9 @@ class PMBM:
         detection_probability: float,
         survival_probability: float,
         existense_probability_threshold: float,
+        track_history_length_threshold: int,
         density: GaussianDensity,
+        initial_PPP_intensity: GaussianMixture,
         *args,
         **kwargs,
     ):
@@ -73,8 +75,9 @@ class PMBM:
 
         self.max_number_of_hypotheses = max_number_of_hypotheses
         self.existense_probability_threshold = existense_probability_threshold
+        self.track_history_length_threshold = track_history_length_threshold
 
-        self.PPP = PoissonRFS(intensity=self.birth_model.get_born_objects_intensity())
+        self.PPP = PoissonRFS(intensity=initial_PPP_intensity)
         self.MBM = MultiBernouilliMixture()
         self.assingner_pool = Pool(processes=6)
 
@@ -86,12 +89,12 @@ class PMBM:
             f"PPP components={len(self.PPP.intensity)}, "
         )
 
-    def step(self, measurements: np.ndarray, dt: float, ego_pose: Dict = None):
+    def step(self, measurements: ObservationList, dt: float, ego_pose: Dict = None):
         if ego_pose is None:
             ego_pose = {"translation": (0.0, 0.0, 0.0), "rotation": (0.0, 0.0, 0.0, 0.0)}
         self.increment_timestep()
         self.predict(
-            self.birth_model.get_born_objects_intensity(params={"ego_pose": ego_pose}),
+            self.birth_model.get_born_objects_intensity(params={"measurements": measurements, "ego_pose": ego_pose}),
             self.motion_model,
             self.survival_probability,
             self.density,
@@ -133,7 +136,6 @@ class PMBM:
         lg.debug(f"\n   global hypotheses {self.MBM.global_hypotheses}")
         lg.debug(f"\n   MBM tracks {self.MBM.tracks} \n")
 
-        # with Timer(name='PPP get', logger=lg.info):
         new_tracks = self.PPP.get_targets_detected_for_first_time(
             measurements,
             self.sensor_model.intensity_c,
@@ -207,7 +209,10 @@ class PMBM:
 
     @Timer(name="PMBM estimation step")
     def estimator(self):
-        estimates = self.MBM.estimator(existense_probability_threshold=self.existense_probability_threshold)
+        estimates = self.MBM.estimator(
+            existense_probability_threshold=self.existense_probability_threshold,
+            track_history_length_threshold=self.track_history_length_threshold,
+        )
         return estimates
 
     @Timer(name="PMBM reduction step")
