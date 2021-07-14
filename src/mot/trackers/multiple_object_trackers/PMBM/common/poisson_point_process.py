@@ -5,10 +5,17 @@ from typing import List, Tuple
 import numpy as np
 import scipy
 
-from .....common import GaussianDensity, GaussianMixture, normalize_log_weights
-from .....measurement_models import MeasurementModel
-from .....motion_models import MotionModel
-from .....utils.timer import Timer
+from mot.common import (
+    GaussianDensity,
+    GaussianMixture,
+    Observation,
+    ObservationList,
+    normalize_log_weights,
+)
+from mot.measurement_models import MeasurementModel
+from mot.motion_models import MotionModel
+from mot.utils.timer import Timer
+
 from .bernoulli import Bernoulli
 from .single_target_hypothesis import SingleTargetHypothesis
 from .track import Track
@@ -28,14 +35,13 @@ class PoissonRFS:
 
     def get_targets_detected_for_first_time(
         self,
-        measurements: np.ndarray,
+        measurements: ObservationList,
         clutter_intensity: float,
         meas_model: MeasurementModel,
         detection_probability: float,
     ) -> List[Track]:
 
-        # TODO make this parallel with joblib/pathos/mp ?
-
+        H_x, S, K = GaussianDensity.numpy_get_Kalman_gain(self.intensity, meas_model)
         # new_single_target_hypotheses = [
         #     self.detected_update(
         #         meas_idx=meas_idx,
@@ -61,7 +67,6 @@ class PoissonRFS:
         new_single_target_hypotheses = [
             detected_update_func((meas_idx, measurements[meas_idx])) for meas_idx in range(len(measurements))
         ]
-        # import pdb; pdb.set_trace()
         # new_single_target_hypotheses = Parallel(
         #     n_jobs=-1)(delayed(self.detected_update)(
         #         meas_idx=meas_idx,
@@ -79,7 +84,7 @@ class PoissonRFS:
 
     @staticmethod
     def detected_update(
-        meas: Tuple[int, np.ndarray],
+        meas: Tuple[int, Observation],
         intensity,
         meas_model: MeasurementModel,
         detection_probability: float,
@@ -109,7 +114,9 @@ class PoissonRFS:
         (
             updated_ppp_components,
             loglikelihoods,
-        ) = GaussianDensity.update_states_with_likelihoods_by_single_measurement(intensity, measurement, meas_model)
+        ) = GaussianDensity.update_states_with_likelihoods_by_single_measurement(
+            intensity, measurement.measurement, meas_model
+        )
 
         # references = [
         #     GaussianDensity.update(state.gaussian, measurement, meas_model)
@@ -117,12 +124,14 @@ class PoissonRFS:
         # ]
 
         # Compute predicted likelihood
+        assert len(intensity) == len(loglikelihoods)
         log_weights = np.array(
             [
                 np.log(detection_probability) + ppp_component.log_weight + loglikelihood
                 for ppp_component, loglikelihood in zip(intensity, loglikelihoods)
             ]
         )
+
         # 2. Perform Gaussian moment matching for the updated object state densities
         # resulted from being updated by the same detection.
         normalized_log_weights, log_sum = normalize_log_weights(log_weights)
@@ -140,7 +149,7 @@ class PoissonRFS:
         # in decimal scale while the likelihoods you calculated
         # beforehand are in logarithmic scale)
         existence_probability = np.exp(log_sum - log_likelihood)
-        bernoulli = Bernoulli(merged_state, existence_probability)
+        bernoulli = Bernoulli(merged_state, existence_probability, measurement.metadata)
         cost = -log_likelihood
         return SingleTargetHypothesis(
             bernoulli=bernoulli,
@@ -158,9 +167,7 @@ class PoissonRFS:
 
     def prune(self, threshold: float) -> None:
         self.intensity.weighted_components = [
-            ppp_component
-            for ppp_component in self.intensity.weighted_components
-            if ppp_component.log_weight > threshold
+            ppp_component for ppp_component in self.intensity if ppp_component.log_weight > threshold
         ]
 
     def predict(
@@ -193,7 +200,7 @@ class PoissonRFS:
 
     def gating(
         self,
-        measurements: np.ndarray,
+        measurements,
         density_handler,
         meas_model: MeasurementModel,
         gating_size: float,
