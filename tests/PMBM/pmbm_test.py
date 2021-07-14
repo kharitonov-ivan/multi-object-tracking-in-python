@@ -6,7 +6,9 @@ import pytest
 from tqdm import trange
 
 from mot.common import GaussianDensity
+from mot.common.state import ObjectMetadata, Observation, ObservationList
 from mot.configs import GroundTruthConfig, SensorModelConfig
+from mot.evaluation_runners.evaluator import OneSceneMOTevaluator
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
 from mot.scenarios.object_motion_scenarious import (
@@ -25,7 +27,6 @@ from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from mot.utils import delete_images_dir
 
-from .evaluator import OneSceneMOTevaluator
 from .params.birth_model import birth_model_params
 
 
@@ -127,14 +128,26 @@ def test_synthetic_scenario(
         detection_probability=scenario_detection_probability,
         survival_probability=scenario_survival_probability,
         existense_probability_threshold=existense_probability_threshold,
+        track_history_length_threshold=3,
         density=GaussianDensity,
+        initial_PPP_intensity=birth_model,
     )
 
     evaluator = OneSceneMOTevaluator()
 
     for timestep in trange(simulation_steps):
         logging.debug(f"===========current timestep {timestep}============")
-        current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
+        current_measurements = ObservationList(
+            [
+                Observation(
+                    measurement,
+                    metadata=ObjectMetadata(object_class="point", confidence=0.9, size=np.array([1.0, 1.0])),
+                )
+                for measurement in meas_data[timestep]
+            ]
+        )
+
+        current_step_estimates = pmbm.step(current_measurements, dt=1.0)
         evaluator.step(
             sample_measurements=meas_data[timestep],
             sample_estimates=current_step_estimates,
@@ -144,5 +157,5 @@ def test_synthetic_scenario(
     evaluator.post_processing()
 
     # assert rms_gospa_scene < 2000
-    # assert summary["mota"].item() < 10
-    # assert summary["idp"].item() < 10
+    # assert summary["mota"].item() < 100
+    # assert summary["idp"].item() < 100
