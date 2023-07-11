@@ -113,10 +113,11 @@ def test_tracker_predict_step(config, motion_model, meas_model, name, *args, **k
         w_min=w_minw,
         merging_threshold=merging_threshold,
         M=M,
+        P_D=0.6,
     )
 
     # One step predict
-    tracker.predict_step()
+    tracker.predict_step(dt=1.0)
 
 
 @pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)

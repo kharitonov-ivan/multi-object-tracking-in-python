@@ -117,7 +117,7 @@ def test_synthetic_scenario(
     gating_percentage = 1.0  # gating size in percentage
     max_hypothesis_kept = 100  # maximum number of hypotheses kept
     existense_probability_threshold = 0.8
-
+    
     pmbm = PMBM(
         meas_model=meas_model,
         sensor_model=sensor_model,
@@ -137,17 +137,7 @@ def test_synthetic_scenario(
 
     for timestep in trange(simulation_steps):
         logging.debug(f"===========current timestep {timestep}============")
-        current_measurements = ObservationList(
-            [
-                Observation(
-                    measurement,
-                    metadata=ObjectMetadata(object_class="point", confidence=0.9, size=np.array([1.0, 1.0])),
-                )
-                for measurement in meas_data[timestep]
-            ]
-        )
-
-        current_step_estimates = pmbm.step(current_measurements, dt=1.0)
+        current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
         evaluator.step(
             sample_measurements=meas_data[timestep],
             sample_estimates=current_step_estimates,

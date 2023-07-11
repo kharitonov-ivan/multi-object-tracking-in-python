@@ -8,7 +8,7 @@ from mot.common import (
     GaussianDensity,
     GaussianMixture,
     HypothesisReduction,
-    WeightedGaussian,
+    GaussianMixture,
 )
 from mot.configs import SensorModelConfig
 from mot.measurement_models import MeasurementModel
@@ -94,7 +94,7 @@ class GMPHD:
 
         estimations = [[] for x in range(len(measurements))]
         # TODO убрать костыль
-        for timestep, measurements_in_scene in tqdm(enumerate(measurements[:10]), total=len(measurements)):
+        for timestep, measurements_in_scene in tqdm(enumerate(measurements), total=len(measurements)):
             estimations[timestep].extend(self.estimation_step(measurements_in_scene, dt=1.0))
         return tuple(estimations)
 
@@ -128,14 +128,14 @@ class GMPHD:
         """Performs PPP update step and PPP approximation"""
         # TODO check shape of measurements
 
-        new_gmm_components = GaussianMixture()
+        new_gmm_components = GaussianMixture([])
         # Construct update components resulted from missed detection.
         # It represents objects that are undetected at time k.
         missdetection_hypotheses = GaussianMixture(
             [
-                WeightedGaussian(
+                GaussianMixture(
                     log_weight=comp.log_weight + np.log(1 - self.P_D),
-                    gaussian=comp.gaussian,
+                    components=comp.gaussian,
                 )
                 for comp in self.gmm_components
             ]
@@ -145,7 +145,6 @@ class GMPHD:
         for _meas_idx, measurement in enumerate(z):
             new_gm_list = GaussianMixture([])
             for hyp_idx in range(len(self.gmm_components)):
-
                 component = self.gmm_components[hyp_idx]
                 z_in_gate, is_meas_in_gate = GaussianDensity.ellipsoidal_gating(
                     component.gaussian,
@@ -165,7 +164,7 @@ class GMPHD:
                         self.meas_model,
                     ).squeeze()
                     w = np.log(self.P_D) + predicted_likelihood + component.log_weight
-                    new_gm_list.append(WeightedGaussian(log_weight=w, gaussian=new_gm))
+                    new_gm_list.append(GaussianMixture(log_weight=w, components=new_gm))
 
             W_sum = np.sum(new_gm_list.log_weights)
             for idx, _ in enumerate(new_gm_list):
@@ -178,38 +177,45 @@ class GMPHD:
         self.gmm_components = new_gmm_components
 
     def components_reduction(self):
+        if not self.gmm_components:
+            logging.info('Nothing to reduce - no components in the PPP')
+            return
+        
         # apptoximates the PPP by represingti its intensity with fewer parameters
-        try:
-            (pruned_hypotheses_weight, pruned_hypotheses,) = HypothesisReduction.prune(
-                self.gmm_components.weights,
-                self.gmm_components.states,
-                threshold=self.w_min,
-            )
+        (
+            pruned_hypotheses_weight,
+            pruned_hypotheses,
+        ) = HypothesisReduction.prune(
+            self.gmm_components.log_weights,
+            self.gmm_components.states,
+            threshold=self.w_min,
+        )
 
-            self.gmm_components = GaussianMixture(
-                [WeightedGaussian(w, gm) for (w, gm) in zip(pruned_hypotheses_weight, pruned_hypotheses)]
-            )
+        self.gmm_components = GaussianMixture(
+            [GaussianMixture(w, gm) for (w, gm) in zip(pruned_hypotheses_weight, pruned_hypotheses)]
+        )
 
-            # Hypotheses merging
-            if len(self.gmm_components.log_weights) > 1:
-                (merged_hypotheses_weights, merged_hypotheses,) = HypothesisReduction.merge(
-                    self.gmm_components.weights,
-                    self.gmm_components.states,
-                    threshold=self.merging_threshold,
-                )
-
-                self.gmm_components = GaussianMixture(
-                    [WeightedGaussian(w, gm) for (w, gm) in zip(merged_hypotheses_weights, merged_hypotheses)]
-                )
-
-            # Cap the number of the hypotheses and then re-normalise the weights
+        # Hypotheses merging
+        if len(self.gmm_components.log_weights) > 1:
             (
-                capped_hypotheses_weights,
-                capped_hypotheses,
-            ) = HypothesisReduction.cap(self.gmm_components.weights, self.gmm_components.states, top_k=self.M)
+                merged_hypotheses_weights,
+                merged_hypotheses,
+            ) = HypothesisReduction.merge(
+                self.gmm_components.log_weights,
+                self.gmm_components.states,
+                threshold=self.merging_threshold,
+            )
 
             self.gmm_components = GaussianMixture(
-                [WeightedGaussian(w, gm) for (w, gm) in zip(capped_hypotheses_weights, capped_hypotheses)]
+                [GaussianMixture(w, gm) for (w, gm) in zip(merged_hypotheses_weights, merged_hypotheses)]
             )
-        except Exception:
-            logging.info("Empty hupotheses")
+
+        # Cap the number of the hypotheses and then re-normalise the weights
+        (
+            capped_hypotheses_weights,
+            capped_hypotheses,
+        ) = HypothesisReduction.cap(self.gmm_components.log_weights, self.gmm_components.states, top_k=self.M)
+
+        self.gmm_components = GaussianMixture(
+            [GaussianMixture(w, gm) for (w, gm) in zip(capped_hypotheses_weights, capped_hypotheses)]
+        )

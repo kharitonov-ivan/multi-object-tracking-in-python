@@ -51,7 +51,7 @@ class GaussianDensity:
 
         K = initial_states.covariances_np @ H_x.T @ np.linalg.inv(S)
 
-        measurement_row = np.vstack([measurement] * initial_states.size)
+        measurement_row = np.vstack([measurement.measurement] * initial_states.size)
         fraction = measurement_row - measurement_model.h(initial_states.states_np.T).T
         with_K = np.einsum("ijk,ik->ij", K, fraction)
         new_states = initial_states.states_np + with_K
@@ -83,10 +83,10 @@ class GaussianDensity:
 
     @staticmethod
     def numpy_get_Kalman_gain(initial_states: GaussianMixture, measurement_model: MeasurementModel):
-        H_x = measurement_model.H(initial_states["gaussian"]["means"])
+        H_x = measurement_model.H(initial_states)
 
         # Innovation covariance
-        states_dot_H_x = initial_states["gaussian"]["covariances"] @ H_x.T
+        states_dot_H_x = initial_states.covariances_np @ H_x.T
         S = H_x @ states_dot_H_x + measurement_model.R
 
         # Make sure matrix S is positive definite

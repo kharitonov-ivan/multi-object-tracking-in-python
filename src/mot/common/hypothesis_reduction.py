@@ -26,6 +26,9 @@ class HypothesisReduction:
         new_multi_hypotheses : List
             hypotheses after pruning
         """
+        if not hypotheses_weights and not multi_hypotheses:
+            return hypotheses_weights, multi_hypotheses # nothing to prune
+        
         selection_indices = np.array(hypotheses_weights) > threshold
         new_hypotheses_weights = np.array(hypotheses_weights)[selection_indices]
         new_multi_hypotheses = np.array(multi_hypotheses)[selection_indices]

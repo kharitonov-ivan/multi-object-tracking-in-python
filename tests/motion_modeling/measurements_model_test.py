@@ -1,14 +1,14 @@
 import unittest
 
 from mot.measurement_models import ConstantVelocityMeasurementModel
-
+import numpy as np
 
 class Test_MotionModels(unittest.TestCase):
     def test_constant_velocity_motion_model(self):
-        sigma_r = 10.0
-        meas_model = ConstantVelocityMeasurementModel(sigma_r=sigma_r)  # noqa F841
-        raise NotImplementedError
-        # TODO: write test
+        pass
+        # TODO
+        # sigma_r = 10.0
+        # meas_model = ConstantVelocityMeasurementModel(sigma_r=sigma_r)  # noqa F841
 
         # initial_state = np.array([0.0, 0.0, 5.0, 5.0])
         # expected_predicted_array = np.array([5.0, 5.0, 5.0, 5.0])

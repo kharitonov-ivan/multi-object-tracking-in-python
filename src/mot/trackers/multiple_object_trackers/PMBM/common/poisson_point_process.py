@@ -23,7 +23,6 @@ from .track import Track
 
 class PoissonRFS:
     def __init__(self, intensity: GaussianMixture):
-        assert isinstance(intensity, GaussianMixture)
         self.intensity = deepcopy(intensity)
         # self.pool = Pool(nodes=8)
 
@@ -40,7 +39,6 @@ class PoissonRFS:
         meas_model: MeasurementModel,
         detection_probability: float,
     ) -> List[Track]:
-
         H_x, S, K = GaussianDensity.numpy_get_Kalman_gain(self.intensity, meas_model)
         # new_single_target_hypotheses = [
         #     self.detected_update(
@@ -115,7 +113,7 @@ class PoissonRFS:
             updated_ppp_components,
             loglikelihoods,
         ) = GaussianDensity.update_states_with_likelihoods_by_single_measurement(
-            intensity, measurement.measurement, meas_model
+            intensity, measurement, meas_model
         )
 
         # references = [
@@ -149,7 +147,7 @@ class PoissonRFS:
         # in decimal scale while the likelihoods you calculated
         # beforehand are in logarithmic scale)
         existence_probability = np.exp(log_sum - log_likelihood)
-        bernoulli = Bernoulli(merged_state, existence_probability, measurement.metadata)
+        bernoulli = Bernoulli(merged_state, existence_probability)
         cost = -log_likelihood
         return SingleTargetHypothesis(
             bernoulli=bernoulli,
@@ -166,7 +164,7 @@ class PoissonRFS:
             ppp_component.log_weight += np.log(1 - detection_probability)
 
     def prune(self, threshold: float) -> None:
-        self.intensity.weighted_components = [
+        self.intensity = [
             ppp_component for ppp_component in self.intensity if ppp_component.log_weight > threshold
         ]
 

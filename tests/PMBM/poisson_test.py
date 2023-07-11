@@ -27,7 +27,6 @@ def clutter_intensity():
 
 
 def test_PPP_predict_linear_motion(initial_PPP_intensity_linear, clutter_intensity):
-
     survival_probability = 0.9
 
     dt = 1.0
@@ -45,12 +44,12 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear, clutter_intensi
 
     PPP_ref_state_x = [
         GaussianDensity.predict(component.gaussian, motion_model, dt).x
-        for component in initial_PPP_intensity_linear.weighted_components
+        for component in initial_PPP_intensity_linear
     ]
 
     PPP_ref_state_P = [
         GaussianDensity.predict(component.gaussian, motion_model, dt).P
-        for component in initial_PPP_intensity_linear.weighted_components
+        for component in initial_PPP_intensity_linear
     ]
 
     np.testing.assert_allclose(sorted(PPP.intensity.log_weights), sorted(PPP_ref_w), rtol=0.1)
@@ -59,7 +58,6 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear, clutter_intensi
 
 
 def test_PPP_adds_birth_components():
-
     # Set Poisson RFS
     PPP = PoissonRFS(intensity=GaussianMixture([]))
     birth_model = StaticBirthModel(birth_model_config=birth_model_params)
@@ -84,7 +82,6 @@ def test_PPP_adds_birth_components():
 
 
 def test_PPP_undetected_update(initial_PPP_intensity_linear):
-
     detection_probability = 0.8
 
     PPP = PoissonRFS(intensity=initial_PPP_intensity_linear)
@@ -218,7 +215,7 @@ def test_PPP_gating(initial_PPP_intensity_linear):
 
 def test_PPP_pruning(initial_PPP_intensity_linear):
     modified_PPP_intensity = copy.deepcopy(initial_PPP_intensity_linear)
-    modified_PPP_intensity.weighted_components[0].log_weight = -6
+    modified_PPP_intensity[0].log_weight = -6
     PPP = PoissonRFS(intensity=modified_PPP_intensity)
     PPP.prune(threshold=np.log(0.01))
     assert len(PPP) == 1

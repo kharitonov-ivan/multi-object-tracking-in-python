@@ -72,7 +72,7 @@ def test_linear_model_without_noise(config, motion_model, output_image_name, mea
     )
 
     Animator.animate(
-        [object_data, meas_data],
+        [meas_data, object_data],
         title=output_image_name,
         filename=output_image_name + ".gif",
     )

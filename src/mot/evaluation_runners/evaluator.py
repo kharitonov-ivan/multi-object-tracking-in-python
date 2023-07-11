@@ -94,7 +94,7 @@ class OneSceneMOTevaluator:
         for sample_measurements in self.measurements:
             if len(sample_measurements) > 0:
                 axs[1, 0].scatter(
-                    sample_measurements.states[:, 0], sample_measurements.states[:, 1], color="r", marker="x"
+                    sample_measurements[:, 0], sample_measurements[:, 1], color="r", marker="x"
                 )
 
         # axs[1, 0] = Plotter.plot_several(
@@ -169,7 +169,7 @@ class OneSceneMOTevaluator:
         for timestep in range(simulation_steps):
             objects_in_scene = self.gt[timestep]
             for measurement in self.measurements[timestep]:
-                meas_x, meas_y = measurement.measurement
+                meas_x, meas_y = measurement
                 axs[0, 4].scatter(timestep, meas_x, color="r", marker="+")
                 axs[1, 4].scatter(timestep, meas_y, color="r", marker="+")
 
@@ -193,7 +193,7 @@ class OneSceneMOTevaluator:
             axs[1, 2].plot(timesteps, poses_y, color=object_colors[target_id % 252])
 
         for target_id, estimation_list in lines.items():
-            for (pos_x, pos_y) in estimation_list:
+            for pos_x, pos_y in estimation_list:
                 axs[0, 1].scatter(pos_x, pos_y, color=object_colors[target_id % 252])
 
         # fig.suptitle(

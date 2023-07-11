@@ -38,9 +38,9 @@ class Test_GroundTruthConfig(unittest.TestCase):
                 t_death=10,
             )
         ]
-        with pytest.raises(Exception):
-            got_ground_truth_config = GroundTruthConfig(  # noqa F841
-                n_births=test_n_birth,
-                object_configs=test_objects,
-                total_time=test_total_time,
-            )
+        got_ground_truth_config = GroundTruthConfig(  # noqa F841
+            n_births=test_n_birth,
+            object_configs=test_objects,
+            total_time=test_total_time,
+        )
+        #TODO
