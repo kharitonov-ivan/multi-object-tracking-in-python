@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 
-from mot.common import Gaussian, GaussianDensity, ObservationList
+from mot.common import Gaussian, GaussianDensity
 from mot.measurement_models import MeasurementModel
 
 from .bernoulli import Bernoulli
@@ -74,7 +74,7 @@ class SingleTargetHypothesis:
 
     def create_detection_hypotheses(
         self,
-        measurements: ObservationList,
+        measurements: np.ndarray,
         detection_probability: float,
         meas_model: MeasurementModel,
         density: GaussianDensity,
@@ -83,7 +83,7 @@ class SingleTargetHypothesis:
 
         (next_states, next_covariances,) = GaussianDensity.update_state_by_multiple_measurement(
             initial_state=self.bernoulli.state,
-            measurements=measurements.states,
+            measurements=measurements,
             measurement_model=meas_model,
         )
 
@@ -94,7 +94,7 @@ class SingleTargetHypothesis:
 
         loglikelihoods = (
             GaussianDensity.update_likelihoods_vectorized(
-                next_states, next_covariances, measurements.states, meas_model
+                next_states, next_covariances, measurements, meas_model
             )
             + np.log(detection_probability)
             + np.log(1.0)

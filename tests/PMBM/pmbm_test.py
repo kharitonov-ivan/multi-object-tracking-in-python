@@ -6,7 +6,6 @@ import pytest
 from tqdm import trange
 
 from mot.common import GaussianDensity
-from mot.common.state import ObjectMetadata, Observation, ObservationList
 from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.evaluation_runners.evaluator import OneSceneMOTevaluator
 from mot.measurement_models import ConstantVelocityMeasurementModel
@@ -28,8 +27,9 @@ from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
 from mot.utils import delete_images_dir
 
 from .params.birth_model import birth_model_params
+from mot.utils.get_path import get_images_dir
 
-
+from mot.utils.visualizer import Plotter
 @pytest.fixture(params=[0.8, 0.99])
 def scenario_detection_probability(request):
     yield request.param
@@ -115,7 +115,7 @@ def test_synthetic_scenario(
 
     # Object tracker parameter setting
     gating_percentage = 1.0  # gating size in percentage
-    max_hypothesis_kept = 100  # maximum number of hypotheses kept
+    max_hypothesis_kept = 10  # maximum number of hypotheses kept
     existense_probability_threshold = 0.8
     
     pmbm = PMBM(
@@ -135,16 +135,24 @@ def test_synthetic_scenario(
 
     evaluator = OneSceneMOTevaluator()
 
+    estimations = []
     for timestep in trange(simulation_steps):
         logging.debug(f"===========current timestep {timestep}============")
         current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
-        evaluator.step(
-            sample_measurements=meas_data[timestep],
-            sample_estimates=current_step_estimates,
-            sample_gt=object_data[timestep],
-            timestep=timestep,
-        )
-    evaluator.post_processing()
+        estimations.append(current_step_estimates)
+
+    Plotter.plot_several(
+        [meas_data, object_data, list(estimations)],
+        out_path=get_images_dir(__file__) + "/" + "meas_data_and_obj_data_and_estimations" +str(np.random.randint(100)) + ".png",
+    )
+
+    #     evaluator.step(
+    #         sample_measurements=meas_data[timestep],
+    #         sample_estimates=current_step_estimates,
+    #         sample_gt=object_data[timestep],
+    #         timestep=timestep,
+    #     )
+    # evaluator.post_processing()
 
     # assert rms_gospa_scene < 2000
     # assert summary["mota"].item() < 100

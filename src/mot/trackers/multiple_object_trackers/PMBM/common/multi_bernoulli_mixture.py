@@ -35,10 +35,9 @@ class MultiBernouilliMixture:
         if not self.global_hypotheses:
             logging.debug("Pool of global hypotheses is empty!")
             return None
-        else:
 
-            most_probable_global_hypo = max(self.global_hypotheses, key=lambda x: x.log_weight)
-            logging.debug(f"most probable global hypothesis: {most_probable_global_hypo}")
+        most_probable_global_hypo = max(self.global_hypotheses, key=lambda x: x.log_weight)
+        logging.debug(f"most probable global hypothesis: {most_probable_global_hypo}")
 
         object_list = []  # list of {'object_id':'object_state'}
         logging.debug("\n estimations")

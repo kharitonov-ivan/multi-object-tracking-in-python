@@ -8,6 +8,6 @@ from mot.common.state import (
     GaussianMixture,
     ObjectMetadata,
     Observation,
-    ObservationList,
     WeightedGaussian,
+    GaussianMixtureNumpy,
 )

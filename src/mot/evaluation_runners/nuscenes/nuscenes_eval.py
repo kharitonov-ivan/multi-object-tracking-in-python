@@ -277,7 +277,7 @@ class NuscenesTrackerEvaluator:
                 print(detection.detection_name, detection.detection_score)
                 measurements.append(object_detection)  # get only x,y position
 
-        observations = ObservationList(measurements)
+        observations = measurements #ObservationList(measurements)
         return observations
 
     def get_scenes_from_detections(self):

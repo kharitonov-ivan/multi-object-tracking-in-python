@@ -119,7 +119,6 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
         # except ValueError as e:
         #     print(e)
         # print(assignment)
-        # import pdb; pdb.set_trace()
         # for idx_object in range(self.n): # row in cost matrix
         #     if assignment[idx_object] <=
         estimates = object_states

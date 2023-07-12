@@ -31,11 +31,10 @@ class ConstantVelocityMotionModel(MotionModel):
         self.sigma = sigma_q
         super(ConstantVelocityMotionModel, self).__init__(*args, **kwargs)
 
-    def f(self, state_vector: np.ndarray, dt: float):
-        # TODO assert on state
-        return self._transition_matrix(dt=dt) @ state_vector
+    def f(self, states: np.ndarray, dt: float):
+        return np.einsum('ii, ...i ->...i', self._transition_matrix(dt) , states) # batched matrix multiplication
 
-    def F(self, state_vector: np.ndarray, dt: float):
+    def F(self, dt: float):
         return self._transition_matrix(dt=dt)
 
     def Q(self, dt):

@@ -9,8 +9,8 @@ from mot.common import (
     GaussianDensity,
     GaussianMixture,
     Observation,
-    ObservationList,
     normalize_log_weights,
+    GaussianMixtureNumpy
 )
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import MotionModel
@@ -22,8 +22,9 @@ from .track import Track
 
 
 class PoissonRFS:
-    def __init__(self, intensity: GaussianMixture):
-        self.intensity = deepcopy(intensity)
+    def __init__(self, intensity: GaussianMixtureNumpy):
+        # self.intensity = deepcopy(intensity)
+        self.intensity = intensity
         # self.pool = Pool(nodes=8)
 
     def __repr__(self):
@@ -34,12 +35,14 @@ class PoissonRFS:
 
     def get_targets_detected_for_first_time(
         self,
-        measurements: ObservationList,
+        measurements: np.ndarray,
         clutter_intensity: float,
         meas_model: MeasurementModel,
         detection_probability: float,
     ) -> List[Track]:
+        
         H_x, S, K = GaussianDensity.numpy_get_Kalman_gain(self.intensity, meas_model)
+       
         # new_single_target_hypotheses = [
         #     self.detected_update(
         #         meas_idx=meas_idx,
@@ -50,20 +53,23 @@ class PoissonRFS:
         #     ) for meas_idx in range(len(measurements))
         # ]
 
-        detected_update_func = partial(
-            PoissonRFS.detected_update,
-            intensity=self.intensity,
-            meas_model=meas_model,
-            detection_probability=detection_probability,
-            clutter_intensity=clutter_intensity,
-        )
+        # detected_update_func = partial(
+        #     PoissonRFS.detected_update,
+        #     intensity=self.intensity,
+        #     meas_model=meas_model,
+        #     detection_probability=detection_probability,
+        #     clutter_intensity=clutter_intensity,
+        # )
 
         # new_single_target_hypotheses = self.pool.map(
         #     detected_update_func,
         #     [(idx, measurements[idx]) for idx in range(len(measurements))])
 
         new_single_target_hypotheses = [
-            detected_update_func((meas_idx, measurements[meas_idx])) for meas_idx in range(len(measurements))
+            PoissonRFS.detected_update(meas = (meas_idx, measurements[meas_idx]),  intensity=self.intensity,
+            meas_model=meas_model,
+            detection_probability=detection_probability,
+            clutter_intensity=clutter_intensity,) for meas_idx in range(len(measurements))
         ]
         # new_single_target_hypotheses = Parallel(
         #     n_jobs=-1)(delayed(self.detected_update)(
@@ -123,12 +129,7 @@ class PoissonRFS:
 
         # Compute predicted likelihood
         assert len(intensity) == len(loglikelihoods)
-        log_weights = np.array(
-            [
-                np.log(detection_probability) + ppp_component.log_weight + loglikelihood
-                for ppp_component, loglikelihood in zip(intensity, loglikelihoods)
-            ]
-        )
+        log_weights = intensity.weigths_log + loglikelihoods + np.log(detection_probability)
 
         # 2. Perform Gaussian moment matching for the updated object state densities
         # resulted from being updated by the same detection.
@@ -160,13 +161,12 @@ class PoissonRFS:
     @Timer(name="update ppp componentns for missed detetion")
     def undetected_update(self, detection_probability) -> None:
         """Performs PPP update for missed detection."""
-        for ppp_component in self.intensity:
-            ppp_component.log_weight += np.log(1 - detection_probability)
+        self.intensity.weigths_log += np.log(1 - detection_probability)
 
     def prune(self, threshold: float) -> None:
-        self.intensity = [
-            ppp_component for ppp_component in self.intensity if ppp_component.log_weight > threshold
-        ]
+        mask_to_keep = np.squeeze(self.intensity.weigths_log > threshold)
+        self.intensity.means, self.intensity.covs, self.intensity.weigths_log = self.intensity.means[mask_to_keep], self.intensity.covs[mask_to_keep], self.intensity.weigths_log[mask_to_keep]
+        
 
     def predict(
         self,
@@ -177,15 +177,12 @@ class PoissonRFS:
     ) -> None:
         """Performs prediciton step for PPP components hypothesing undetected objects.
         Birth components will be added in another method."""
-        assert isinstance(motion_model, MotionModel)
-        assert isinstance(survival_probability, float)
-        assert isinstance(dt, float)
+        self.intensity.weigths_log += np.log(survival_probability)
+        self.intensity.means, self.intensity.covs = density.predict(self.intensity.means, self.intensity.covs, motion_model, dt)
+      
+        
 
-        for ppp_component in self.intensity:
-            ppp_component.log_weight += np.log(survival_probability)
-            ppp_component.gaussian = density.predict(ppp_component.gaussian, motion_model, dt)
-
-    def birth(self, new_components: GaussianMixture):
+    def birth(self, new_components: GaussianMixtureNumpy) -> None:
         """Incorporate PPP birth intensity into PPP intensity
 
         Parameters
@@ -193,8 +190,7 @@ class PoissonRFS:
         born_components : GaussianMixture
             [description]
         """
-        assert isinstance(new_components, GaussianMixture)
-        self.intensity.extend(deepcopy(new_components))
+        self.intensity += new_components
 
     def gating(
         self,

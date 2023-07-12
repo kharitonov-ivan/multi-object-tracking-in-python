@@ -60,7 +60,7 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear, clutter_intensi
 def test_PPP_adds_birth_components():
     # Set Poisson RFS
     PPP = PoissonRFS(intensity=GaussianMixture([]))
-    birth_model = StaticBirthModel(birth_model_config=birth_model_params)
+    birth_model = StaticBirthModel(birth_model_density=birth_model_params)
     PPP.birth(new_components=birth_model.get_born_objects_intensity())
 
     np.testing.assert_allclose(

@@ -8,7 +8,7 @@ import numpy as np
 import scipy
 import scipy.stats
 
-from mot.common import GaussianDensity, GaussianMixture, ObservationList
+from mot.common import GaussianDensity, GaussianMixture
 from mot.configs import SensorModelConfig
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import MotionModel
@@ -89,12 +89,13 @@ class PMBM:
             f"PPP components={len(self.PPP.intensity)}, "
         )
 
-    def step(self, measurements: ObservationList, dt: float, ego_pose: Dict = None):
+    def step(self, measurements: np.ndarray, dt: float, ego_pose: Dict = None):
         if ego_pose is None:
             ego_pose = {"translation": (0.0, 0.0, 0.0), "rotation": (0.0, 0.0, 0.0, 0.0)}
-        self.increment_timestep()
+        
+        self.timestep += 1 # increment_timestep
         self.predict(
-            self.birth_model.get_born_objects_intensity(params={"measurements": measurements, "ego_pose": ego_pose}),
+            self.birth_model.get_born_objects_intensity(measurements= measurements, ego_pose= ego_pose),
             self.motion_model,
             self.survival_probability,
             self.density,
@@ -104,9 +105,7 @@ class PMBM:
         estimates = self.estimator()
         self.reduction()
         return estimates
-
-    def increment_timestep(self):
-        self.timestep += 1
+       
 
     @Timer(name="PMBM preiction step")
     def predict(
@@ -117,13 +116,12 @@ class PMBM:
         density: GaussianDensity,
         dt: float,
     ) -> None:
-        assert isinstance(birth_model, GaussianMixture)
-        assert isinstance(motion_model, MotionModel)
-        assert isinstance(survival_probability, float)
-
         self.MBM.predict(motion_model, survival_probability, density, dt)
         self.PPP.predict(motion_model, survival_probability, density, dt)
         self.PPP.birth(birth_model)
+        if len(self.PPP.intensity) == 0:
+            import pdb; pdb.set_trace()
+        lg.error(f"{self.timestep}  {len(self.PPP.intensity)}")
 
     @Timer(name="PMBM update step")
     def update(self, measurements: np.ndarray) -> None:

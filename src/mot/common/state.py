@@ -2,9 +2,10 @@ import collections
 from collections import UserList
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import List
-
+from typing import List, Any
+from nptyping import NDArray, Shape, Float
 import numpy as np
+from regex import F
 
 
 @dataclass
@@ -30,15 +31,6 @@ class Estimation:
     covariance: np.ndarray
     metadata: EstimationObjectMetadata
 
-
-class ObservationList(UserList):
-    def __init__(self, initial_data):
-        self.data = initial_data
-
-    @property
-    def states(self):
-        measurements = [observation.measurement for observation in self.data]
-        return np.array(measurements)
 
 
 @dataclass
@@ -100,6 +92,48 @@ class WeightedGaussian:
             f"x = {np.array2string(self.gaussian.x, max_line_width=np.inf, precision =2)}  "
         )
 
+@dataclass
+class GaussianMixtureNumpy:
+    means: NDArray[Shape["Batch_size, State_dim"], Float]
+    covs: NDArray[Shape["Batch_size, State_dim, State_dim"], Float]
+    weigths_log: NDArray[Shape["Batch_size"], Float]
+
+    def __post_init__(self):
+        if len(self.means.shape) == 1: self.means = np.expand_dims(self.means, axis=0)
+        if len(self.covs.shape) == 2: self.covs = np.expand_dims(self.covs, axis=0)
+        if len(self.weigths_log.shape) == 0: self.weigths_log = np.array([self.weigths_log])
+
+        assert self.means.shape[0] == self.covs.shape[0] == self.weigths_log.shape[0], "Number of components must be equal"
+        assert len(self.means.shape) == 2
+        assert len(self.covs.shape) == 3
+        assert len(self.weigths_log.shape) == 1
+
+    @classmethod
+    def from_gaussian_mixture(cls, gaussian_mixture):
+        return cls(
+            means=gaussian_mixture.states_np,
+            covs=gaussian_mixture.covariances_np,
+            weigths_log=gaussian_mixture.log_weights,
+        )
+    
+    def __add__(self, other):
+        return GaussianMixtureNumpy(
+            means=np.concatenate((self.means, other.means)),
+            covs=np.concatenate((self.covs, other.covs)),
+            weigths_log=np.concatenate((self.weigths_log, other.weigths_log)),
+        )
+
+    @property
+    def size(self):
+        return self.means.shape[0]
+
+    def __len__(self):
+        return self.size
+    
+    def extend(self, other):
+        self.means = np.concatenate((self.means, other.means))
+        self.covs = np.concatenate((self.covs, other.covs))
+        self.weigths_log = np.concatenate((self.weigths_log, other.weigths_log))
 
 class GaussianMixture(UserList):
     def __init__(self, initial_components: List[WeightedGaussian] = None):
@@ -241,6 +275,3 @@ class NumpyWeightedGaussian(np.recarray):
 if __name__ == "__main__":
     a = Gaussian(mean=[2.0, 2.0, 3.0], covariance=np.eye(3), ndim=3)
     b = WeightedGaussian(log_weight=0.03)
-    import pdb
-
-    pdb.set_trace()

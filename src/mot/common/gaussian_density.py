@@ -20,7 +20,7 @@ class GaussianDensity:
         """
 
     @staticmethod
-    def predict(state: Gaussian, motion_model: MotionModel, dt: float) -> Gaussian:
+    def predict(means: np.ndarray, covs:np.ndarray, motion_model: MotionModel, dt: float) -> Gaussian:
         """Performs linear/nonlinear (Extended) Kalman prediction step
 
         Args:
@@ -30,10 +30,11 @@ class GaussianDensity:
         Returns:
             state_pred (Gaussian): predicted value of state
         """
-        next_x = motion_model.f(state.x, dt)
-        next_F = motion_model.F(state.x, dt)
-        next_P = np.linalg.multi_dot([next_F, state.P, next_F.T]) + motion_model.Q(dt)
-        return Gaussian(next_x, next_P)
+        next_x = motion_model.f(means, dt)
+        next_F = motion_model.F(dt)
+        next_P = next_F @ covs @ next_F.T + motion_model.Q(dt)
+        
+        return next_x, next_P
 
     @staticmethod
     def update_states_with_likelihoods_by_single_measurement(
@@ -42,27 +43,27 @@ class GaussianDensity:
         measurement_model: MeasurementModel,
     ):
 
-        H_x = measurement_model.H(initial_states.states_np)
+        H_x = measurement_model.H(initial_states.means)
         # Innovation covariance
-        S = H_x @ initial_states.covariances_np @ H_x.T + measurement_model.R
+        S = H_x @ initial_states.covs @ H_x.T + measurement_model.R
 
         # Make sure matrix S is positive definite
         S = 0.5 * (S + np.transpose(S, axes=(0, 2, 1)))
 
-        K = initial_states.covariances_np @ H_x.T @ np.linalg.inv(S)
+        K = initial_states.covs @ H_x.T @ np.linalg.inv(S)
 
-        measurement_row = np.vstack([measurement.measurement] * initial_states.size)
-        fraction = measurement_row - measurement_model.h(initial_states.states_np.T).T
+        measurement_row = np.vstack([measurement] * initial_states.size)
+        fraction = measurement_row - measurement_model.h(initial_states.means.T).T
         with_K = np.einsum("ijk,ik->ij", K, fraction)
-        new_states = initial_states.states_np + with_K
+        new_states = initial_states.means + with_K
 
-        state_vector_size = initial_states.states_np[0].shape[0]
+        state_vector_size = initial_states.means[0].shape[-1]
 
-        next_covariances = (np.eye(state_vector_size) - K @ H_x) @ initial_states.covariances_np
+        next_covariances = (np.eye(state_vector_size) - K @ H_x) @ initial_states.covs
 
         next_states = [Gaussian(new_states[idx], next_covariances[idx]) for idx in range(initial_states.size)]
 
-        measurements_bar = np.expand_dims(H_x, axis=0) @ initial_states.states_np.T
+        measurements_bar = np.expand_dims(H_x, axis=0) @ initial_states.means.T
 
         # it takes 0.0277 sec
         # TODO: clean up
@@ -86,7 +87,7 @@ class GaussianDensity:
         H_x = measurement_model.H(initial_states)
 
         # Innovation covariance
-        states_dot_H_x = initial_states.covariances_np @ H_x.T
+        states_dot_H_x = initial_states.covs @ H_x.T
         S = H_x @ states_dot_H_x + measurement_model.R
 
         # Make sure matrix S is positive definite

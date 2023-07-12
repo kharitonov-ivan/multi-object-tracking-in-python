@@ -29,7 +29,7 @@ class Bernoulli:
         motion_model: MotionModel,
         survival_probability: float,
         density: GaussianDensity,
-        dt: float = 1.0,
+        dt: float,
     ) -> None:
         """Performs prediciton step for a Bernoulli component"""
 
@@ -37,7 +37,8 @@ class Bernoulli:
         self.existence_probability = survival_probability * self.existence_probability
 
         # Kalman prediction of the new state
-        self.state = density.predict(self.state, motion_model, dt)
+        new_means, new_covs = density.predict(self.state.x, self.state.P, motion_model, dt)
+        self.state = Gaussian(new_means, new_covs)
         return self
 
     def undetected_update_state(self, detection_probability: float):
