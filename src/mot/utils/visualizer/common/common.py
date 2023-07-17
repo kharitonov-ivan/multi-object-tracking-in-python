@@ -9,7 +9,6 @@ logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
 def set_mpl_params():
-
     assert "matplotlib" in globals() or "matplotlib" in locals(), "matplotlib not imported"
 
     mpl_logger = logging.getLogger("matplotlib")
@@ -24,9 +23,7 @@ def set_mpl_params():
     # matplotlib.use("svg")
     matplotlib.rcParams["legend.markerscale"] = 1.5  # the relative size of legend markers vs. original
     matplotlib.rcParams["legend.handletextpad"] = 0.5
-    matplotlib.rcParams[
-        "legend.labelspacing"
-    ] = 0.4  # the vertical space between the legend entries in fraction of fontsize
+    matplotlib.rcParams["legend.labelspacing"] = 0.4  # the vertical space between the legend entries in fraction of fontsize
     matplotlib.rcParams["legend.borderpad"] = 0.5  # border whitespace in fontsize units
     matplotlib.rcParams["font.size"] = 14
     # matplotlib.rcParams["font.family"] = "serif"

@@ -30,7 +30,6 @@ class Profiler(object):
         self.profiler = cProfile.Profile()
 
     def __enter__(self, *args):
-
         if not self.enabled:
             return self
 
@@ -41,7 +40,6 @@ class Profiler(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-
         if not self.enabled:
             return False
 
@@ -56,7 +54,6 @@ class Profiler(object):
         return False
 
     def get_profile_data(self):
-
         value = self.stream.getvalue()
         if self.logger is not None:
             self.logger.info("%s", value)
@@ -65,7 +62,6 @@ class Profiler(object):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     import re
 
     with Profiler(enabled=True, contextstr="test") as p:

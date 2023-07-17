@@ -1,80 +1,31 @@
 import numpy as np
-import scipy
-import scipy.io
 
 from mot.common.gaussian_density import GaussianDensity
-from mot.common.state import Gaussian
 
 
 TOL = 1e-4
 
-
-def test_moment_matching_small():
-    pass
-    # # TODO
-    # """
-    #     w =
-
-    #     1.0000
-    #     0.0000
-
-    #     K>> states.x
-
-    # ans =
-
-    #    24.3498
-    #     5.7689
-    #     5.0000
-    #          0
-    #     0.0175
+import numpy as np
+from mot.common.gaussian_density import GaussianDensity as Gaussian
 
 
-    # ans =
+def test_moment_matching():
+    # Create a list of Gaussian objects
+    gaussian1 = Gaussian(means=np.array([1, 2]), covs=np.array([[1, 0], [0, 1]]))
+    gaussian2 = Gaussian(means=np.array([3, 4]), covs=np.array([[2, 1], [1, 2]]))
+    gaussian3 = Gaussian(means=np.array([5, 6]), covs=np.array([[3, 2], [2, 3]]))
+    gaussian_arr = gaussian1 + gaussian2 + gaussian3
 
-    #     4.7970
-    #    14.7449
-    #   -10.0000
-    #          0
-    #     0.0087
+    # Create a list of weights in logarithmic scale
+    log_weights = [-0.1, -100, -100]
 
-    #     P
-    #     ans =
+    # Call the moment_matching method
+    result = GaussianDensity.moment_matching(log_weights, gaussian_arr)
 
-    #     0.9779   -0.0122         0         0         0
-    #    -0.0122    0.9707         0         0         0
-    #          0         0    1.0000         0         0
-    #          0         0         0    1.0000         0
-    #          0         0         0         0    1.0000
+    # Calculate the expected mean and covariance
+    expected_mean = np.array([1, 2])
+    expected_covariance = np.array([[1, 0], [0, 1]])
 
-
-    # ans =
-
-    #     0.9769   -0.0126         0         0         0
-    #    -0.0126    0.9719         0         0         0
-    #          0         0    1.0000         0         0
-    #          0         0         0    1.0000         0
-    #          0         0         0         0    1.0000
-    # """
-    # raise NotImplementedError
-
-
-def test_moment_matching_big():
-    pass
-    # num_gaussians = 5  # noqa F841
-    # n_dim = 4  # noqa F841
-    # states = []  # noqa F841
-    # raise NotImplementedError
-    # expected_vars = scipy.io.loadmat("tests/data/SA2Ex2Test3.mat")
-
-    # test_w = np.array(expected_vars["w"]).squeeze()
-    # test_states = [
-    #     Gaussian(x=np.array(test_x[0]).squeeze(), P=np.array(test_P)[0])
-    #     for test_x, test_P in zip(expected_vars["states"]["x"], expected_vars["states"]["P"])
-    # ]
-    # got_state = GaussianDensity.moment_matching(test_w, test_states)
-    # expected_state = Gaussian(
-    #     x=expected_vars["state_ref"]["x"][0][0].squeeze(),
-    #     P=expected_vars["state_ref"]["P"][0][0],
-    # )
-    # assert np.linalg.norm(got_state.x).all() > TOL, "check calculation of mean"
-    # assert np.linalg.norm(got_state.P - expected_state.P).all() > TOL, "check calculation of covariance"
+    # Compare the result with the expected output
+    assert np.allclose(result.means, expected_mean, rtol=1e-3)
+    assert np.allclose(result.covs, expected_covariance, rtol=1e-3)

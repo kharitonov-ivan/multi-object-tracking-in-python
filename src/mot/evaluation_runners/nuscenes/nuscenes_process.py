@@ -27,9 +27,7 @@ def create_parser():
         help="nuscenes split set \
             https://github.com/nutonomy/nuscenes-devkit/blob/master/python-sdk/nuscenes/utils/splits.py",
     )
-    arg_group.add_argument(
-        "--detection-file", dest="detection_filepath", help="detections saved in nuscenes submission format"
-    )
+    arg_group.add_argument("--detection-file", dest="detection_filepath", help="detections saved in nuscenes submission format")
     arg_group.add_argument(
         "--nuscenes-version",
         dest="nuscenes_version",

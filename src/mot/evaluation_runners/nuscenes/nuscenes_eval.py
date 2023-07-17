@@ -122,7 +122,6 @@ class NuscenesTrackerEvaluator:
             json.dump(output_data, outfile)
 
     def process_scene(self, scene_token: str) -> Dict:
-
         scene_object = self.nuscenes_helper.get(table_name="scene", token=scene_token)
         logging.debug(f"Process scene with name {scene_object['name']}")
         first_sample_token = scene_object["first_sample_token"]
@@ -134,19 +133,19 @@ class NuscenesTrackerEvaluator:
             [
                 WeightedGaussian(
                     np.log(0.03),
-                    Gaussian(x=np.array([620.0, 1640.0, 0.0, 0.0]), P=100 * np.eye(4)),
+                    Gaussian(means=np.array([620.0, 1640.0, 0.0, 0.0]), covs=100 * np.eye(4)),
                 ),
                 WeightedGaussian(
                     np.log(0.03),
-                    Gaussian(x=np.array([680.0, 1680.0, 0.0, 0.0]), P=100 * np.eye(4)),
+                    Gaussian(means=np.array([680.0, 1680.0, 0.0, 0.0]), covs=100 * np.eye(4)),
                 ),
                 WeightedGaussian(
                     np.log(0.03),
-                    Gaussian(x=np.array([580.0, 1600.0, 0.0, 0.0]), P=100 * np.eye(4)),
+                    Gaussian(means=np.array([580.0, 1600.0, 0.0, 0.0]), covs=100 * np.eye(4)),
                 ),
                 WeightedGaussian(
                     np.log(0.03),
-                    Gaussian(x=np.array([680.0, 1600.0, 0.0, 0.0]), P=100 * np.eye(4)),
+                    Gaussian(means=np.array([680.0, 1600.0, 0.0, 0.0]), covs=100 * np.eye(4)),
                 ),
             ]
         )
@@ -197,8 +196,7 @@ class NuscenesTrackerEvaluator:
             scene_estimations.append(estimation)
 
             annotations = [
-                self.nuscenes_helper.get("sample_annotation", annotation_token)
-                for annotation_token in current_sample_data["anns"]
+                self.nuscenes_helper.get("sample_annotation", annotation_token) for annotation_token in current_sample_data["anns"]
             ]
 
             scene_data = {}
@@ -207,18 +205,15 @@ class NuscenesTrackerEvaluator:
                     id_pool.add_id(annotation["instance_token"])
                     object_id = id_pool.data[annotation["instance_token"]]
                     object_pos_x, object_pos_y = annotation["translation"][:2]
-                    scene_data[object_id] = Gaussian(x=np.array([object_pos_x, object_pos_y, 0.0, 0.0]), P=np.eye(4))
+                    scene_data[object_id] = Gaussian(means=np.array([object_pos_x, object_pos_y, 0.0, 0.0]), covs=np.eye(4))
 
-            evaluator.step(
-                sample_measurements=measurements, sample_estimates=estimation, sample_gt=scene_data, timestep=timestep
-            )
+            evaluator.step(sample_measurements=measurements, sample_estimates=estimation, sample_gt=scene_data, timestep=timestep)
 
             gt.append(annotations)
             if not annotations:
                 logging.info("annotation empty")
 
             def format_nuscenes_sample_results(sample_token: str, tracker_estimations):
-
                 if tracker_estimations:
                     results = []
                     for tracker_estimation_kv in tracker_estimations:
@@ -277,7 +272,7 @@ class NuscenesTrackerEvaluator:
                 print(detection.detection_name, detection.detection_score)
                 measurements.append(object_detection)  # get only x,y position
 
-        observations = measurements #ObservationList(measurements)
+        observations = measurements  # ObservationList(measurements)
         return observations
 
     def get_scenes_from_detections(self):

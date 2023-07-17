@@ -1,18 +1,15 @@
 import logging
+from chardet import detect
 
 import numpy as np
 from scipy.stats import chi2
 from tqdm import tqdm as tqdm
 
-from mot.common import (
-    GaussianDensity,
-    GaussianMixture,
-    HypothesisReduction,
-    GaussianMixture,
-)
+from mot.common.gaussian_density import GaussianDensity
+from mot.common.hypothesis_reduction import HypothesisReduction
 from mot.configs import SensorModelConfig
 from mot.measurement_models import MeasurementModel
-from mot.motion_models import MotionModel
+from mot.motion_models import BaseMotionModel
 
 
 class GMPHD:
@@ -27,8 +24,8 @@ class GMPHD:
         self,
         meas_model: MeasurementModel,
         sensor_model: SensorModelConfig,
-        motion_model: MotionModel,
-        birth_model: GaussianMixture,
+        motion_model: BaseMotionModel,
+        birth_model: GaussianDensity,
         M,
         merging_threshold,
         P_G,
@@ -43,44 +40,39 @@ class GMPHD:
         self.motion_model = motion_model
         self.birth_model = birth_model
         self.P_S = P_S
-        self.gating_size = chi2.ppf(P_G, df=self.meas_model.d)
+        self.gating_size = P_G
         self.w_min = np.log(w_min)
         self.M = M
         self.P_D = P_D
         self.merging_threshold = merging_threshold
-        self.gmm_components = GaussianMixture([])
+        self.gmm_components = GaussianDensity()
 
     @property
     def method(self):
         return "GM-PHD-tracker"
 
-    def PHD_estimator(self):
-        """[summary]
-
-        Returns
-        -------
-        [type]
-            [description]
+    def estimate(self):
         """
-        # Performs obhect state estimation in the GM PHD filetes
-        # Output: estimates object states in matrix from of size
-        # (object state dimention) x (number of objects)
-        # Geat a mean estimate (expected number of objects)
-        # if the cardinality of object sby takings the summation of
-        # the weights of the Gaussian components
-        # (rounded to the nearest integes), denotes as n
+        Performs obhect state estimation in the GM PHD filetes
+        Output: estimates object states in matrix from of size
+        (object state dimention) x (number of objects)
+        Geat a mean estimate (expected number of objects)
+        if the cardinality of object sby takings the summation of
+        the weights of the Gaussian components
+        (rounded to the nearest integes), denotes as n
+        """
         if self.gmm_components:
-            E = np.sum(np.exp(self.gmm_components.log_weights))  # number exptected value
+            E = np.sum(np.exp(self.gmm_components.weights))  # number exptected value
             n = np.min([len(self.gmm_components), int(np.round(E))])
-            top_n_hypotheses = sorted(self.gmm_components, key=lambda x: x.log_weight)[:n]
-            estimates = [comp.gaussian for comp in top_n_hypotheses]
+            top_n_hypotheses = sorted(self.gmm_components, key=lambda x: x.weights)[:n]
+            estimates = [comp for comp in top_n_hypotheses]
             return estimates
-        return [None]
 
-    def estimate(self, measurements, verbose=False):
-        """Tracks multilple
-
+    def step(self, current_measurements: np.ndarray):
+        """
+        Tracks multilple
         For each filter recursion iteration implemented next steps:
+        0) preform prefict for each local hypotheses
         1) for each prior perform prediction
         2) for each hypothesis, perform ellipsoidal gating
            and only create object detection hypotheses for detections
@@ -89,16 +81,11 @@ class GMPHD:
         4) find best assignment using a 2D assignment solver
         5) create new local hypotheses accotding to the best assgnment matrix obtained
         6) get obhect state estimates
-        7) preform prefict for each local hypotheses
         """
 
-        estimations = [[] for x in range(len(measurements))]
-        # TODO убрать костыль
-        for timestep, measurements_in_scene in tqdm(enumerate(measurements), total=len(measurements)):
-            estimations[timestep].extend(self.estimation_step(measurements_in_scene, dt=1.0))
-        return tuple(estimations)
+        # # PPP prediction
+        self.predict_step(dt=1.0)
 
-    def estimation_step(self, current_measurements: np.ndarray, dt: float):
         # PPP update
         self.update(current_measurements)
 
@@ -106,116 +93,65 @@ class GMPHD:
         self.components_reduction()
 
         # # Extract state estimates from the PPP
-        estimates = self.PHD_estimator()
+        estimates = self.estimate()
 
-        # # PPP prediction
-        self.predict_step(dt)
-        logging.debug(f"number of components: {len(self.gmm_components)}")
         return estimates
 
     def predict_step(self, dt):
         # surviving process - predict and store the components that survived
-        for idx in range(len(self.gmm_components)):
-            self.gmm_components[idx].gaussian = GaussianDensity.predict(
-                self.gmm_components[idx].gaussian, self.motion_model, dt
-            )
-            self.gmm_components[idx].log_weight += np.log(self.P_S)
+        if len(self.gmm_components) > 0:
+            self.gmm_components = GaussianDensity.predict(self.gmm_components, self.motion_model, dt)
+            self.gmm_components.weights += np.log(self.P_S)
 
         # birth process - copy birth weight and birth states
-        self.gmm_components.extend(self.birth_model)
+        self.gmm_components = self.gmm_components + self.birth_model if self.gmm_components else self.birth_model
 
-    def update(self, z):
+    def update(self, measurements):
         """Performs PPP update step and PPP approximation"""
         # TODO check shape of measurements
 
-        new_gmm_components = GaussianMixture([])
         # Construct update components resulted from missed detection.
         # It represents objects that are undetected at time k.
-        missdetection_hypotheses = GaussianMixture(
-            [
-                GaussianMixture(
-                    log_weight=comp.log_weight + np.log(1 - self.P_D),
-                    components=comp.gaussian,
-                )
-                for comp in self.gmm_components
-            ]
+
+        missdetection_hypotheses = self.gmm_components
+        if missdetection_hypotheses:
+            missdetection_hypotheses.weights += np.log(1 - self.P_D)
+
+        detection_hypotheses = GaussianDensity()
+        mask, dists = GaussianDensity.ellipsoidal_gating(
+            self.gmm_components,
+            measurements,
+            self.meas_model,
+            self.gating_size,
         )
-        new_gmm_components.extend(missdetection_hypotheses)
 
-        for _meas_idx, measurement in enumerate(z):
-            new_gm_list = GaussianMixture([])
-            for hyp_idx in range(len(self.gmm_components)):
-                component = self.gmm_components[hyp_idx]
-                z_in_gate, is_meas_in_gate = GaussianDensity.ellipsoidal_gating(
-                    component.gaussian,
-                    np.array(measurement, ndmin=2),
-                    gating_size=self.gating_size,
-                    measurement_model=self.meas_model,
-                )
-                if is_meas_in_gate:
-                    new_gm = GaussianDensity.update(
-                        component.gaussian,
-                        np.array(measurement, ndmin=2),
-                        self.meas_model,
-                    )
-                    predicted_likelihood = GaussianDensity.predict_loglikelihood(
-                        component.gaussian,
-                        np.array(measurement, ndmin=2),
-                        self.meas_model,
-                    ).squeeze()
-                    w = np.log(self.P_D) + predicted_likelihood + component.log_weight
-                    new_gm_list.append(GaussianMixture(log_weight=w, components=new_gm))
+        new_means, new_covs, _ = GaussianDensity.update(
+            self.gmm_components,
+            measurements,
+            self.meas_model,
+        )
 
-            W_sum = np.sum(new_gm_list.log_weights)
-            for idx, _ in enumerate(new_gm_list):
-                new_gm_list[idx].log_weight = np.log(
-                    new_gm_list[idx].log_weight / (self.sensor_model.intensity_c + W_sum)
-                )
-            if len(new_gm_list) > 0:
-                new_gmm_components.extend(new_gm_list)
+        predicted_likelihood = GaussianDensity.predict_loglikelihood(self.gmm_components, measurements, self.meas_model)
+        new_weights = np.log(self.P_D) + predicted_likelihood + self.gmm_components.weights[..., None]
+        detection_hypotheses += GaussianDensity(new_means[mask], new_covs[mask], new_weights[mask])
 
-        self.gmm_components = new_gmm_components
+        W_sum = np.sum(detection_hypotheses.weights)
+        detection_hypotheses.weights = np.log(detection_hypotheses.weights / (self.sensor_model.intensity_c + W_sum))
+        self.gmm_components = detection_hypotheses + missdetection_hypotheses
 
     def components_reduction(self):
-        if not self.gmm_components:
-            logging.info('Nothing to reduce - no components in the PPP')
-            return
-        
-        # apptoximates the PPP by represingti its intensity with fewer parameters
-        (
-            pruned_hypotheses_weight,
-            pruned_hypotheses,
-        ) = HypothesisReduction.prune(
-            self.gmm_components.log_weights,
-            self.gmm_components.states,
-            threshold=self.w_min,
-        )
+        if len(self.gmm_components) == 0:
+            return  # nothing to reduce
 
-        self.gmm_components = GaussianMixture(
-            [GaussianMixture(w, gm) for (w, gm) in zip(pruned_hypotheses_weight, pruned_hypotheses)]
-        )
+        # Delete components with weight less than w_min
+        self.gmm_components = HypothesisReduction.prune(self.gmm_components, threshold=self.w_min)
 
         # Hypotheses merging
-        if len(self.gmm_components.log_weights) > 1:
-            (
-                merged_hypotheses_weights,
-                merged_hypotheses,
-            ) = HypothesisReduction.merge(
-                self.gmm_components.log_weights,
-                self.gmm_components.states,
-                threshold=self.merging_threshold,
-            )
-
-            self.gmm_components = GaussianMixture(
-                [GaussianMixture(w, gm) for (w, gm) in zip(merged_hypotheses_weights, merged_hypotheses)]
-            )
+        # if len(self.gmm_components) > 1:
+        #     self.gmm = HypothesisReduction.merge(
+        #         self.gmm
+        #         threshold=self.merging_threshold,
+        #     )
 
         # Cap the number of the hypotheses and then re-normalise the weights
-        (
-            capped_hypotheses_weights,
-            capped_hypotheses,
-        ) = HypothesisReduction.cap(self.gmm_components.log_weights, self.gmm_components.states, top_k=self.M)
-
-        self.gmm_components = GaussianMixture(
-            [GaussianMixture(w, gm) for (w, gm) in zip(capped_hypotheses_weights, capped_hypotheses)]
-        )
+        self.gmm_components = HypothesisReduction.cap(self.gmm_components, top_k=self.M)

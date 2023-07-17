@@ -14,7 +14,9 @@ def test_ellipsoidal_gating_known_values():
     confidence_level = 0.99
 
     # Perform gating
-    meas_mask, mah_dists = GaussianDensity.ellipsoidal_gating(means, covs, measurements, measurement_model, confidence_level)
+    meas_mask, mah_dists = GaussianDensity.ellipsoidal_gating(
+        GaussianDensity(means, covs), measurements, measurement_model, confidence_level
+    )
 
     # Given the known inputs, check that the outputs have the expected values
     assert meas_mask.all() == True, "At least one measurement should be inside the gate"
@@ -30,7 +32,9 @@ def test_ellipsoidal_gating_known_values_outside_gate():
     confidence_level = 0.99
 
     # Perform gating
-    meas_mask, mah_dists = GaussianDensity.ellipsoidal_gating(means, covs, measurements, measurement_model, confidence_level)
+    meas_mask, mah_dists = GaussianDensity.ellipsoidal_gating(
+        GaussianDensity(means, covs), measurements, measurement_model, confidence_level
+    )
 
     # Given the known inputs, check that the outputs have the expected values
     assert meas_mask.all() == False, "No measurement should be inside the gate"

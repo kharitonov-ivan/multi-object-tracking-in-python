@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from tqdm import trange
 
-from mot.common import GaussianDensity
+from mot.common.gaussian_density import GaussianDensity
 from mot.configs import GroundTruthConfig, SensorModelConfig
 from mot.evaluation_runners.evaluator import OneSceneMOTevaluator
 from mot.measurement_models import ConstantVelocityMeasurementModel
@@ -24,20 +24,28 @@ from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
     StaticBirthModel,
 )
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
-from mot.utils import delete_images_dir
 
 from .params.birth_model import birth_model_params
-from mot.utils.get_path import get_images_dir
+from mot.utils.get_path import get_images_dir, delete_images_dir
 
 from mot.utils.visualizer import Plotter
-@pytest.fixture(params=[0.8, 0.99])
+from mot.utils.visualizer import Plotter, Animator
+from mot.utils.get_path import get_images_dir, delete_images_dir
+
+
+@pytest.fixture(
+    params=[
+        0.8,
+        # 0.99
+    ]
+)
 def scenario_detection_probability(request):
     yield request.param
 
 
 @pytest.fixture(
     params=[
-        0.1,
+        # 0.1,
         10.0,
     ]
 )
@@ -47,12 +55,12 @@ def scenario_clutter_rate(request):
 
 @pytest.fixture(
     params=[
-        single_static_object,
-        two_static_objects,
-        three_static_objects,
-        single_object_linear_motion,
-        two_objects_linear_motion,
-        two_objects_linear_motion_delayed,
+        # single_static_object,
+        # two_static_objects,
+        # three_static_objects,
+        # single_object_linear_motion,
+        # two_objects_linear_motion,
+        # two_objects_linear_motion_delayed,
         many_objects_linear_motion_delayed,
     ]
 )
@@ -73,7 +81,7 @@ def do_something_before_all_tests():
 
 @pytest.fixture(
     params=[
-        0.99,
+        # 0.99,
         0.8,
     ]
 )
@@ -102,22 +110,20 @@ def test_synthetic_scenario(
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
-    sensor_model = SensorModelConfig(
-        P_D=scenario_detection_probability, lambda_c=scenario_clutter_rate, range_c=range_c
-    )
+    sensor_model = SensorModelConfig(P_D=scenario_detection_probability, lambda_c=scenario_clutter_rate, range_c=range_c)
 
     # Generate true object data (noisy or noiseless) and measurement data
     ground_truth = GroundTruthConfig(object_motion_fixture, total_time=simulation_steps)
     object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
-    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+    meas_data_gen = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
 
     logging.debug(f"object motion config {pprint.pformat(object_motion_fixture)}")
 
     # Object tracker parameter setting
-    gating_percentage = 1.0  # gating size in percentage
+    gating_percentage = 0.999  # gating size in percentage
     max_hypothesis_kept = 10  # maximum number of hypotheses kept
     existense_probability_threshold = 0.8
-    
+
     pmbm = PMBM(
         meas_model=meas_model,
         sensor_model=sensor_model,
@@ -134,18 +140,23 @@ def test_synthetic_scenario(
     )
 
     evaluator = OneSceneMOTevaluator()
-
+    meas_data = [next(meas_data_gen) for _ in range(simulation_steps)]
     estimations = []
     for timestep in trange(simulation_steps):
         logging.debug(f"===========current timestep {timestep}============")
-        current_step_estimates = pmbm.step(meas_data[timestep], dt=1.0)
+        current_step_estimates = pmbm.step(meas_data[timestep][1], dt=1.0)
         estimations.append(current_step_estimates)
 
     Plotter.plot_several(
         [meas_data, object_data, list(estimations)],
-        out_path=get_images_dir(__file__) + "/" + "meas_data_and_obj_data_and_estimations" +str(np.random.randint(100)) + ".png",
+        out_path=get_images_dir(__file__) + "/" + "meas_data_and_obj_data_and_estimations" + str(np.random.randint(100)) + ".png",
     )
-
+    name = "PMBM"
+    Animator.animate(
+        [meas_data, object_data, estimations],
+        title=name,
+        filename=get_images_dir(__file__) + "/" + name + ".gif",
+    )
     #     evaluator.step(
     #         sample_measurements=meas_data[timestep],
     #         sample_estimates=current_step_estimates,

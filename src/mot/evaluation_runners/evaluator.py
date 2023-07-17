@@ -5,7 +5,7 @@ import motmetrics
 import numpy as np
 
 from mot.metrics import GOSPA
-from mot.utils import get_images_dir
+from mot.utils.get_path import get_images_dir
 from mot.utils.visualizer.common.plot_series import OBJECT_COLORS as object_colors
 
 
@@ -93,9 +93,7 @@ class OneSceneMOTevaluator:
         axs[1, 0].set_ylabel("y position")
         for sample_measurements in self.measurements:
             if len(sample_measurements) > 0:
-                axs[1, 0].scatter(
-                    sample_measurements[:, 0], sample_measurements[:, 1], color="r", marker="x"
-                )
+                axs[1, 0].scatter(sample_measurements[:, 0], sample_measurements[:, 1], color="r", marker="x")
 
         # axs[1, 0] = Plotter.plot_several(
         # [self.measurements],

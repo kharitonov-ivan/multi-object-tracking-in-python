@@ -2,20 +2,20 @@ from copy import deepcopy
 
 import numpy as np
 
-from mot.common import Gaussian, GaussianMixture, WeightedGaussian
+from mot.common.gaussian_density import GaussianDensity
 
 
 class BirthModel:
-    def get_born_objects_intensity(self, params) -> GaussianMixture:
+    def get_born_objects_intensity(self, params) -> GaussianDensity:
         raise NotImplementedError
 
 
 class StaticBirthModel(BirthModel):
-    def __init__(self, birth_model_density: GaussianMixture):
+    def __init__(self, birth_model_density: GaussianDensity):
         super(StaticBirthModel, self).__init__()
         self.birth_model_density = birth_model_density
 
-    def get_born_objects_intensity(self, measurements= None, ego_pose=None) -> GaussianMixture:
+    def get_born_objects_intensity(self, measurements=None, ego_pose=None) -> GaussianDensity:
         return self.birth_model_density
 
 
@@ -29,7 +29,7 @@ class MeasurementDrivenBirthModel(BirthModel):
     def __init__(self):
         super(MeasurementDrivenBirthModel, self).__init__()
 
-    def get_born_objects_intensity(self, params) -> GaussianMixture:
+    def get_born_objects_intensity(self, params) -> GaussianDensity:
         measurements = params["measurements"]
         num_of_born_components_per_measurement = 10
 
@@ -42,6 +42,6 @@ class MeasurementDrivenBirthModel(BirthModel):
 
             for d_x, d_y in zip(delta_x, delta_y):
                 state = np.array([measurement.measurement[0] + d_x, measurement.measurement[1] + d_y, 0.0, 0.0])
-                sample_gaussian = Gaussian(x=state, P=100 * np.eye(4))
-                generated_intensity.append(WeightedGaussian(log_weight=np.log(0.03), gaussian=sample_gaussian))
-        return GaussianMixture(generated_intensity)
+                sample_gaussian = GaussianDensity(means=state, covs=100 * np.eye(4))
+                generated_intensity.append(GaussianDensity(log_weight=np.log(0.03), GaussianDensity=sample_gaussian))
+        return GaussianDensity(generated_intensity)

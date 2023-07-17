@@ -146,6 +146,7 @@ data/*
 
 # profilers metadata
 *.profile
+*.prof
 
 # results
 *.csv

@@ -1,8 +1,9 @@
 from typing import Tuple
 
+import nptyping as npt
 import numpy as np
 
-from mot.common import Gaussian, GaussianDensity
+from mot.common.gaussian_density import GaussianDensity
 from mot.measurement_models import MeasurementModel
 
 from .bernoulli import Bernoulli
@@ -26,13 +27,8 @@ class SingleTargetHypothesis:
         self.missdetection_hypothesis = None
         self.detection_hypotheses = {}
 
-    def __repr__(self) -> str:
-        return self.__class__.__name__ + (
-            f"(log_likelihood={self.log_likelihood:.2f}, "
-            f"bernoulli={self.bernoulli}, "
-            f"cost={self.cost:.2f}, "
-            f"sth_id={self.sth_id}"
-        )
+    # def __repr__(self) -> str:
+    # return self.__class__.__name__ + (f"(log_likelihood={self.log_likelihood:.2f}, " f"bernoulli={self.bernoulli}, " f"cost={self.cost:.2f}, " f"sth_id={self.sth_id}")
 
     def create_missdetection_hypothesis(self, detection_probability: float, sth_id):
         missdetection_bernoulli = self.bernoulli.undetected_update_state(detection_probability)
@@ -59,9 +55,8 @@ class SingleTargetHypothesis:
             measurement, meas_model, detection_probability, density
         )
 
-        missdetection_log_likelihood = (
-            self.missdetection_hypothesis.log_likelihood
-            or self.bernoulli.undetected_update_loglikelihood(detection_probability)
+        missdetection_log_likelihood = self.missdetection_hypothesis.log_likelihood or self.bernoulli.undetected_update_loglikelihood(
+            detection_probability
         )
 
         detection_hypothesis = SingleTargetHypothesis(
@@ -74,36 +69,28 @@ class SingleTargetHypothesis:
 
     def create_detection_hypotheses(
         self,
-        measurements: np.ndarray,
+        measurements: npt.NDArray[npt.Shape["N_measurements, Dim_measurement"], npt.Float],
         detection_probability: float,
-        meas_model: MeasurementModel,
+        model_measurement: MeasurementModel,
         density: GaussianDensity,
         sth_ids: Tuple[int],
     ):
-
-        (next_states, next_covariances,) = GaussianDensity.update_state_by_multiple_measurement(
+        next_states, next_covariances, _ = density.update(
             initial_state=self.bernoulli.state,
             measurements=measurements,
-            measurement_model=meas_model,
+            model_measurement=model_measurement,
         )
 
-        missdetection_log_likelihood = (
-            self.missdetection_hypothesis.log_likelihood
-            or self.bernoulli.undetected_update_loglikelihood(detection_probability)
+        missdetection_log_likelihood = self.missdetection_hypothesis.log_likelihood or self.bernoulli.undetected_update_loglikelihood(
+            detection_probability
         )
+        state = GaussianDensity(next_states[0], next_covariances[0])  # from one state to many measurements
+        loglikelihoods = density.predict_loglikelihood(state, measurements, model_measurement) + np.log(detection_probability) + np.log(1.0)
 
-        loglikelihoods = (
-            GaussianDensity.update_likelihoods_vectorized(
-                next_states, next_covariances, measurements, meas_model
-            )
-            + np.log(detection_probability)
-            + np.log(1.0)
-        )
-
-        detection_hypotheses = {
+        return {
             idx: SingleTargetHypothesis(
                 bernoulli=Bernoulli(
-                    state=Gaussian(x=next_states[idx], P=next_covariances),
+                    state=Gaussian(next_states[0], next_covariances[0]),  # TODO проверить
                     existence_probability=1.0,
                 ),
                 log_likelihood=loglikelihoods[idx],
@@ -112,5 +99,3 @@ class SingleTargetHypothesis:
             )
             for idx in range(len(measurements))
         }
-
-        return detection_hypotheses

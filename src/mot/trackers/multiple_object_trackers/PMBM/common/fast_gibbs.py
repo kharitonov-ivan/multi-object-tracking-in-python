@@ -2,12 +2,14 @@ from typing import List, Tuple
 import numba as nb
 import numpy as np
 
+
 @nb.jit(nopython=True, cache=True)
 def compute_initial_cost(n_objects: int, cost_matrix: np.ndarray, current_solution: np.ndarray) -> float:
     cost = 0
     for i in nb.prange(n_objects):
         cost += cost_matrix[i, current_solution[i]]
     return cost
+
 
 @nb.jit(nopython=True, cache=True, parallel=True)
 def gibbs_inner_loop(n_objects: int, cost_matrix: np.ndarray, current_solution: np.ndarray) -> np.ndarray:
@@ -23,16 +25,16 @@ def gibbs_inner_loop(n_objects: int, cost_matrix: np.ndarray, current_solution: 
 
 
 @nb.njit()
-def compute_assignments_and_costs(n_iterations: int, n_objects: int, cost_matrix: np.ndarray, 
-                                  current_solution: np.ndarray, assignments: np.ndarray, 
-                                  costs: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-
+def compute_assignments_and_costs(
+    n_iterations: int, n_objects: int, cost_matrix: np.ndarray, current_solution: np.ndarray, assignments: np.ndarray, costs: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
     for iteration_idx in range(1, n_iterations):
         current_solution = gibbs_inner_loop(n_objects, cost_matrix, current_solution)
         assignments[iteration_idx] = current_solution
         costs[iteration_idx] = compute_initial_cost(n_objects, cost_matrix, current_solution)
-        
+
     return assignments, costs
+
 
 def assign_2d_by_gibbs(cost_matrix: np.ndarray, n_iterations: int, k: int) -> Tuple[np.ndarray, np.ndarray]:
     n_objects = cost_matrix.shape[0]  # Number of objects
@@ -43,8 +45,8 @@ def assign_2d_by_gibbs(cost_matrix: np.ndarray, n_iterations: int, k: int) -> Tu
 
     current_solution = np.arange(n_measurements, n_measurements + n_objects)  # Use all missed detections as initial solution
     assignments[0] = current_solution  # Set initial assignments
-    costs[0] = compute_initial_cost(n_objects, cost_matrix, current_solution) # Compute initial cost
-    
+    costs[0] = compute_initial_cost(n_objects, cost_matrix, current_solution)  # Compute initial cost
+
     compute_assignments_and_costs(n_iterations, n_objects, cost_matrix, current_solution, assignments, costs)
     unique_indices = np.unique(assignments, axis=0, return_index=True)[1]  # Find unique assignments
     unique_assignments = assignments[unique_indices]  # Get the unique assignments

@@ -2,15 +2,12 @@ import numpy as np
 from scipy.stats import chi2
 from tqdm import tqdm as tqdm
 
-from ...common import (
-    Gaussian,
-    GaussianDensity,
-    HypothesisReduction,
-    normalize_log_weights,
-)
+from mot.common.gaussian_density import GaussianDensity
+from mot.common.normalize_log_weights import normalize_log_weights
+from mot.common.hypothesis_reduction import HypothesisReduction
 from ...configs import SensorModelConfig
 from ...measurement_models import MeasurementModel
-from ...motion_models import MotionModel
+from ...motion_models import BaseMotionModel
 from .base_single_object_tracker import SingleObjectTracker
 
 
@@ -19,7 +16,7 @@ class GaussSumTracker(SingleObjectTracker):
         self,
         meas_model: MeasurementModel,
         sensor_model: SensorModelConfig,
-        motion_model: MotionModel,
+        motion_model: BaseMotionModel,
         M,
         merging_threshold,
         P_G,
@@ -40,7 +37,7 @@ class GaussSumTracker(SingleObjectTracker):
 
         super(GaussSumTracker).__init__()
 
-    def estimate(self, initial_state: Gaussian, measurements, verbose=False):
+    def step(self, initial_state: GaussianDensity, measurements, verbose=False):
         """Tracks a single object using Gauss sum filtering
 
         For each filter recursion iteration implemented next steps:
@@ -70,14 +67,12 @@ class GaussSumTracker(SingleObjectTracker):
             prev_state = GaussianDensity.predict(state=estimations[timestep], motion_model=self.motion_model)
         return tuple(estimations)
 
-    def estimation_step(self, predicted_state: Gaussian, current_measurements: np.ndarray):
+    def estimation_step(self, predicted_state: GaussianDensity, current_measurements: np.ndarray):
         new_hypotheses, new_weights = [], []
         w_theta_factor = np.log(self.sensor_model.P_D / self.sensor_model.intensity_c)
         w_theta_0 = np.log(1 - self.sensor_model.P_D)  # misdetection
 
-        for _old_idx, (curr_weight, curr_hypothesis) in enumerate(
-            zip(self.hypotheses_weight, self.multi_hypotheses_bank)
-        ):
+        for _old_idx, (curr_weight, curr_hypothesis) in enumerate(zip(self.hypotheses_weight, self.multi_hypotheses_bank)):
             # 1) for each hypothesis, create missed detection hypothesis
             new_hypotheses.append(curr_hypothesis)
             new_weights.append(w_theta_0 + curr_weight)
@@ -134,9 +129,7 @@ class GaussSumTracker(SingleObjectTracker):
             estimation = predicted_state
 
         # 8. For each hypotheses do prediction
-        self.updated_states = [
-            GaussianDensity.predict(hypothesis, self.motion_model) for hypothesis in self.multi_hypotheses_bank
-        ]
+        self.updated_states = [GaussianDensity.predict(hypothesis, self.motion_model) for hypothesis in self.multi_hypotheses_bank]
         self.multi_hypotheses_bank = self.updated_states
         return estimation
 

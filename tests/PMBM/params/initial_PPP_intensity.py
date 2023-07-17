@@ -10,11 +10,11 @@ def initial_PPP_intensity_linear():
         [
             WeightedGaussian(
                 np.log(0.03),
-                Gaussian(x=np.array([-400.0, 200.0, 0.0, 0.0]), P=400 * np.eye(4)),
+                Gaussian(means=np.array([-400.0, 200.0, 0.0, 0.0]), covs=400 * np.eye(4)),
             ),
             WeightedGaussian(
                 np.log(0.03),
-                Gaussian(x=np.array([-400.0, -200.0, 0.0, 0.0]), P=400 * np.eye(4)),
+                Gaussian(means=np.array([-400.0, -200.0, 0.0, 0.0]), covs=400 * np.eye(4)),
             ),
         ]
     )
@@ -26,15 +26,15 @@ def initial_PPP_intensity_nonlinear():
         [
             WeightedGaussian(
                 -0.3861,
-                Gaussian(x=np.array([0.0, 0.0, 5.0, 0.0, np.pi / 180]), P=np.eye(5)),
+                Gaussian(means=np.array([0.0, 0.0, 5.0, 0.0, np.pi / 180]), covs=np.eye(5)),
             ),
             WeightedGaussian(
                 -0.423,
-                Gaussian(x=np.array([20.0, 20.0, -20.0, 0.0, np.pi / 90]), P=np.eye(5)),
+                Gaussian(means=np.array([20.0, 20.0, -20.0, 0.0, np.pi / 90]), covs=np.eye(5)),
             ),
             WeightedGaussian(
                 -1.8164,
-                Gaussian(x=np.array([-20.0, 10.0, -10.0, 0.0, np.pi / 360]), P=np.eye(5)),
+                Gaussian(means=np.array([-20.0, 10.0, -10.0, 0.0, np.pi / 360]), covs=np.eye(5)),
             ),
         ]
     )

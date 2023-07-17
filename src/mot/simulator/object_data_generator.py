@@ -1,5 +1,5 @@
-from ..configs.ground_truth_config import GroundTruthConfig
-from ..motion_models import MotionModel
+from mot.configs.ground_truth_config import GroundTruthConfig
+from mot.motion_models import BaseMotionModel
 
 
 class ObjectData:
@@ -8,14 +8,14 @@ class ObjectData:
     def __init__(
         self,
         ground_truth_config: GroundTruthConfig,
-        motion_model: MotionModel,
+        motion_model: BaseMotionModel,
         if_noisy: bool,
     ):
         """Init generator
 
         Args:
             ground_truth (GroundTruth): specifies the parameters used to generate groundtruth
-            motion_model (MotionModel): a structure specifies the motion model parameters
+            motion_model (BaseMotionModel): a structure specifies the motion model parameters
             if_noisy (bool): boolean value indicating whether to generate noisy object state
                              sequence or not
 

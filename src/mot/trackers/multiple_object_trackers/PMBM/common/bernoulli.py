@@ -1,8 +1,9 @@
 import numpy as np
 
-from mot.common import Gaussian, GaussianDensity, ObjectMetadata
+from mot.common.gaussian_density import GaussianDensity
+from mot.common.state import ObjectMetadata
 from mot.measurement_models import MeasurementModel
-from mot.motion_models import MotionModel
+from mot.motion_models import BaseMotionModel
 
 
 class Bernoulli:
@@ -10,14 +11,14 @@ class Bernoulli:
 
     Parameters
     ----------
-    state : Gaussian
+    state : GaussianDensity
         a struct contains parameters describing the object pdf
     r : scalar
         probability of existence
     """
 
-    def __init__(self, state: Gaussian, existence_probability: float, metadata: ObjectMetadata = None):
-        self.state: Gaussian = state
+    def __init__(self, state: GaussianDensity, existence_probability: float, metadata: ObjectMetadata = None):
+        self.state: GaussianDensity = state
         self.existence_probability: float = existence_probability
         self.metadata = metadata
 
@@ -26,7 +27,7 @@ class Bernoulli:
 
     def predict(
         self,
-        motion_model: MotionModel,
+        motion_model: BaseMotionModel,
         survival_probability: float,
         density: GaussianDensity,
         dt: float,
@@ -37,9 +38,7 @@ class Bernoulli:
         self.existence_probability = survival_probability * self.existence_probability
 
         # Kalman prediction of the new state
-        new_means, new_covs = density.predict(self.state.x, self.state.P, motion_model, dt)
-        self.state = Gaussian(new_means, new_covs)
-        return self
+        self.state = density.predict(self.state, motion_model, dt)
 
     def undetected_update_state(self, detection_probability: float):
         """Calculates the likelihood of missed detection,
@@ -69,11 +68,8 @@ class Bernoulli:
         """Calculates the predicted likelihood for a given local hypothesis.
         NOTE page 86 lecture 04
         """
-
-        assert isinstance(meas_model, MeasurementModel)
-
         log_likelihood_detected = (
-            density.predict_loglikelihood(self.state, measurement, meas_model)
+            density.predict_loglikelihood(self.state, measurement, meas_model)[0]
             + np.log(detection_probability)
             + np.log(self.existence_probability)
         )
@@ -87,10 +83,7 @@ class Bernoulli:
     ):
         """Creates the new local hypothesis due to measurement update.
         NOTE: page 85 lecture 04
-
         """
-        assert isinstance(meas_model, MeasurementModel)
 
-        updated_density = density.update(self.state, measurement, meas_model)
-        update_bern = Bernoulli(state=updated_density, existence_probability=1.0)
-        return update_bern
+        new_means, new_covs, _ = density.update(self.state, measurement, meas_model)
+        return Bernoulli(state=GaussianDensity(new_means[0], new_covs[0]), existence_probability=1.0)

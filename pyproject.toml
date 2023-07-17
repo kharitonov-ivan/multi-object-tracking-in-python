@@ -70,6 +70,7 @@ source = ["mot"]
 show_missing = true
 
 [tool.pytest.ini_options]
+pytest_plugins = ['pytest_profiling']
 log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(message)s "
@@ -79,7 +80,7 @@ log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 [tool.black] 
 # https://black.readthedocs.io/en/stable/pyproject_toml.html#configuration-format
 # https://black.readthedocs.io/en/stable/compatible_configs.html
-line-length = 120
+line-length = 140
 multi_line_output = 3
 include_trailing_comma = true
 use_parentheses = false

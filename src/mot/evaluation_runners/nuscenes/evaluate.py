@@ -93,9 +93,7 @@ class TrackingEval:
         # Load data.
         if verbose:
             print("Initializing nuScenes tracking evaluation")
-        pred_boxes, self.meta = load_prediction(
-            self.result_path, self.cfg.max_boxes_per_sample, TrackingBox, verbose=verbose
-        )
+        pred_boxes, self.meta = load_prediction(self.result_path, self.cfg.max_boxes_per_sample, TrackingBox, verbose=verbose)
         gt_boxes = load_gt(nusc, self.eval_set, TrackingBox, verbose=verbose)
         # assert set(pred_boxes.sample_tokens) == set(
         #     gt_boxes.sample_tokens
@@ -245,7 +243,6 @@ class TrackingEval:
 
 
 if __name__ == "__main__":
-
     # Settings.
     parser = argparse.ArgumentParser(
         description="Evaluate nuScenes tracking results.", formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -257,12 +254,8 @@ if __name__ == "__main__":
         default="nuscenes-metrics",
         help="Folder to store result metrics, graphs and example visualizations.",
     )
-    parser.add_argument(
-        "--eval_set", type=str, default="val", help="Which dataset split to evaluate on, train, val or test."
-    )
-    parser.add_argument(
-        "--dataroot", type=str, default="data/nuscenes/dataset", help="Default nuScenes data directory."
-    )
+    parser.add_argument("--eval_set", type=str, default="val", help="Which dataset split to evaluate on, train, val or test.")
+    parser.add_argument("--dataroot", type=str, default="data/nuscenes/dataset", help="Default nuScenes data directory.")
     parser.add_argument(
         "--version",
         type=str,

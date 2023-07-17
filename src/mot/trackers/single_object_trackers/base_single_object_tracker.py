@@ -1,5 +1,5 @@
 class SingleObjectTracker:
-    def estimate(self):
+    def step(self):
         raise NotImplementedError
 
     def __repr__(self):

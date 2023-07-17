@@ -22,3 +22,6 @@ class GlobalHypothesis:
     def __post_init__(self) -> None:
         if not self.associations:
             raise ValueError("Global hypothesis can not be without any association!")
+
+    def __lt__(self, other):
+        return self.log_weight > other.log_weight

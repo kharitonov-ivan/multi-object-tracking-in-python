@@ -1,6 +1,6 @@
 import itertools
 
-from mot.common.state import Gaussian
+from mot.common.gaussian_density import GaussianDensity as Gaussian
 
 
 class Object:
@@ -41,8 +41,5 @@ class Object:
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
-            f"(id={self.id}, "
-            f"initial_state={self.initial_state}, "
-            f"t_birth={self.t_birth}, "
-            f"t_death={self.t_death}, "
+            f"(id={self.id}, " f"initial_state={self.initial_state}, " f"t_birth={self.t_birth}, " f"t_death={self.t_death}, "
         )

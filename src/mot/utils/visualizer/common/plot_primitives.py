@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from matplotlib.patches import Ellipse, FancyArrow
 
-from mot.common.state import Gaussian
+from mot.common.gaussian_density import GaussianDensity as Gaussian
 
 
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
@@ -52,27 +52,24 @@ class BasicPlotter:
         center_marker="*",
         label=None,
     ):
-
         assert isinstance(state, Gaussian)
-        pos_x, pos_y = state.x[0], state.x[1]
+        pos_x, pos_y = state.means[0, 0], state.means[0, 1]
 
         # draw position
         point = BasicPlotter.plot_point(ax, x=pos_x, y=pos_y, color=color, marker=center_marker, label=label)
 
         # plot velocity vector
-        if state.x.size > 2:
+        if state.means.size > 2:
             arrow = FancyArrow(
                 x=pos_x,
                 y=pos_y,
-                dx=state.x[2],
-                dy=state.x[3],
+                dx=state.means[0, 2],
+                dy=state.means[0, 3],
                 length_includes_head=True,
                 head_length=2.0,
                 head_width=1.0,
             )
 
         # plot covariance ellipse
-        cov_ell = BasicPlotter.plot_covariance_ellipse(
-            ax=ax, mean=np.array([pos_x, pos_y]), covariance=state.P, color=color
-        )
+        cov_ell = BasicPlotter.plot_covariance_ellipse(ax=ax, mean=np.array([pos_x, pos_y]), covariance=state.covs[0], color=color)
         return point, arrow, cov_ell

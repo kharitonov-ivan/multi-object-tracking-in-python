@@ -61,18 +61,18 @@ def test_linear_model_without_noise(config, motion_model, output_image_name, mea
     sensor_model = SensorModelConfig(**config)
 
     meas_model = meas_model(**config)
-    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
-
+    meas_data_gen = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+    meas_data = next(meas_data_gen)
     Plotter.plot([meas_data[0]], title=output_image_name, out_path="meas_" + output_image_name)
 
     Plotter.plot(
-        [meas_data[0], object_data],
+        [meas_data, object_data],
         title=output_image_name,
         out_path="meas_" + output_image_name,
     )
 
     Animator.animate(
-        [meas_data, object_data],
+        [meas_data_gen, object_data],
         title=output_image_name,
         filename=output_image_name + ".gif",
     )

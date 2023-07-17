@@ -79,8 +79,8 @@ class Plotter:
             is_autoscale=is_autoscale,
             **kwargs,
         ) as p:
-            for series in data:
-                plot_series(series, p.ax)
+            plot_series(data[0], p.ax)
+            plot_series(data[2], p.ax)
         return p.ax
 
     @staticmethod
@@ -93,7 +93,6 @@ class Plotter:
         *args,
         **kwargs,
     ):
-
         with Plot(ax=ax, title=title, out_path=out_path, show=show, autoscale_margin=0.1, **kwargs) as p:
             plot_series(data, p.ax)
         return p.ax

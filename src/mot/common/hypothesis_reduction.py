@@ -1,13 +1,14 @@
+from __future__ import annotations
 from typing import List
 
 import numpy as np
 
-from .gaussian_density import GaussianDensity
+from mot.common.gaussian_density import GaussianDensity
 
 
 class HypothesisReduction:
     @staticmethod
-    def prune(hypotheses_weights: List[float], multi_hypotheses: List, threshold: float):
+    def prune(weighted_gaussian: GaussianDensity, threshold: float):
         """Prunes hypotheses with small weights
 
         Parameters
@@ -26,16 +27,11 @@ class HypothesisReduction:
         new_multi_hypotheses : List
             hypotheses after pruning
         """
-        if not hypotheses_weights and not multi_hypotheses:
-            return hypotheses_weights, multi_hypotheses # nothing to prune
-        
-        selection_indices = np.array(hypotheses_weights) > threshold
-        new_hypotheses_weights = np.array(hypotheses_weights)[selection_indices]
-        new_multi_hypotheses = np.array(multi_hypotheses)[selection_indices]
-        return new_hypotheses_weights.tolist(), new_multi_hypotheses.tolist()
+        mask = weighted_gaussian.weights > threshold
+        return GaussianDensity(weighted_gaussian.means[mask], weighted_gaussian.covs[mask], weighted_gaussian.weights[mask])
 
     @staticmethod
-    def cap(hypotheses_weights: List[float], multi_hypotheses: List, top_k: int):
+    def cap(weighted_gaussian: GaussianDensity, top_k: int):
         """keeps top_k hypotheses with the highest weights and discard the rest
 
         Parameters
@@ -55,10 +51,12 @@ class HypothesisReduction:
             hypotheses after capping
         """
         assert top_k >= 0, "only keep must be equal of larger than 0"
-        selection_indices = np.argsort(hypotheses_weights)[:top_k]
-        new_hypotheses_weights = np.array(hypotheses_weights)[selection_indices]
-        new_multi_hypotheses = np.array(multi_hypotheses)[selection_indices]
-        return new_hypotheses_weights.tolist(), new_multi_hypotheses.tolist()
+        selection_indices = np.argsort(weighted_gaussian.weights)[:top_k]
+        return GaussianDensity(
+            weighted_gaussian.means[selection_indices],
+            weighted_gaussian.covs[selection_indices],
+            weighted_gaussian.weights[selection_indices],
+        )
 
     @staticmethod
     def merge(hypotheses_weights: List[float], multi_hypotheses: List, threshold: float):

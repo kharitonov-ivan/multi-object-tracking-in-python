@@ -21,7 +21,6 @@ class Track:
     def __init__(self, initial_sth=None):
         self.track_id = Track.get_id(Track)
         self.sth_id_counter = 0
-
         self.single_target_hypotheses = {self.get_new_sth_id(): initial_sth}
 
     def get_new_sth_id(self):
@@ -33,14 +32,8 @@ class Track:
         self.single_target_hypotheses[self.get_new_sth_id()] = sth
 
     def __repr__(self) -> str:
-        sth_rep = (
-            f"STH: \n {pprint.pformat(self.single_target_hypotheses)}" if len(self.single_target_hypotheses) < 3 else ""
-        )
-        return (
-            self.__class__.__name__
-            + (f" id = {self.track_id}" f" number of sth = {len(self.single_target_hypotheses)} ")
-            + sth_rep
-        )
+        sth_rep = f"STH: \n {pprint.pformat(self.single_target_hypotheses)}" if len(self.single_target_hypotheses) < 3 else ""
+        return self.__class__.__name__ + (f" id = {self.track_id}" f" number of sth = {len(self.single_target_hypotheses)} ") + sth_rep
 
     @classmethod
     def from_sth(cls, single_target_hypo):

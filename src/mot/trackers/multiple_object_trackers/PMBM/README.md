@@ -54,7 +54,7 @@ Files referenced:
       measmodel.m
       GaussianDensity.m
       hypothesisReduction.m
-      motionmodel.m
+      BaseMotionModel.m
       normalizeLogWeights.m
       log_mvnpdf.m
 Note that obj.density is a function handle bound to MATLAB class GaussianDensity. For instance, you can simply call obj.density.update to perform a Kalman update instead of using your own code.
