@@ -3,8 +3,9 @@ from scipy.stats import chi2
 from tqdm import tqdm as tqdm
 
 from mot.common.gaussian_density import GaussianDensity
-from mot.common.normalize_log_weights import normalize_log_weights
 from mot.common.hypothesis_reduction import HypothesisReduction
+from mot.common.normalize_log_weights import normalize_log_weights
+
 from ...configs import SensorModelConfig
 from ...measurement_models import MeasurementModel
 from ...motion_models import BaseMotionModel

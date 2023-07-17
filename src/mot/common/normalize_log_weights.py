@@ -1,5 +1,5 @@
-import numpy as np
 import nptyping as npt
+import numpy as np
 
 
 def normalize_log_weights(

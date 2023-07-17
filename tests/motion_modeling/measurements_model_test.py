@@ -1,7 +1,8 @@
 import unittest
 
-from mot.measurement_models import ConstantVelocityMeasurementModel
 import numpy as np
+
+from mot.measurement_models import ConstantVelocityMeasurementModel
 
 
 class Test_BaseMotionModels(unittest.TestCase):

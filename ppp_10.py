@@ -1,6 +1,6 @@
-from distutils.log import Log
 import logging as lg
 from copy import deepcopy
+from distutils.log import Log
 from functools import partial
 from typing import List, Tuple
 

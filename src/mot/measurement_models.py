@@ -54,8 +54,8 @@ class CoordinateTurnMeasurementModel(MeasurementModel):
         return self.d
 
 
-from nptyping import NDArray, Shape, Float
 import numpy as np
+from nptyping import Float, NDArray, Shape
 
 
 class ConstantVelocityMeasurementModel(MeasurementModel):

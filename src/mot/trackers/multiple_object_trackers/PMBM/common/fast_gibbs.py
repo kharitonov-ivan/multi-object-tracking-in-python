@@ -1,4 +1,5 @@
 from typing import List, Tuple
+
 import numba as nb
 import numpy as np
 

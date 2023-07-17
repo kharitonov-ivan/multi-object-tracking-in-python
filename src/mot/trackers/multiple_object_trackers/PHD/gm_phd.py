@@ -1,7 +1,7 @@
 import logging
-from chardet import detect
 
 import numpy as np
+from chardet import detect
 from scipy.stats import chi2
 from tqdm import tqdm as tqdm
 

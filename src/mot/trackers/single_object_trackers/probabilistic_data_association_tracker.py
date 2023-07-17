@@ -1,8 +1,8 @@
 import numpy as np
 
 from mot.common.gaussian_density import GaussianDensity
-from mot.common.normalize_log_weights import normalize_log_weights
 from mot.common.hypothesis_reduction import HypothesisReduction
+from mot.common.normalize_log_weights import normalize_log_weights
 from mot.configs import SensorModelConfig
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import BaseMotionModel

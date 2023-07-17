@@ -1,19 +1,20 @@
 from __future__ import annotations
+
 import copy
 import logging
 import typing as tp
-from nptyping import NDArray, Shape, Float
 
-
+import numba as nb
 import numpy as np
 import numpy.typing as npt
+from nptyping import Float, NDArray, Shape
 from scipy.stats import chi2
 from sklearn.covariance import log_likelihood  # noqa: I201
+
 import mot
 from mot.common.normalize_log_weights import normalize_log_weights
 from mot.measurement_models import MeasurementModel
 from mot.utils.vectorized_gaussian_logpdf import vectorized_gaussian_logpdf
-import numba as nb
 
 
 def make_SPD(covariance: np.ndarray) -> np.ndarray:

@@ -1,11 +1,11 @@
 import time
-import nbclient
-from nptyping import NDArray, Shape, Float
 
+import nbclient
+import numba
 import numpy as np
 import scipy
 import scipy.stats
-import numba
+from nptyping import Float, NDArray, Shape
 
 
 def multiple_logpdfs_vec_input(xs, means, covs):

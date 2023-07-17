@@ -4,12 +4,12 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from mot.utils.get_path import get_output_dir
 from mot.common.gaussian_density import GaussianDensity as Gaussian
 from mot.configs import GroundTruthConfig, Object, SensorModelConfig
 from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
 from mot.simulator import MeasurementData, ObjectData
+from mot.utils.get_path import get_output_dir
 
 
 class Test_MeasurementData(unittest.TestCase):

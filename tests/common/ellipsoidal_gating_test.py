@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import chi2
-from mot.common.gaussian_density import GaussianDensity
 
+from mot.common.gaussian_density import GaussianDensity
 from mot.measurement_models import ConstantVelocityMeasurementModel
 
 

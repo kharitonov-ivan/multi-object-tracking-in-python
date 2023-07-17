@@ -13,12 +13,11 @@ from mot.measurement_models import (
 from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
 from mot.scenarios.scenario_configs import linear_sot, nonlinear_sot
 from mot.simulator import MeasurementData, ObjectData
-from mot.utils.get_path import get_images_dir
-from mot.utils.visualizer import Plotter
-from mot.trackers.single_object_trackers.nearest_neighbour_tracker import NearestNeighbourTracker
-
-from mot.utils.visualizer import Plotter, Animator
-from mot.utils.get_path import get_images_dir, delete_images_dir
+from mot.trackers.single_object_trackers.nearest_neighbour_tracker import (
+    NearestNeighbourTracker,
+)
+from mot.utils.get_path import delete_images_dir, get_images_dir
+from mot.utils.visualizer import Animator, Plotter
 
 
 @pytest.mark.parametrize(

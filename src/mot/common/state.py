@@ -2,9 +2,10 @@ import collections
 from collections import UserList
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import List, Any
-from nptyping import NDArray, Shape, Float
+from typing import Any, List
+
 import numpy as np
+from nptyping import Float, NDArray, Shape
 from regex import F
 
 

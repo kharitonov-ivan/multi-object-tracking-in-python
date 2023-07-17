@@ -1,4 +1,5 @@
 import numpy as np
+
 from mot.common.normalize_log_weights import normalize_log_weights
 
 

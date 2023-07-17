@@ -24,13 +24,10 @@ from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
     StaticBirthModel,
 )
 from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
+from mot.utils.get_path import delete_images_dir, get_images_dir
+from mot.utils.visualizer import Animator, Plotter
 
 from .params.birth_model import birth_model_params
-from mot.utils.get_path import get_images_dir, delete_images_dir
-
-from mot.utils.visualizer import Plotter
-from mot.utils.visualizer import Plotter, Animator
-from mot.utils.get_path import get_images_dir, delete_images_dir
 
 
 @pytest.fixture(

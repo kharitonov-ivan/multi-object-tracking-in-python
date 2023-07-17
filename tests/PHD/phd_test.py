@@ -11,9 +11,10 @@ from mot.measurement_models import ConstantVelocityMeasurementModel
 from mot.motion_models import ConstantVelocityMotionModel
 from mot.scenarios.scenario_configs import linear_full_mot
 from mot.simulator import MeasurementData, ObjectData
+from mot.trackers.multiple_object_trackers.PHD.gm_phd import GMPHD
 from mot.utils.get_path import get_images_dir
 from mot.utils.visualizer import Plotter
-from mot.trackers.multiple_object_trackers.PHD.gm_phd import GMPHD
+
 
 test_env_cases = [
     (

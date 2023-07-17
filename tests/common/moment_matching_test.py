@@ -6,6 +6,7 @@ from mot.common.gaussian_density import GaussianDensity
 TOL = 1e-4
 
 import numpy as np
+
 from mot.common.gaussian_density import GaussianDensity as Gaussian
 
 

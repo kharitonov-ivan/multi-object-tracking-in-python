@@ -1,6 +1,7 @@
 from typing import List
 
 import numpy as np
+from scipy.optimize import linear_sum_assignment
 from scipy.stats import chi2
 from tqdm import tqdm as tqdm
 
@@ -9,10 +10,9 @@ from mot.configs import SensorModelConfig
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import BaseMotionModel
 from mot.trackers.multiple_object_trackers.PMBM.common.assigner import gibbs_sampling
+from mot.utils.vectorized_gaussian_logpdf import vectorized_gaussian_logpdf
 
 from .base_n_object_tracker import KnownObjectTracker
-from mot.utils.vectorized_gaussian_logpdf import vectorized_gaussian_logpdf
-from scipy.optimize import linear_sum_assignment
 
 
 class GlobalNearestNeighboursTracker(KnownObjectTracker):

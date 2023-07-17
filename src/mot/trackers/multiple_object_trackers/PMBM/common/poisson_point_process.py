@@ -1,16 +1,16 @@
-from distutils.log import Log
 import logging as lg
 from copy import deepcopy
+from distutils.log import Log
 from functools import partial
 from typing import List, Tuple
 
 import nptyping as npt
 import numpy as np
 import scipy
+
+from mot.common.gaussian_density import GaussianDensity, make_SPD
 from mot.common.normalize_log_weights import normalize_log_weights
 from mot.common.state import Observation
-from mot.common.gaussian_density import GaussianDensity, make_SPD
-
 from mot.measurement_models import MeasurementModel
 from mot.motion_models import BaseMotionModel
 from mot.utils.timer import Timer

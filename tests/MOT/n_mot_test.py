@@ -1,4 +1,6 @@
+import operator
 from dataclasses import asdict
+from functools import reduce
 
 import pytest
 
@@ -10,11 +12,8 @@ from mot.scenarios.scenario_configs import linear_n_mot
 from mot.simulator import MeasurementData
 from mot.simulator.object_data_generator import ObjectData
 from mot.trackers.n_object_trackers import GlobalNearestNeighboursTracker
-import operator
-from functools import reduce
-
-from mot.utils.visualizer import Plotter, Animator
-from mot.utils.get_path import get_images_dir, delete_images_dir
+from mot.utils.get_path import delete_images_dir, get_images_dir
+from mot.utils.visualizer import Animator, Plotter
 
 
 @pytest.mark.parametrize(
