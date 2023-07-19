@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+
 from src.common.gaussian_density import GaussianDensity as GaussianDensity
 from src.utils.plotting import save_figures_to_gif, setup_ax
-
 from src.utils.visualizer.common.plot_series import (
     plot_estimations,
     plot_measurement_scene,
     plot_object_data,
 )
-from tqdm import tqdm
 
 
 def plot_sample(object_data, meas_data, tracker_estimations):
@@ -43,14 +43,15 @@ def run(object_data, meas_data, tracker):
     figs = []
     timestep_start, timestap_end = 0, len(meas_data)
     for timestep_idx in tqdm(range(timestep_start, timestap_end)):
-        import pdb; pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()
         fig = plot_sample(
-            object_data[0: timestep_idx],
-            meas_data[timestep_idx: timestep_idx + 1],
-            tracker_estimations[0: timestep_idx],
+            object_data[0:timestep_idx],
+            meas_data[timestep_idx : timestep_idx + 1],
+            tracker_estimations[0:timestep_idx],
         )
-    
+
         figs.append(fig)
- 
 
     save_figures_to_gif(figs, "test.gif")

@@ -14,9 +14,9 @@ repos:
         entry: black
         types: [python]
         stages: [commit]
-      - id: flake8
-        name: flake8
+      - id: ruff
+        name: ruff
         language: system
-        entry: flake8
+        entry: ruff
         types: [python]
         stages: [commit]
