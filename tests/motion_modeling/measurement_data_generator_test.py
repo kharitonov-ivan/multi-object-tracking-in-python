@@ -3,13 +3,12 @@ import unittest
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-from mot.common.gaussian_density import GaussianDensity as Gaussian
-from mot.configs import GroundTruthConfig, Object, SensorModelConfig
-from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import ConstantVelocityMotionModel
-from mot.simulator import MeasurementData, ObjectData
-from mot.utils.get_path import get_output_dir
+from src.common.gaussian_density import GaussianDensity as GaussianDensity
+from src.configs import GroundTruthConfig, Object, SensorModelConfig
+from src.measurement_models import ConstantVelocityMeasurementModel
+from src.motion_models import ConstantVelocityMotionModel
+from src.simulator import MeasurementsGenerator, ObjectData
+from src.utils.get_path import get_output_dir
 
 
 class Test_MeasurementData(unittest.TestCase):
@@ -20,12 +19,16 @@ class Test_MeasurementData(unittest.TestCase):
         total_time = 100
         objects_configs = [
             Object(
-                initial=Gaussian(means=np.array([0.0, 0.0, 10.0, 10.0]), covs=np.eye(4)),
+                initial=GaussianDensity(
+                    means=np.array([0.0, 0.0, 10.0, 10.0]), covs=np.eye(4)
+                ),
                 t_birth=0,
                 t_death=total_time,
             )
         ]
-        ground_truth = GroundTruthConfig(n_births=n_births, object_configs=objects_configs, total_time=total_time)
+        ground_truth = GroundTruthConfig(
+            n_births=n_births, object_configs=objects_configs, total_time=total_time
+        )
 
         # Linear motion model
         dt = 1.0
@@ -33,7 +36,9 @@ class Test_MeasurementData(unittest.TestCase):
         motion_model = ConstantVelocityMotionModel(dt=dt, sigma_q=sigma_q)
 
         # Generate true object data (noisy or noiseless) and measurement
-        object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
+        object_data = ObjectData(
+            ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
+        )
 
         # Sensor model config
         P_D = 0.9  # object detection probability
@@ -45,7 +50,9 @@ class Test_MeasurementData(unittest.TestCase):
         sigma_r = 10.0
         meas_model = ConstantVelocityMeasurementModel(sigma_r=sigma_r)
 
-        meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)  # noqa F841  # noqa F841
+        meas_data = MeasurementsGenerator(
+            object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
+        )  # noqa F841  # noqa F841
 
         OUTPUT_PICTURE = "measurements.png"
         picture_path = os.path.join(get_output_dir(), OUTPUT_PICTURE)  # noqa F841

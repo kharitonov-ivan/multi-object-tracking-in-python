@@ -1,8 +1,7 @@
 import unittest
 
 import numpy as np
-
-from mot.configs import SensorModelConfig
+from src.configs import SensorModelConfig
 
 
 TOL = 1e-4
@@ -22,14 +21,20 @@ class Test_SensorModelConfig(unittest.TestCase):
         expected_pdf_c = 1.96806104572303
         expected_intensity_c = 0.41872271991070659
 
-        sensor_model = SensorModelConfig(P_D=test_P_D, lambda_c=test_lambda_c, range_c=test_range_c)
+        sensor_model = SensorModelConfig(
+            P_D=test_P_D, lambda_c=test_lambda_c, range_c=test_range_c
+        )
 
         assert abs(sensor_model.pdf_c - expected_pdf_c) < TOL, (
-            f"The value of clutter pdf 2D case: " f"Expected {expected_pdf_c} " f"Got {sensor_model.pdf_c}"
+            f"The value of clutter pdf 2D case: "
+            f"Expected {expected_pdf_c} "
+            f"Got {sensor_model.pdf_c}"
         )
 
         assert abs(sensor_model.intensity_c - expected_intensity_c) < TOL, (
-            f"Clutter intensity 2D case: " f"Expected {expected_intensity_c}, " f"got {sensor_model.intensity_c}"
+            f"Clutter intensity 2D case: "
+            f"Expected {expected_intensity_c}, "
+            f"got {sensor_model.intensity_c}"
         )
 
     def test_sensor_model_config_1D(self):
@@ -40,11 +45,17 @@ class Test_SensorModelConfig(unittest.TestCase):
         expected_pdf_c = 0.961203267377758
         expected_intensity_c = 0.870650169481514
 
-        sensor_model = SensorModelConfig(P_D=test_P_D, lambda_c=test_lambda_c, range_c=test_range_c)
+        sensor_model = SensorModelConfig(
+            P_D=test_P_D, lambda_c=test_lambda_c, range_c=test_range_c
+        )
 
         assert abs(sensor_model.pdf_c - expected_pdf_c) < TOL, (
-            f"The value of clutter pdf 2D case: " f"Expected {expected_pdf_c} " f"Got {sensor_model.pdf_c}"
+            f"The value of clutter pdf 2D case: "
+            f"Expected {expected_pdf_c} "
+            f"Got {sensor_model.pdf_c}"
         )
         assert abs(sensor_model.intensity_c - expected_intensity_c) < TOL, (
-            f"Clutter intensity 2D case: " f"Expected {expected_intensity_c}, " f"Got {sensor_model.intensity_c}"
+            f"Clutter intensity 2D case: "
+            f"Expected {expected_intensity_c}, "
+            f"Got {sensor_model.intensity_c}"
         )

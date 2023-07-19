@@ -1,23 +1,20 @@
 from dataclasses import asdict
-from re import I
 
 import numpy as np
 import pytest
-
-from mot.common.gaussian_density import GaussianDensity as Gaussian
-from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import (
+from src.common.gaussian_density import GaussianDensity as GaussianDensity
+from src.configs import GroundTruthConfig, SensorModelConfig
+from src.measurement_models import (
     ConstantVelocityMeasurementModel,
-    RangeBearingMeasurementModel,
 )
-from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
-from mot.scenarios.scenario_configs import linear_sot, nonlinear_sot
-from mot.simulator import MeasurementData, ObjectData
-from mot.trackers.single_object_trackers.nearest_neighbour_tracker import (
+from src.motion_models import ConstantVelocityMotionModel
+from src.run import run
+from src.scenarios.scenario_configs import linear_sot
+from src.simulator import MeasurementsGenerator, ObjectData
+
+from src.trackers.single_object_trackers.nearest_neighbour_tracker import (
     NearestNeighbourTracker,
 )
-from mot.utils.get_path import delete_images_dir, get_images_dir
-from mot.utils.visualizer import Animator, Plotter
 
 
 @pytest.mark.parametrize(
@@ -28,7 +25,9 @@ from mot.utils.visualizer import Animator, Plotter
             ConstantVelocityMotionModel,
             ConstantVelocityMeasurementModel,
             "SOT linear case (CV)",
-            Gaussian(means=np.array([-40, -40, 15.0, 5.0]), covs=100.0 * np.eye(4)),
+            GaussianDensity(
+                means=np.array([-750, -750, 50.0, 50.0]), covs=200.0 * np.eye(4)
+            ),
         ),
         # (
         #     nonlinear_sot,
@@ -43,17 +42,22 @@ from mot.utils.visualizer import Animator, Plotter
     ],
 )
 @pytest.mark.parametrize("tracker", [(NearestNeighbourTracker)])  # noqa
-def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initial_state):
+def test_tracker(
+    config, motion_model, meas_model, name, tracker, tracker_initial_state
+):
     config = asdict(config)
     ground_truth = GroundTruthConfig(**config)
     motion_model = motion_model(**config)
     sensor_model = SensorModelConfig(**config)
     meas_model = meas_model(**config)
 
-    object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
-    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
-
-    # Single object tracker parameter setting
+    object_data = ObjectData(
+        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
+    )
+    meas_gen = MeasurementsGenerator(
+        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
+    )
+    meas_data = [next(meas_gen) for _ in range(ground_truth.total_time)]
     P_G = 0.999  # gating size in percentage
 
     tracker = tracker(
@@ -63,19 +67,4 @@ def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initia
         gating_size=P_G,
         initial_state=tracker_initial_state,
     )
-    tracker_estimations = []
-    for timestep in range(ground_truth.total_time):
-        timestep, measurements, sources = next(meas_data)
-        estimations = tracker.step(measurements)
-        tracker_estimations.append(estimations)
-
-    Plotter.plot(
-        [object_data, meas_data, tracker_estimations],
-        out_path=get_images_dir(__file__) + "/" + name + ".png",
-    )
-
-    # Animator.animate(
-    #     [meas_data[1], object_data, tracker_estimations],
-    #     title=name,
-    #     filename=get_images_dir(__file__) + "/" + name + ".gif",
-    # )
+    run(object_data, meas_data, tracker)

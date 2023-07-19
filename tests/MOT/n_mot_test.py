@@ -3,17 +3,17 @@ from dataclasses import asdict
 from functools import reduce
 
 import pytest
+from src.configs.ground_truth_config import GroundTruthConfig
+from src.configs.sensor_model_config import SensorModelConfig
+from src.measurement_models import ConstantVelocityMeasurementModel
+from src.motion_models import ConstantVelocityMotionModel
+from src.run import run
+from src.scenarios.initial_conditions import linear_n_mot_object_life_params
+from src.scenarios.scenario_configs import linear_n_mot
+from src.simulator import MeasurementsGenerator
+from src.simulator.object_data_generator import ObjectData
 
-from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import ConstantVelocityMotionModel
-from mot.scenarios.initial_conditions import linear_n_mot_object_life_params
-from mot.scenarios.scenario_configs import linear_n_mot
-from mot.simulator import MeasurementData
-from mot.simulator.object_data_generator import ObjectData
-from mot.trackers.n_object_trackers import GlobalNearestNeighboursTracker
-from mot.utils.get_path import delete_images_dir, get_images_dir
-from mot.utils.visualizer import Animator, Plotter
+from src.trackers.n_object_trackers import GlobalNearestNeighboursTracker
 
 
 @pytest.mark.parametrize(
@@ -31,20 +31,28 @@ from mot.utils.visualizer import Animator, Plotter
             ConstantVelocityMotionModel,
             ConstantVelocityMeasurementModel,
             "n MOT linear (CV)",
-            reduce(operator.add, [x.initial_state for x in linear_n_mot_object_life_params]),
+            reduce(
+                operator.add, [x.initial_state for x in linear_n_mot_object_life_params]
+            ),
         ),
     ],
 )
 @pytest.mark.parametrize("tracker", [(GlobalNearestNeighboursTracker)])
-def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initial_states):
+def test_tracker(
+    config, motion_model, meas_model, name, tracker, tracker_initial_states
+):
     config = asdict(config)
     ground_truth = GroundTruthConfig(**config)
     motion_model = motion_model(**config)
     sensor_model = SensorModelConfig(**config)
     meas_model = meas_model(**config)
 
-    object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
-    meas_data_gen = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+    object_data = ObjectData(
+        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
+    )
+    meas_data_gen = MeasurementsGenerator(
+        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
+    )
 
     # Single object tracker parameter setting
     P_G = 0.99  # gating size in percentage
@@ -62,23 +70,25 @@ def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initia
         M=M,
         intensity=tracker_initial_states,
     )
-
-    tracker_estimations = []
     meas_data = [next(meas_data_gen) for _ in range(ground_truth.total_time)]
-    for measurement in meas_data:
-        estimations = tracker.step(measurement[1])
-        current_estimations = [estimations[idx] for idx in range(len(estimations))]
-        for idx in range(len(estimations)):
-            tracker_estimations.append(estimations[idx])
+    run(object_data, meas_data, tracker)
 
-    # import pdb; pdb.set_trace()
-    Plotter.plot(
-        [meas_data, object_data, tracker_estimations],
-        out_path=get_images_dir(__file__) + "/" + name + ".png",
-    )
+    # tracker_estimations = []
+    # meas_data = [next(meas_data_gen) for _ in range(ground_truth.total_time)]
+    # for measurement in meas_data:
+    #     estimations = tracker.step(measurement[1])
+    #     current_estimations = [estimations[idx] for idx in range(len(estimations))]
+    #     for idx in range(len(estimations)):
+    #         tracker_estimations.append(estimations[idx])
 
-    Animator.animate(
-        [meas_data, object_data, tracker_estimations],
-        title=name,
-        filename=get_images_dir(__file__) + "/" + name + ".gif",
-    )
+    # # import pdb; pdb.set_trace()
+    # Plotter.plot(
+    #     [meas_data, object_data, tracker_estimations],
+    #     out_path=get_images_dir(__file__) + "/" + name + ".png",
+    # )
+
+    # Animator.animate(
+    #     [meas_data, object_data, tracker_estimations],
+    #     title=name,
+    #     filename=get_images_dir(__file__) + "/" + name + ".gif",
+    # )

@@ -1,20 +1,18 @@
 import numpy as np
-
-from mot.common.gaussian_density import GaussianDensity
+from src.common.gaussian_density import GaussianDensity
 
 
 TOL = 1e-4
 
 import numpy as np
-
-from mot.common.gaussian_density import GaussianDensity as Gaussian
+from src.common.gaussian_density import GaussianDensity as GaussianDensity
 
 
 def test_moment_matching():
     # Create a list of Gaussian objects
-    gaussian1 = Gaussian(means=np.array([1, 2]), covs=np.array([[1, 0], [0, 1]]))
-    gaussian2 = Gaussian(means=np.array([3, 4]), covs=np.array([[2, 1], [1, 2]]))
-    gaussian3 = Gaussian(means=np.array([5, 6]), covs=np.array([[3, 2], [2, 3]]))
+    gaussian1 = GaussianDensity(means=np.array([1, 2]), covs=np.array([[1, 0], [0, 1]]))
+    gaussian2 = GaussianDensity(means=np.array([3, 4]), covs=np.array([[2, 1], [1, 2]]))
+    gaussian3 = GaussianDensity(means=np.array([5, 6]), covs=np.array([[3, 2], [2, 3]]))
     gaussian_arr = gaussian1 + gaussian2 + gaussian3
 
     # Create a list of weights in logarithmic scale

@@ -1,93 +1,47 @@
-[tool.poetry]
+[project]
 name = "mot"
 version = "0.1.0"
-description = "Multi object tracking course in python"
-authors = ["Ivan Kharitonov <ipkharitonov@gmail.com>"]
-license = "Apache 2"
-
-[tool.poetry.dependencies]
-argcomplete = "^1.12.3"
-black = "^21.4b2"
-colorcet = {git = "https://github.com/holoviz/colorcet.git"}
-debug = "^0.3.2"
-debugpy = "^1.3.0"
-holoviews = "^1.14.1"
-ipdb = "^0.13.4"
-ipython = "^7.19.0"
-isort = "^5.8.0"
-joblib = "^1.0.1"
-jupyter = "^1.0.0"
-jupyter-contrib-nbextensions = "^0.5.1"
-matplotlib = "^3.3.4"
-motmetrics = "1.1.3"
-murty = {git = "https://github.com/neer201/murty.git"}
-nox = "^2020.12.31"
-numpy = "^1.20.0"
-nuscenes-devkit = "^1.1.3"
-pathos = "^0.2.7"
-pdbpp = "^0.10.2"
-pre-commit = "^2.12.1"
-pycycle = "^0.0.8"
-pyquaternion = "^0.9.9"
-python = "^3.8"
-scipy = "^1.6.0"
-seaborn = "^0.11.1"
-tqdm = "^4.56.2"
-ujson = "^4.0.2"
-nptyping = "^2.5.0"
-
-[tool.poetry.dev-dependencies]
-autoflake = "^1.4"
-coverage = "^5.4"
-flake8 = "^3.8.4"
-flake8-bandit = "^2.1.2"
-flake8-black = "^0.2.1"
-flake8-bugbear = "^20.11.1"
-flake8-isort = "^4.0.0"
-functiontrace = "^0.3.4"
-gprof2dot = "^2021.2.21"
-ipdb = "^0.13.4"
-isort = "^5.8.0"
-line-profiler = "^3.3.0"
-mypy = "^0.800"
-pyrasite = "^2.0"
-pytest = "^6.2.2"
-pytest-cov = "^2.11.1"
-rope = "^0.18.0"
-snakeviz = "^2.1.0"
-viztracer = "^0.12.3"
-vulture = "^2.3"
-yapf = "^0.30.0"
-
-[tool.coverage.paths]
-source = ["src", "*/site-packages"]
-
-[tool.coverage.run]
-branch = true
-source = ["mot"]
-
-[tool.coverage.report]
-show_missing = true
+description = ""
+authors = [
+    {name = "Ivan Kharitonov", email = "ipkharitonov@gmail.com"},
+]
+dependencies = [
+    "black>=23.7.0",
+    "matplotlib>=3.7.2",
+    "numpy>=1.25.1",
+    "scipy>=1.9.3",
+    "imageio>=2.31.1",
+    "pdbpp>=0.10.3",
+    "pytest>=7.4.0",
+    "ipython>=8.14.0",
+    "typing>=3.7.4.3",
+    "colorcet>=3.0.1",
+    "tqdm>=4.65.0",
+    "motmetrics>=1.4.0",
+    "murty @ git+https://github.com/neer201/murty.git",
+    "pytest-profiling>=1.7.0",
+    "ruff>=0.0.278",
+    "pytype>=2023.7.12",
+    "isort>=5.12.0",
+    "vulture>=2.7",
+]
+requires-python = ">= 3.9, < 3.11"
+readme = "README.md"
+license = {text = "Apache 2.0"}
 
 [tool.pytest.ini_options]
-pytest_plugins = ['pytest_profiling']
+# pytest_plugins = ['pytest_profiling']
 log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(message)s "
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 # docstring check
 
-[tool.black] 
-# https://black.readthedocs.io/en/stable/pyproject_toml.html#configuration-format
-# https://black.readthedocs.io/en/stable/compatible_configs.html
-line-length = 140
-multi_line_output = 3
-include_trailing_comma = true
-use_parentheses = false
-force_grid_wrap = 0
-target-version = ['py37']
-
 [tool.isort]
 profile = "black"
 multi_line_output = 3
-lines_after_imports = 2 
+lines_after_imports = 2
+
+[tool.ruff]
+show-fixes = true
+fixable = ["F401"]

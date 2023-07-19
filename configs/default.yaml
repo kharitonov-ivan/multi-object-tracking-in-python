@@ -1,0 +1,38 @@
+# @package _global_
+
+# specify here default configuration
+# order of defaults determines the order in which configs override each other
+defaults:
+  - _self_
+
+scenario_motion_model:
+  _target_: src.mot.motion_models.ConstantVelocityMotionModel
+  dt: 1.0
+  sigma_q: 5.0
+
+scenario_sensor_model:
+  _target_: src.mot.configs.sensor_model_config.SensorModelConfig
+  P_D: 0.9
+  lambda_c: 5.0
+
+scenario_measurement_model:
+  target_: src.mot.measurement_models.ConstantVelocityMeasurementModel
+  sigma_r: 10.0
+
+ground_truth_config:
+  target: src.mot.configs.ground_truth_config.GroundTruthConfig
+  object_list: 
+    target_: src.mot.scenarios.scenario_configs.linear_sot
+  total_time: 100
+
+
+
+
+
+  
+ 
+# task name, determines output directory path
+task_name: "train"
+
+# seed for random number generators in pytorch, numpy and python.random
+seed: null

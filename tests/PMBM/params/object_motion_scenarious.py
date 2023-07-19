@@ -1,7 +1,6 @@
 import numpy as np
-
-from mot.common import Gaussian
-from mot.configs import Object
+from src.common import Gaussian
+from src.configs import Object
 
 
 # TODO single static object (no motion

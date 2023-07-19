@@ -1,7 +1,6 @@
 import numpy as np
-
-from mot.common.gaussian_density import GaussianDensity
-from mot.measurement_models import ConstantVelocityMeasurementModel
+from src.common.gaussian_density import GaussianDensity
+from src.measurement_models import ConstantVelocityMeasurementModel
 
 
 TOL = 1e-4

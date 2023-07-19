@@ -1,7 +1,5 @@
 import numpy as np
-import pytest
-
-from mot.common.gaussian_density import GaussianDensity
+from src.common.gaussian_density import GaussianDensity
 
 
 def test_create_state():

@@ -1,15 +1,13 @@
 import copy
-import logging
 
 import numpy as np
 import pytest
-from scipy.special import logsumexp
+from src.common.gaussian_density import GaussianDensity
+from src.configs import SensorModelConfig
+from src.measurement_models import ConstantVelocityMeasurementModel
+from src.motion_models import ConstantVelocityMotionModel
 
-from mot.common.gaussian_density import GaussianDensity
-from mot.configs import SensorModelConfig
-from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import ConstantVelocityMotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common import (
+from src.trackers.multiple_object_trackers.PMBM.common import (
     PoissonRFS,
     StaticBirthModel,
 )
@@ -38,10 +36,19 @@ def test_PPP_predict_linear_motion(initial_PPP_intensity_linear, clutter_intensi
     PPP.predict(motion_model, survival_probability, GaussianDensity, dt)
 
     # check multiply of weight in log domain
-    PPP_ref_w = np.array([current_weight + np.log(survival_probability) for current_weight in initial_PPP_intensity_linear.weights])
+    PPP_ref_w = np.array(
+        [
+            current_weight + np.log(survival_probability)
+            for current_weight in initial_PPP_intensity_linear.weights
+        ]
+    )
 
-    PPP_ref_state = GaussianDensity.predict(initial_PPP_intensity_linear, motion_model, dt)
-    np.testing.assert_allclose(sorted(PPP.intensity.weights), sorted(PPP_ref_w), rtol=0.1)
+    PPP_ref_state = GaussianDensity.predict(
+        initial_PPP_intensity_linear, motion_model, dt
+    )
+    np.testing.assert_allclose(
+        sorted(PPP.intensity.weights), sorted(PPP_ref_w), rtol=0.1
+    )
     np.testing.assert_allclose(PPP.intensity.means, PPP_ref_state.means, rtol=0.01)
     np.testing.assert_allclose(PPP.intensity.covs, PPP_ref_state.covs, rtol=0.02)
 
@@ -76,7 +83,9 @@ def test_PPP_undetected_update(initial_PPP_intensity_linear):
 
     PPP.undetected_update(detection_probability)
 
-    PPP_weights_ref = initial_PPP_intensity_linear.weights + np.log(1 - detection_probability)
+    PPP_weights_ref = initial_PPP_intensity_linear.weights + np.log(
+        1 - detection_probability
+    )
     np.testing.assert_almost_equal(
         PPP.intensity.weights,
         PPP_weights_ref,
@@ -93,7 +102,9 @@ def test_PPP_detected_update(initial_PPP_intensity_linear):
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
-    sensor_model = SensorModelConfig(P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c)
+    sensor_model = SensorModelConfig(
+        P_D=detection_probability, lambda_c=clutter_rate, range_c=range_c
+    )
     clutter_intensity = sensor_model.intensity_c
 
     # Create nlinear motion model
@@ -179,7 +190,9 @@ def test_PPP_gating(initial_PPP_intensity_linear):
     PPP = PoissonRFS(intensity=initial_PPP_intensity_linear)
 
     z = np.array([[-410.0, 201.0], [10e6, 10e6]])
-    gating_matrix_ud, dists = GaussianDensity.ellipsoidal_gating(PPP.intensity, z, meas_model, 0.8)
+    gating_matrix_ud, dists = GaussianDensity.ellipsoidal_gating(
+        PPP.intensity, z, meas_model, 0.8
+    )
     gating_matrix_ud_ref = np.array([[True, False], [True, False]])
     np.testing.assert_almost_equal(
         gating_matrix_ud_ref,

@@ -2,22 +2,22 @@ import os
 from dataclasses import asdict
 
 import pytest
-
-from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import (
+from src.configs import GroundTruthConfig, SensorModelConfig
+from src.measurement_models import (
     ConstantVelocityMeasurementModel,
     RangeBearingMeasurementModel,
 )
-from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
-from mot.scenarios.scenario_configs import (
+from src.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
+from src.scenarios.scenario_configs import (
     linear_n_mot,
     linear_sot,
     nonlinear_n_mot,
     nonlinear_sot,
 )
-from mot.simulator import MeasurementData
-from mot.simulator.object_data_generator import ObjectData
-from mot.utils.visualizer import Animator, Plotter
+from src.simulator import MeasurementsGenerator
+from src.simulator.object_data_generator import ObjectData
+
+from src.utils.visualizer import Animator, Plotter
 
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -50,20 +50,30 @@ test_data = [
 ]
 
 
-@pytest.mark.parametrize("config, motion_model, output_image_name, meas_model", test_data)
-def test_linear_model_without_noise(config, motion_model, output_image_name, meas_model):
+@pytest.mark.parametrize(
+    "config, motion_model, output_image_name, meas_model", test_data
+)
+def test_linear_model_without_noise(
+    config, motion_model, output_image_name, meas_model
+):
     config = asdict(config)
     ground_truth = GroundTruthConfig(**config)
     motion_model = motion_model(**config)
 
-    object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
+    object_data = ObjectData(
+        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
+    )
 
     sensor_model = SensorModelConfig(**config)
 
     meas_model = meas_model(**config)
-    meas_data_gen = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+    meas_data_gen = MeasurementsGenerator(
+        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
+    )
     meas_data = next(meas_data_gen)
-    Plotter.plot([meas_data[0]], title=output_image_name, out_path="meas_" + output_image_name)
+    Plotter.plot(
+        [meas_data[0]], title=output_image_name, out_path="meas_" + output_image_name
+    )
 
     Plotter.plot(
         [meas_data, object_data],

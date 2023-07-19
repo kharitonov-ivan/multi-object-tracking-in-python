@@ -1,10 +1,8 @@
 import unittest
 
 import numpy as np
-import pytest
-
-from mot.common.gaussian_density import GaussianDensity as Gaussian
-from mot.configs import GroundTruthConfig, Object
+from src.common.gaussian_density import GaussianDensity as GaussianDensity
+from src.configs import GroundTruthConfig, Object
 
 
 TOL = 1e-4
@@ -16,7 +14,7 @@ class Test_GroundTruthConfig(unittest.TestCase):
         test_total_time = 10
         test_objects = [
             Object(
-                initial=Gaussian(means=np.array([0.0, 1.0]), covs=np.eye(2)),
+                initial=GaussianDensity(means=np.array([0.0, 1.0]), covs=np.eye(2)),
                 t_birth=0,
                 t_death=10,
             )
@@ -33,7 +31,7 @@ class Test_GroundTruthConfig(unittest.TestCase):
         test_total_time = 10
         test_objects = [
             Object(
-                initial=Gaussian(means=np.array([0.0, 1.0]), covs=np.eye(2)),
+                initial=GaussianDensity(means=np.array([0.0, 1.0]), covs=np.eye(2)),
                 t_birth=0,
                 t_death=10,
             )

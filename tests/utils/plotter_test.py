@@ -3,15 +3,15 @@ from dataclasses import asdict
 
 import numpy as np
 import pytest
+from src.common.gaussian_density import GaussianDensity
+from src.configs import GroundTruthConfig, SensorModelConfig
+from src.measurement_models import ConstantVelocityMeasurementModel
+from src.motion_models import ConstantVelocityMotionModel
+from src.scenarios.scenario_configs import linear_full_mot
+from src.simulator import MeasurementsGenerator, ObjectData
+from src.utils.get_path import get_images_dir
 
-from mot.common.gaussian_density import GaussianDensity as Gaussian
-from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import ConstantVelocityMotionModel
-from mot.scenarios.scenario_configs import linear_full_mot
-from mot.simulator import MeasurementData, ObjectData
-from mot.utils.get_path import get_images_dir
-from mot.utils.visualizer import Animator, Plotter
+from src.utils.visualizer import Plotter
 
 
 test_env_cases = [
@@ -30,11 +30,15 @@ def generate_environment(config, motion_model, meas_model, *args, **kwargs):
     motion_model = motion_model(**config)
     sensor_model = SensorModelConfig(**config)
     meas_model = meas_model(**config)
-    object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
-    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+    object_data = ObjectData(
+        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
+    )
+    meas_data = MeasurementsGenerator(
+        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
+    )
     estimations = [
         [
-            Gaussian(means=pos, covs=400 * np.eye(4))
+            GaussianDensity(means=pos, covs=400 * np.eye(4))
             for pos in [
                 np.array([0, 0, 0, 0]),
                 np.array([400, -600, 0, 0]),
@@ -96,7 +100,9 @@ def test_plot_object_meas_data(config, motion_model, meas_model, name, *args, **
 
 
 def test_plot_one_gaussian(*args, **kwargs):
-    gaussian = Gaussian(means=np.array([0, 0, 10, 10]), covs=np.diag([400, 200, 0, 0]))
+    gaussian = GaussianDensity(
+        means=np.array([0, 0, 10, 10]), covs=np.diag([400, 200, 0, 0])
+    )
 
     # Plotter.plot(
     #     [gaussian],
