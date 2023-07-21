@@ -4,19 +4,18 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-import mot.utils as utils
-from mot.common.state import Gaussian
-from mot.configs import GroundTruthConfig, Object, SensorModelConfig
-from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import ConstantVelocityMotionModel
-from mot.simulator import MeasurementData, ObjectData
+import src.utils as utils
+from src.common.state import Gaussian
+from src.configs import GroundTruthConfig, Object, SensorModelConfig
+from src.measurement_models import ConstantVelocityMeasurementModel
+from src.motion_models import ConstantVelocityMotionModel
+from src.simulator import MeasurementData, ObjectData
 
 
 class Test_MeasurementData(unittest.TestCase):
     def test_function_name(self):
         """Test linear model without noise"""
         # Ground truth model config
-        n_births = 1
         total_time = 100
         objects_configs = [
             Object(
@@ -25,12 +24,12 @@ class Test_MeasurementData(unittest.TestCase):
                 t_death=total_time,
             )
         ]
-        ground_truth = GroundTruthConfig(n_births=n_births, object_configs=objects_configs, total_time=total_time)
+        ground_truth = GroundTruthConfig(object_configs=objects_configs, total_time=total_time)
 
         # Linear motion model
-        dt = 1.0
         sigma_q = 5.0
-        motion_model = ConstantVelocityMotionModel(dt=dt, sigma_q=sigma_q)
+        random_state = 42
+        motion_model = ConstantVelocityMotionModel(sigma_q=sigma_q, random_state=random_state)
 
         # Generate true object data (noisy or noiseless) and measurement
         object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
@@ -45,9 +44,7 @@ class Test_MeasurementData(unittest.TestCase):
         sigma_r = 10.0
         meas_model = ConstantVelocityMeasurementModel(sigma_r=sigma_r)
 
-        meas_data = MeasurementData(  # noqa F841
-            object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
-        )  # noqa F841
+        meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)  # noqa F841  # noqa F841
 
         OUTPUT_PICTURE = "measurements.png"
         picture_path = os.path.join(utils.get_output_dir(), OUTPUT_PICTURE)  # noqa F841

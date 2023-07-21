@@ -3,11 +3,11 @@ from copy import deepcopy
 import numpy as np
 import pytest
 
-from mot.common.gaussian_density import GaussianDensity
-from mot.common.state import Gaussian
-from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import ConstantVelocityMotionModel
-from mot.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli
+from src.common.gaussian_density import GaussianDensity
+from src.common.state import Gaussian
+from src.measurement_models import ConstantVelocityMeasurementModel
+from src.motion_models import ConstantVelocityMotionModel
+from src.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli
 
 
 @pytest.fixture
@@ -20,9 +20,8 @@ def initial_bernoulli():
 
 @pytest.fixture
 def cv_motion_model():
-    dt = 1.0
     sigma_q = 5.0
-    return ConstantVelocityMotionModel(dt, sigma_q)
+    return ConstantVelocityMotionModel(42, sigma_q)
 
 
 @pytest.fixture
@@ -88,27 +87,20 @@ def test_bern_undetected_update(initial_bernoulli, P_D):
 
 
 def test_bern_detected_update_likelihood_outlier(initial_bernoulli, P_D, cv_measurement_model, outlier_measurement):
-
-    likelihood_detected = initial_bernoulli.detected_update_loglikelihood(
-        outlier_measurement, cv_measurement_model, P_D
-    )
+    likelihood_detected = initial_bernoulli.detected_update_loglikelihood(outlier_measurement, cv_measurement_model, P_D)
 
     likelihood_detected_ref = np.array([-105.7914])
     np.testing.assert_allclose(likelihood_detected, likelihood_detected_ref, rtol=0.05)
 
 
 def test_bern_detected_update_likelihood_target(initial_bernoulli, P_D, cv_measurement_model, neighbour_measurement):
-
-    log_likelihood_detected = initial_bernoulli.detected_update_loglikelihood(
-        neighbour_measurement, cv_measurement_model, P_D
-    )
+    log_likelihood_detected = initial_bernoulli.detected_update_loglikelihood(neighbour_measurement, cv_measurement_model, P_D)
 
     log_likelihood_detected_ref = np.array([-7.3304])
     np.testing.assert_allclose(log_likelihood_detected, log_likelihood_detected_ref, rtol=0.05)
 
 
 def test_bern_update_state(initial_bernoulli, neighbour_measurement, cv_measurement_model):
-
     new_bernoulli = Bernoulli.detected_update_state(initial_bernoulli, neighbour_measurement, cv_measurement_model)
 
     ref_r = 1.0

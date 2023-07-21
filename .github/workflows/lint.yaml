@@ -1,0 +1,17 @@
+name: Python Code Linting and Formatting
+on: [push, pull_request]
+jobs:
+  lint-format:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.10-slim
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Ruff, Black, and isort
+        run: pip install ruff "black[jupyter]" isort
+      - name: Check imports order with isort
+        run: isort . --check-only
+      - name: Check Python code formatting with Black
+        run: black --check .
+      - name: Run Ruff linter
+        run: ruff .

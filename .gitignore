@@ -128,11 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Images
-.images
-*.png
-*.gif
-
 # VScode
 .vscode
 .vscode/settings.json
@@ -150,3 +145,4 @@ data/*
 # results
 *.csv
 *.pdf
+*.drawio.bkp
