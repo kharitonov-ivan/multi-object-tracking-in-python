@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 import numpy as np
+
 from src.configs import Object
 
 from .initial_conditions import (
@@ -53,7 +54,7 @@ nonlinear_sot = ScenarioConfig(
     sigma_V=1.0,
     sigma_omega=0.1 * np.pi / 180,
     P_D=0.9,
-    lambda_c=10.0,
+    lambda_c=1.0,
     range_c=np.array([[-1000, 1000], [-np.pi, np.pi]]),
     sigma_r=5.0,
     object_data_noisy=False,

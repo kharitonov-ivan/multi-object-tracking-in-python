@@ -2,6 +2,7 @@ import argparse
 import logging
 
 import yaml
+
 from src.evaluation_runners.nuscenes.nuscenes_eval import (
     NuscenesDatasetConfig,
     NuscenesTrackerEvaluator,
@@ -78,10 +79,7 @@ if __name__ == "__main__":
     }
     level = levels.get(args.log.lower())
     if level is None:
-        raise ValueError(
-            f"log level given: {args.log}"
-            f" -- must be one of: {' | '.join(levels.keys())}"
-        )
+        raise ValueError(f"log level given: {args.log}" f" -- must be one of: {' | '.join(levels.keys())}")
     logging.basicConfig(level=level)
     logger = logging.getLogger(__name__)
 

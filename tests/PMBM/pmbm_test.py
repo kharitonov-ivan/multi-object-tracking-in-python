@@ -1,26 +1,32 @@
 import logging
 import pprint
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+
 from src.common.gaussian_density import GaussianDensity
 from src.configs import GroundTruthConfig, SensorModelConfig
 from src.evaluation_runners.evaluator import OneSceneMOTevaluator
 from src.measurement_models import ConstantVelocityMeasurementModel
 from src.motion_models import ConstantVelocityMotionModel
-from src.run import run
+from src.run import animate, plot, run
 from src.scenarios.object_motion_scenarious import (
     many_objects_linear_motion_delayed,
+    single_object_linear_motion,
+    two_objects_linear_motion,
+    single_static_object,
 )
 from src.simulator import MeasurementsGenerator, ObjectData
-from src.utils.get_path import delete_images_dir
-
 from src.trackers.multiple_object_trackers.PMBM.common.birth_model import (
     StaticBirthModel,
 )
 from src.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
+from src.utils.get_path import delete_images_dir, get_images_dir
 
 from .params.birth_model import birth_model_params
+
+np.set_printoptions(precision=2)
 
 
 @pytest.fixture(
@@ -48,10 +54,10 @@ def scenario_clutter_rate(request):
         # single_static_object,
         # two_static_objects,
         # three_static_objects,
-        # single_object_linear_motion,
+        single_object_linear_motion,
         # two_objects_linear_motion,
         # two_objects_linear_motion_delayed,
-        many_objects_linear_motion_delayed,
+        # many_objects_linear_motion_delayed,
     ]
 )
 def object_motion_fixture(request):
@@ -71,8 +77,8 @@ def do_something_before_all_tests():
 
 @pytest.fixture(
     params=[
-        # 0.99,
-        0.8,
+        0.99,
+        # 0.8,
     ]
 )
 def scenario_survival_probability(request):
@@ -108,12 +114,8 @@ def test_synthetic_scenario(
 
     # Generate true object data (noisy or noiseless) and measurement data
     ground_truth = GroundTruthConfig(object_motion_fixture, total_time=simulation_steps)
-    object_data = ObjectData(
-        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
-    )
-    meas_data_gen = MeasurementsGenerator(
-        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
-    )
+    object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
+    meas_data_gen = MeasurementsGenerator(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
 
     logging.debug(f"object motion config {pprint.pformat(object_motion_fixture)}")
 
@@ -139,4 +141,18 @@ def test_synthetic_scenario(
 
     evaluator = OneSceneMOTevaluator()
     meas_data = [next(meas_data_gen) for _ in range(simulation_steps)]
-    run(object_data, meas_data, tracker)
+    tracker_estimations = run(object_data, meas_data, tracker)
+
+    name = "PMBM"
+    plot(object_data, meas_data, tracker_estimations, meas_model=meas_model)
+    plt.savefig(f"{get_images_dir(__file__)}" + "/" + f"{name}" + ".png")
+    import pdb
+
+    pdb.set_trace()
+
+    # animate(
+    #     object_data,
+    #     meas_data,
+    #     tracker_estimations,
+    #     f"{get_images_dir(__file__)}" + "/" + f"{name}" + ".gif",
+    # )

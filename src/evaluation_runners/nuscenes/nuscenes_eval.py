@@ -7,7 +7,6 @@ from typing import Dict
 
 import numpy as np
 import pytest
-import src.motion_models
 import tqdm
 import ujson
 from nuscenes.eval.common.data_classes import EvalBoxes
@@ -25,11 +24,12 @@ from nuscenes.utils.splits import (  # noqa: F401
     val,
 )
 from pyquaternion import Quaternion
+
+import src.motion_models
 from src.common import Gaussian, GaussianMixture, WeightedGaussian
 from src.common.state import ObjectMetadata, Observation
 from src.configs import SensorModelConfig
 from src.evaluation_runners.evaluator import OneSceneMOTevaluator
-
 from src.trackers.multiple_object_trackers.PMBM.common.birth_model import (
     MeasurementDrivenBirthModel,
 )
@@ -81,16 +81,12 @@ class NuscenesTrackerEvaluator:
         #     # result2 = pool.map_async(self.read_detection_file, [detection_filepath])
         #     # result1 = result1.get()
         #     # result2 = result2.get()
-        _, self.detection_metadata, self.detection_results = self.read_detection_file(
-            detection_filepath
-        )
+        _, self.detection_metadata, self.detection_results = self.read_detection_file(detection_filepath)
         self.nuscenes_helper = self.initialize_nuscenes(nuscens_config)
         self.evaluation_set = tuple(ast.literal_eval(evaluation_set))
 
         # check if dataset contains all scenes from detection file
-        assert set(self.evaluation_set).issubset(
-            set([scene["name"] for scene in self.nuscenes_helper.scene])
-        )
+        assert set(self.evaluation_set).issubset(set([scene["name"] for scene in self.nuscenes_helper.scene]))
 
         self.results_by_scene = {}
 
@@ -113,11 +109,7 @@ class NuscenesTrackerEvaluator:
 
         for scene_name in self.evaluation_set:
             print(f"scene name: {scene_name}")
-            scene = [
-                scene
-                for scene in self.nuscenes_helper.scene
-                if scene["name"] == scene_name
-            ][0]
+            scene = [scene for scene in self.nuscenes_helper.scene if scene["name"] == scene_name][0]
             scene_token = scene["token"]
             results.update(self.process_scene(scene_token))
 
@@ -138,9 +130,7 @@ class NuscenesTrackerEvaluator:
         scene_object = self.nuscenes_helper.get(table_name="scene", token=scene_token)
         logging.debug(f"Process scene with name {scene_object['name']}")
         first_sample_token = scene_object["first_sample_token"]
-        scene_sample_tokens_ = self.get_scene_token_list(
-            firts_frame_token=first_sample_token
-        )
+        scene_sample_tokens_ = self.get_scene_token_list(firts_frame_token=first_sample_token)
         scene_sample_tokens = tuple([first_sample_token] + list(scene_sample_tokens_))
         detection_probability = 0.7
         dt = 0.5
@@ -148,35 +138,25 @@ class NuscenesTrackerEvaluator:
             [
                 WeightedGaussian(
                     np.log(0.03),
-                    Gaussian(
-                        means=np.array([620.0, 1640.0, 0.0, 0.0]), covs=100 * np.eye(4)
-                    ),
+                    Gaussian(means=np.array([620.0, 1640.0, 0.0, 0.0]), covs=100 * np.eye(4)),
                 ),
                 WeightedGaussian(
                     np.log(0.03),
-                    Gaussian(
-                        means=np.array([680.0, 1680.0, 0.0, 0.0]), covs=100 * np.eye(4)
-                    ),
+                    Gaussian(means=np.array([680.0, 1680.0, 0.0, 0.0]), covs=100 * np.eye(4)),
                 ),
                 WeightedGaussian(
                     np.log(0.03),
-                    Gaussian(
-                        means=np.array([580.0, 1600.0, 0.0, 0.0]), covs=100 * np.eye(4)
-                    ),
+                    Gaussian(means=np.array([580.0, 1600.0, 0.0, 0.0]), covs=100 * np.eye(4)),
                 ),
                 WeightedGaussian(
                     np.log(0.03),
-                    Gaussian(
-                        means=np.array([680.0, 1600.0, 0.0, 0.0]), covs=100 * np.eye(4)
-                    ),
+                    Gaussian(means=np.array([680.0, 1600.0, 0.0, 0.0]), covs=100 * np.eye(4)),
                 ),
             ]
         )
 
         tracker = PMBM(
-            meas_model=src.measurement_models.ConstantVelocityMeasurementModel(
-                sigma_r=0.5
-            ),
+            meas_model=src.measurement_models.ConstantVelocityMeasurementModel(sigma_r=0.5),
             sensor_model=SensorModelConfig(
                 P_D=detection_probability,
                 lambda_c=10.0,
@@ -212,9 +192,7 @@ class NuscenesTrackerEvaluator:
             current_sample_data = self.nuscenes_helper.get("sample", sample_token)
             lidar_top_data_token = current_sample_data["data"]["LIDAR_TOP"]
             lidar_data = self.nuscenes_helper.get("sample_data", lidar_top_data_token)
-            lidar_top_ego_pose = self.nuscenes_helper.get(
-                "ego_pose", lidar_data["ego_pose_token"]
-            )
+            lidar_top_ego_pose = self.nuscenes_helper.get("ego_pose", lidar_data["ego_pose_token"])
             current_ego_pose = lidar_top_ego_pose
 
             estimation = tracker.step(measurements, dt, current_ego_pose)
@@ -222,17 +200,11 @@ class NuscenesTrackerEvaluator:
             scene_measurements.append(measurements)
             scene_estimations.append(estimation)
 
-            annotations = [
-                self.nuscenes_helper.get("sample_annotation", annotation_token)
-                for annotation_token in current_sample_data["anns"]
-            ]
+            annotations = [self.nuscenes_helper.get("sample_annotation", annotation_token) for annotation_token in current_sample_data["anns"]]
 
             scene_data = {}
             for annotation in annotations:
-                if (
-                    annotation["category_name"].split(".")[0] == "vehicle"
-                    and annotation["num_lidar_pts"] > 10
-                ):
+                if annotation["category_name"].split(".")[0] == "vehicle" and annotation["num_lidar_pts"] > 10:
                     id_pool.add_id(annotation["instance_token"])
                     object_id = id_pool.data[annotation["instance_token"]]
                     object_pos_x, object_pos_y = annotation["translation"][:2]
@@ -284,9 +256,7 @@ class NuscenesTrackerEvaluator:
                     return {sample_token: results}
 
             if estimation:
-                nuscenes_results = format_nuscenes_sample_results(
-                    sample_token, estimation
-                )
+                nuscenes_results = format_nuscenes_sample_results(sample_token, estimation)
                 result_estimations[sample_token] = nuscenes_results
                 result_results_scene.update(nuscenes_results)
 
@@ -332,9 +302,7 @@ class NuscenesTrackerEvaluator:
         scene_tokens = set()
 
         for sample_token in self.detection_results.sample_tokens:
-            scene_token = self.nuscenes_helper.get(
-                table_name="sample", token=sample_token
-            )["scene_token"]
+            scene_token = self.nuscenes_helper.get(table_name="sample", token=sample_token)["scene_token"]
             scene_tokens.add(scene_token)
         logging.info(f"Tokens: {scene_tokens}")
         # TODO убрать костыль
@@ -349,9 +317,7 @@ class NuscenesTrackerEvaluator:
         return detection_data, metadata, results
 
     def initialize_nuscenes(self, config: NuscenesDatasetConfig):
-        nuscenes = NuScenes(
-            version=config.version, dataroot=config.data_path, verbose=True
-        )
+        nuscenes = NuScenes(version=config.version, dataroot=config.data_path, verbose=True)
         return nuscenes
 
     def get_scene_token_list(self, firts_frame_token: str):
@@ -382,9 +348,7 @@ class NuscenesTrackerEvaluator:
 
         while True:
             if len(current_object[direction]):
-                current_object = nuscenes.get(
-                    table_name=table_hey, token=current_object[direction]
-                )
+                current_object = nuscenes.get(table_name=table_hey, token=current_object[direction])
                 sequence.append(current_object)
             else:
                 break

@@ -1,9 +1,10 @@
 import numpy as np
 from scipy.stats import chi2
+from tqdm import tqdm as tqdm
+
 from src.common.gaussian_density import GaussianDensity
 from src.common.hypothesis_reduction import HypothesisReduction
 from src.common.normalize_log_weights import normalize_log_weights
-from tqdm import tqdm as tqdm
 
 from ...configs import SensorModelConfig
 from ...measurement_models import MeasurementModel
@@ -64,21 +65,15 @@ class GaussSumTracker(SingleObjectTracker):
                 predicted_state=prev_state,
                 current_measurements=np.array(measurements_in_scene),
             )
-            prev_state = GaussianDensity.predict(
-                state=estimations[timestep], motion_model=self.motion_model
-            )
+            prev_state = GaussianDensity.predict(state=estimations[timestep], motion_model=self.motion_model)
         return tuple(estimations)
 
-    def estimation_step(
-        self, predicted_state: GaussianDensity, current_measurements: np.ndarray
-    ):
+    def estimation_step(self, predicted_state: GaussianDensity, current_measurements: np.ndarray):
         new_hypotheses, new_weights = [], []
         w_theta_factor = np.log(self.sensor_model.P_D / self.sensor_model.intensity_c)
         w_theta_0 = np.log(1 - self.sensor_model.P_D)  # misdetection
 
-        for _old_idx, (curr_weight, curr_hypothesis) in enumerate(
-            zip(self.hypotheses_weight, self.multi_hypotheses_bank)
-        ):
+        for _old_idx, (curr_weight, curr_hypothesis) in enumerate(zip(self.hypotheses_weight, self.multi_hypotheses_bank)):
             # 1) for each hypothesis, create missed detection hypothesis
             new_hypotheses.append(curr_hypothesis)
             new_weights.append(w_theta_0 + curr_weight)
@@ -93,17 +88,11 @@ class GaussSumTracker(SingleObjectTracker):
                 self.gating_size,
             )
 
-            predicted_likelihood = GaussianDensity.predicted_likelihood(
-                curr_hypothesis, z_ingate, self.meas_model
-            )
+            predicted_likelihood = GaussianDensity.predicted_likelihood(curr_hypothesis, z_ingate, self.meas_model)
 
             # for each measurement create detection hypotheses
             for idx, meausurement in z_ingate:
-                new_hypotheses.append(
-                    GaussianDensity.update(
-                        curr_hypothesis, meausurement, self.meas_model
-                    )
-                )
+                new_hypotheses.append(GaussianDensity.update(curr_hypothesis, meausurement, self.meas_model))
                 new_weights.append(predicted_likelihood[idx] + w_theta_factor)
 
         self.hypotheses_weight.extend(new_weights)
@@ -114,9 +103,7 @@ class GaussSumTracker(SingleObjectTracker):
         self.hypotheses_weight, _ = normalize_log_weights(self.hypotheses_weight)
 
         # 4. Prune hypotheses with small weights and then re-normalise the weights
-        self.hypotheses_weight, self.multi_hypotheses_bank = HypothesisReduction.prune(
-            self.hypotheses_weight, self.multi_hypotheses_bank, threshold=self.w_min
-        )
+        self.hypotheses_weight, self.multi_hypotheses_bank = HypothesisReduction.prune(self.hypotheses_weight, self.multi_hypotheses_bank, threshold=self.w_min)
         self.hypotheses_weight, _ = normalize_log_weights(self.hypotheses_weight)
 
         # 5. Hypotheses merging and normalize
@@ -128,25 +115,18 @@ class GaussSumTracker(SingleObjectTracker):
         self.hypotheses_weight, _ = normalize_log_weights(self.hypotheses_weight)
 
         # 6. Cap the number of the hypotheses and then re-normalise the weights
-        self.hypotheses_weight, self.multi_hypotheses_bank = HypothesisReduction.cap(
-            self.hypotheses_weight, self.multi_hypotheses_bank, top_k=self.M
-        )
+        self.hypotheses_weight, self.multi_hypotheses_bank = HypothesisReduction.cap(self.hypotheses_weight, self.multi_hypotheses_bank, top_k=self.M)
         self.hypotheses_weight, _ = normalize_log_weights(self.hypotheses_weight)
 
         # 7. Get object state from the most probable hypothesis
         if self.multi_hypotheses_bank:
-            current_step_state = self.multi_hypotheses_bank[
-                np.argmax(self.hypotheses_weight)
-            ]
+            current_step_state = self.multi_hypotheses_bank[np.argmax(self.hypotheses_weight)]
             estimation = current_step_state
         else:
             estimation = predicted_state
 
         # 8. For each hypotheses do prediction
-        self.updated_states = [
-            GaussianDensity.predict(hypothesis, self.motion_model)
-            for hypothesis in self.multi_hypotheses_bank
-        ]
+        self.updated_states = [GaussianDensity.predict(hypothesis, self.motion_model) for hypothesis in self.multi_hypotheses_bank]
         self.multi_hypotheses_bank = self.updated_states
         return estimation
 

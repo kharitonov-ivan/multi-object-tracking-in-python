@@ -1,4 +1,5 @@
 import numpy as np
+
 from src.common.gaussian_density import GaussianDensity as GaussianDensity
 from src.configs import Object
 
@@ -18,16 +19,12 @@ single_static_object = [
 # TODO two static objects (no motion)
 two_static_objects = [
     Object(
-        initial=GaussianDensity(
-            means=np.array([-100.0, 100.0, 0.0, 0.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([-100.0, 100.0, 0.0, 0.0]), covs=np.eye(4)),
         t_birth=COMMON_BIRTH_TIME,
         t_death=COMMON_DEATH_TIME,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([100.0, 100.0, 0.0, 0.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([100.0, 100.0, 0.0, 0.0]), covs=np.eye(4)),
         t_birth=COMMON_BIRTH_TIME,
         t_death=COMMON_DEATH_TIME,
     ),
@@ -36,23 +33,17 @@ two_static_objects = [
 # TODO three static objects (no motion)
 three_static_objects = [
     Object(
-        initial=GaussianDensity(
-            means=np.array([-250.0, 250.0, 0.0, 0.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([-250.0, 250.0, 0.0, 0.0]), covs=np.eye(4)),
         t_birth=COMMON_BIRTH_TIME,
         t_death=COMMON_DEATH_TIME,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([250.0, 250.0, 0.0, 0.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([250.0, 250.0, 0.0, 0.0]), covs=np.eye(4)),
         t_birth=COMMON_BIRTH_TIME,
         t_death=COMMON_DEATH_TIME,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([0.0, -250.0, 0.0, 0.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([0.0, -250.0, 0.0, 0.0]), covs=np.eye(4)),
         t_birth=COMMON_BIRTH_TIME,
         t_death=COMMON_DEATH_TIME,
     ),
@@ -69,16 +60,12 @@ single_object_linear_motion = [
 # TODO two objects linear motion starting simulateneously
 two_objects_linear_motion = [
     Object(
-        initial=GaussianDensity(
-            means=np.array([-100.0, 10.0, 10.0, 10.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([-100.0, 10.0, 10.0, 10.0]), covs=np.eye(4)),
         t_birth=COMMON_BIRTH_TIME,
         t_death=COMMON_DEATH_TIME,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([10.0, -10.0, 0.0, -10.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([10.0, -10.0, 0.0, -10.0]), covs=np.eye(4)),
         t_birth=COMMON_BIRTH_TIME,
         t_death=COMMON_DEATH_TIME,
     ),
@@ -87,16 +74,12 @@ two_objects_linear_motion = [
 # TODO two objects linear motion starting - one after another
 two_objects_linear_motion_delayed = [
     Object(
-        initial=GaussianDensity(
-            means=np.array([10.0, 10.0, 0.0, 10.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([10.0, 10.0, 0.0, 10.0]), covs=np.eye(4)),
         t_birth=5,
         t_death=69,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([10.0, -10.0, 0.0, -10.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([10.0, -10.0, 0.0, -10.0]), covs=np.eye(4)),
         t_birth=0,
         t_death=69,
     ),
@@ -110,30 +93,22 @@ many_objects_linear_motion_delayed = [
         t_death=69,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([400.0, -600.0, -10.0, 5.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([400.0, -600.0, -10.0, 5.0]), covs=np.eye(4)),
         t_birth=0,
         t_death=99,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([-800.0, -200.0, 20.0, -5.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([-800.0, -200.0, 20.0, -5.0]), covs=np.eye(4)),
         t_birth=0,
         t_death=69,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([400.0, -600.0, -7.0, -4.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([400.0, -600.0, -7.0, -4.0]), covs=np.eye(4)),
         t_birth=19,
         t_death=99,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([400.0, -600.0, -2.5, 10.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([400.0, -600.0, -2.5, 10.0]), covs=np.eye(4)),
         t_birth=19,
         t_death=99,
     ),
@@ -143,44 +118,32 @@ many_objects_linear_motion_delayed = [
         t_death=99,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([-800.0, -200.0, 12.0, 7.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([-800.0, -200.0, 12.0, 7.0]), covs=np.eye(4)),
         t_birth=39,
         t_death=99,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([-200.0, 800.0, 15.0, -10.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([-200.0, 800.0, 15.0, -10.0]), covs=np.eye(4)),
         t_birth=39,
         t_death=99,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([-800.0, -200.0, 3.0, 15.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([-800.0, -200.0, 3.0, 15.0]), covs=np.eye(4)),
         t_birth=59,
         t_death=99,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([-200.0, 800.0, -3.0, -15.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([-200.0, 800.0, -3.0, -15.0]), covs=np.eye(4)),
         t_birth=59,
         t_death=99,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([0.0, 0.0, -20.0, -15.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([0.0, 0.0, -20.0, -15.0]), covs=np.eye(4)),
         t_birth=79,
         t_death=99,
     ),
     Object(
-        initial=GaussianDensity(
-            means=np.array([-200.0, 800.0, 15.0, -5.0]), covs=np.eye(4)
-        ),
+        initial=GaussianDensity(means=np.array([-200.0, 800.0, 15.0, -5.0]), covs=np.eye(4)),
         t_birth=79,
         t_death=99,
     ),

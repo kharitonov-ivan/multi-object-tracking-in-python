@@ -1,10 +1,11 @@
 import numpy as np
 from scipy.optimize import linear_sum_assignment
+from tqdm import tqdm as tqdm
+
 from src.common.gaussian_density import GaussianDensity
 from src.configs import SensorModelConfig
 from src.measurement_models import MeasurementModel
 from src.motion_models import BaseMotionModel
-from tqdm import tqdm as tqdm
 
 from .base_n_object_tracker import KnownObjectTracker
 
@@ -49,14 +50,10 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
         6) get obhect state estimates
         7) preform prefict for each local hypotheses
         """
-        self.intensity = GaussianDensity.predict(
-            self.intensity, self.motion_model, dt=1.0
-        )
+        self.intensity = GaussianDensity.predict(self.intensity, self.motion_model, dt=1.0)
 
         # 1) elipsoidal gating separately for each object
-        mask, dists = GaussianDensity.ellipsoidal_gating(
-            self.intensity, measurements, self.meas_model, self.gating_size
-        )
+        mask, dists = GaussianDensity.ellipsoidal_gating(self.intensity, measurements, self.meas_model, self.gating_size)
         mask = np.ones_like(mask, dtype=bool)
         # 2) Disconsider measurements which do not fall inside any object gate
         mask_to_keep = np.sum(mask, axis=0, dtype=bool)
@@ -70,17 +67,11 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
         cost_matrix = np.full((self.n, n_filtered_measurements + self.n), np.inf)
 
         # Misdetection cost
-        cost_matrix[:, n_filtered_measurements:] = -np.log(
-            1 - self.sensor_model.P_D
-        )  # misdetection cost
+        cost_matrix[:, n_filtered_measurements:] = -np.log(1 - self.sensor_model.P_D)  # misdetection cost
 
         # Detection cost -log(sensormodel.P_D/sensormodel.intensity_c) - predicted_likelihood_log;    % detection weights
-        ll = GaussianDensity.predict_loglikelihood(
-            self.intensity, considered_measurements, self.meas_model
-        )
-        cost_matrix[:, :n_filtered_measurements] = -ll - np.log(
-            self.sensor_model.P_D / self.sensor_model.intensity_c
-        )
+        ll = GaussianDensity.predict_loglikelihood(self.intensity, considered_measurements, self.meas_model)
+        cost_matrix[:, :n_filtered_measurements] = -ll - np.log(self.sensor_model.P_D / self.sensor_model.intensity_c)
 
         # 4) find best assignment using a 2D assignment solver
         row_ind, col_ind = linear_sum_assignment(cost_matrix)
@@ -98,9 +89,7 @@ class GlobalNearestNeighboursTracker(KnownObjectTracker):
                     measurements[measurement_idx, None],
                     self.meas_model,
                 )
-                self.intensity[object_idx] = GaussianDensity(
-                    updated_means[0], updated_covs[0]
-                )
+                self.intensity[object_idx] = GaussianDensity(updated_means[0], updated_covs[0])
 
         # 6) get object state estimates
         return {idx: self.intensity[idx] for idx in range(len(self.intensity))}

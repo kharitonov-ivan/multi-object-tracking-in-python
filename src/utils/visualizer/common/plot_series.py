@@ -1,20 +1,20 @@
-from cProfile import label
 import logging
+from cProfile import label
 from functools import singledispatch
 
 import colorcet
-from matplotlib import legend
 import numpy as np
+from matplotlib import legend
 from matplotlib.lines import Line2D
+
 from src.common.gaussian_density import GaussianDensity as GaussianDensity
 from src.simulator import MeasurementsGenerator, ObjectData
-
 from src.utils.visualizer.common.plot_primitives import BasicPlotter
 
 
 CLUTTER_COLOR = colorcet.glasbey_category10[3]  # red
 CLUTTER_MARKER = "+"
-OBJECT_COLORS = colorcet.glasbey_category10[4:]
+OBJECT_COLORS = colorcet.glasbey_category10[4:] * 4
 OBJECT_MARKER = "s"
 OBJECT_MEASUREMENT_MARKER = "o"
 OBJECT_MEASUREMENT_COLOR = "b"
@@ -42,6 +42,7 @@ def clean_legend_labels(ax: plt.Axes):
 def plot_measurement_scene(
     ax,
     meas_data,
+    meas_model,
     clutter_color=CLUTTER_COLOR,
     clutter_marker=CLUTTER_MARKER,
 ):
@@ -79,9 +80,25 @@ def plot_measurement_scene(
 
 
 def plot_estimations(ax, estimations):
+    object_ids = []
     for scene in estimations:
         for estimated_object_id, gaussian in scene.items():
             gaussian.plot(ax=ax, color=OBJECT_COLORS[estimated_object_id])
+            object_ids.append(estimated_object_id)
+
+    legend_elements, labels = ax.get_legend_handles_labels()
+    for object_id in list(set(object_ids)):
+        legend_elements.append(
+            Line2D(
+                [0],
+                [0],
+                marker=OBJECT_MARKER,
+                color=OBJECT_COLORS[object_id],
+                label=f"id {object_id}",
+            )
+        )
+
+    ax.legend(handles=legend_elements, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=3)  # noqa
 
 
 @singledispatch
@@ -98,9 +115,7 @@ def plot_object_data(series: ObjectData, ax):
                 OBJECT_COLORS[object_id],
                 OBJECT_MARKER,
             )
-            BasicPlotter.plot_state(
-                state, ax=ax, color=curr_color, center_marker=curr_marker
-            )
+            BasicPlotter.plot_state(state, ax=ax, color=curr_color, center_marker=curr_marker)
 
     object_ids = []
     for objects in series:
@@ -119,9 +134,7 @@ def plot_object_data(series: ObjectData, ax):
             )
         )
 
-    ax.legend(
-        handles=legend_elements, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=3
-    )  # noqa
+    ax.legend(handles=legend_elements, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=3)  # noqa
 
 
 @plot_series.register(MeasurementsGenerator)
@@ -130,12 +143,8 @@ def __plot_series(series: MeasurementsGenerator, ax, *args, **kwargs):
         plot_measurement_scene(ax, series, timestep)
 
     legend_elements, labels = ax.get_legend_handles_labels()
-    legend_elements.append(
-        Line2D([0], [0], marker=CLUTTER_MARKER, color=CLUTTER_COLOR, label="clutter")
-    )
-    lgd = ax.legend(
-        handles=legend_elements, loc="best", bbox_to_anchor=(1, 0.815)
-    )  # noqa
+    legend_elements.append(Line2D([0], [0], marker=CLUTTER_MARKER, color=CLUTTER_COLOR, label="clutter"))
+    lgd = ax.legend(handles=legend_elements, loc="best", bbox_to_anchor=(1, 0.815))  # noqa
     return ax
 
 
@@ -162,9 +171,7 @@ def ___plot_series(series: list, ax, *args, **kwargs):
             if scene:
                 for curr_object in scene:
                     if isinstance(curr_object, GaussianDensity):
-                        for patch in BasicPlotter.plot_state(
-                            curr_object, ax=ax, color="m"
-                        ):
+                        for patch in BasicPlotter.plot_state(curr_object, ax=ax, color="m"):
                             ax.add_artist(patch)
     return ax
 
@@ -174,7 +181,5 @@ def ____plot_series(series: np.ndarray, ax, *args, **kwargs):
     for timestep in range(len(series)):
         states = series[timestep]
         for state in states:
-            ax.add_artist(
-                BasicPlotter.plot_point(x=state[0], y=state[1], ax=ax, color="m")
-            )
+            ax.add_artist(BasicPlotter.plot_point(x=state[0], y=state[1], ax=ax, color="m"))
     return ax

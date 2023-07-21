@@ -111,9 +111,7 @@ if __name__ == "__main__":
     reference_array = np.zeros((n_gaussians, n_data_points))
     ref_start = time.time()
     for j in range(n_gaussians):
-        reference_array[j] = scipy.stats.multivariate_normal.logpdf(
-            data_points, means[j], covariances[j]
-        )
+        reference_array[j] = scipy.stats.multivariate_normal.logpdf(data_points, means[j], covariances[j])
     ref_time = time.time() - ref_start
     import pdb
 

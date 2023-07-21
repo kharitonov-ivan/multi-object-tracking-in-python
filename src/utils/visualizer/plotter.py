@@ -3,8 +3,8 @@ from typing import List, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-from src.simulator import MeasurementsGenerator, ObjectData
 
+from src.simulator import MeasurementsGenerator, ObjectData
 from src.utils.visualizer.common.autoscale import autoscale
 from src.utils.visualizer.common.common import create_figure, set_mpl_params
 from src.utils.visualizer.common.plot_series import plot_series

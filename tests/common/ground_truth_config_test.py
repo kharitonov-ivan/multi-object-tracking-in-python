@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+
 from src.common.gaussian_density import GaussianDensity as GaussianDensity
 from src.configs import GroundTruthConfig, Object
 

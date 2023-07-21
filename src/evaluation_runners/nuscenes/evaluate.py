@@ -111,14 +111,10 @@ class TrackingEval:
         # Filter boxes (distance, points per box, etc.).
         if verbose:
             print("Filtering tracks")
-        pred_boxes = filter_eval_boxes(
-            nusc, pred_boxes, self.cfg.class_range, verbose=verbose
-        )
+        pred_boxes = filter_eval_boxes(nusc, pred_boxes, self.cfg.class_range, verbose=verbose)
         if verbose:
             print("Filtering ground truth tracks")
-        gt_boxes = filter_eval_boxes(
-            nusc, gt_boxes, self.cfg.class_range, verbose=verbose
-        )
+        gt_boxes = filter_eval_boxes(nusc, gt_boxes, self.cfg.class_range, verbose=verbose)
 
         self.sample_tokens = gt_boxes.sample_tokens
 
@@ -215,9 +211,7 @@ class TrackingEval:
             return os.path.join(self.plot_dir, name + ".pdf")
 
         # Plot a summary.
-        summary_plot(
-            md_list, min_recall=self.cfg.min_recall, savepath=savepath("summary")
-        )
+        summary_plot(md_list, min_recall=self.cfg.min_recall, savepath=savepath("summary"))
 
         # For each metric, plot all the classes in one diagram.
         for metric_name in LEGACY_METRICS:
@@ -293,8 +287,7 @@ if __name__ == "__main__":
         "--config_path",
         type=str,
         default="",
-        help="Path to the configuration file."
-        "If no path given, the NIPS 2019 configuration will be used.",
+        help="Path to the configuration file." "If no path given, the NIPS 2019 configuration will be used.",
     )
     parser.add_argument(
         "--render_curves",
@@ -302,9 +295,7 @@ if __name__ == "__main__":
         default=1,
         help="Whether to render statistic curves to disk.",
     )
-    parser.add_argument(
-        "--verbose", type=int, default=10, help="Whether to print to stdout."
-    )
+    parser.add_argument("--verbose", type=int, default=10, help="Whether to print to stdout.")
     parser.add_argument(
         "--render_classes",
         type=str,

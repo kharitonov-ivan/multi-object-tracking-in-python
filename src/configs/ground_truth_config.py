@@ -23,9 +23,7 @@ class GroundTruthConfig:
         from .object_config import Object
 
         assert isinstance(total_time, int), "Argument of wrong type!"
-        assert all(
-            isinstance(x, Object) for x in object_configs
-        ), "Argument of wrong type!"
+        assert all(isinstance(x, Object) for x in object_configs), "Argument of wrong type!"
         self.object_configs = object_configs
         self.total_time = total_time
 
@@ -34,8 +32,4 @@ class GroundTruthConfig:
         return len(self.object_configs)
 
     def __repr__(self) -> str:
-        return self.__class__.__name__ + (
-            f"(n_births={self.n_births}, "
-            f"object_configs={self.object_configs}, "
-            f"total_time={self.total_time}, "
-        )
+        return self.__class__.__name__ + (f"(n_births={self.n_births}, " f"object_configs={self.object_configs}, " f"total_time={self.total_time}, ")

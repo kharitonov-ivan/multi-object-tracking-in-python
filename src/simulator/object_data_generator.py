@@ -38,9 +38,7 @@ class ObjectData:
         return self.objects_state_data[key]
 
     def generate_objects_data(self):
-        object_state_history = [
-            {} for timestep in range(self._ground_truth_config.total_time)
-        ]
+        object_state_history = [{} for timestep in range(self._ground_truth_config.total_time)]
         for object_config in self._ground_truth_config.object_configs:
             state = object_config.initial_state
             for timestep in range(self._ground_truth_config.total_time):
@@ -52,10 +50,7 @@ class ObjectData:
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
-            f"(ground_truth_config={self._ground_truth_config}, "
-            f"motion_model={self._motion_model}, "
-            f"if_noisy={self._if_noisy}, "
-            f"X={self.objects_state_data}, "
+            f"(ground_truth_config={self._ground_truth_config}, " f"motion_model={self._motion_model}, " f"if_noisy={self._if_noisy}, " f"X={self.objects_state_data}, "
         )
 
     @property

@@ -10,9 +10,7 @@ class Object:
     def restart(cls):
         cls.new_id = itertools.count(start=0, step=1)
 
-    def __init__(
-        self, initial: GaussianDensity, t_birth: int, t_death: int, *args, **kwargs
-    ):
+    def __init__(self, initial: GaussianDensity, t_birth: int, t_death: int, *args, **kwargs):
         """Construct object configuration for ground truth config
 
         Parameters
@@ -42,9 +40,4 @@ class Object:
         self.t_death = t_death
 
     def __repr__(self) -> str:
-        return self.__class__.__name__ + (
-            f"(id={self.id}, "
-            f"initial_state={self.initial_state}, "
-            f"t_birth={self.t_birth}, "
-            f"t_death={self.t_death}, "
-        )
+        return self.__class__.__name__ + (f"(id={self.id}, " f"initial_state={self.initial_state}, " f"t_birth={self.t_birth}, " f"t_death={self.t_death}, ")

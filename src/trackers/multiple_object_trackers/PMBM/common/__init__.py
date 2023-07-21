@@ -4,27 +4,23 @@ from src.trackers.multiple_object_trackers.PMBM.common.assigner import (
     AssignmentSolver,
     assign,
 )
-from src.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli
+from src.trackers.multiple_object_trackers.PMBM.common.bernoulli import (
+    Bernoulli,
+    SingleTargetHypothesis,
+)
 from src.trackers.multiple_object_trackers.PMBM.common.birth_model import (
     BirthModel,
     MeasurementDrivenBirthModel,
     RandomSampledBirthModel,
     StaticBirthModel,
 )
-from src.trackers.multiple_object_trackers.PMBM.common.global_hypothesis import (
+from src.trackers.multiple_object_trackers.PMBM.common.multi_bernoulli_mixture import (
     Association,
     GlobalHypothesis,
-)
-from src.trackers.multiple_object_trackers.PMBM.common.multi_bernoulli_mixture import (
     MultiBernouilliMixture,
+    SingleTargetHypothesis,
+    Track,
 )
 from src.trackers.multiple_object_trackers.PMBM.common.poisson_point_process import (
     PoissonRFS,
-)
-from src.trackers.multiple_object_trackers.PMBM.common.single_target_hypothesis import (
-    SingleTargetHypothesis,
-)
-from src.trackers.multiple_object_trackers.PMBM.common.track import (
-    SingleTargetHypothesis,
-    Track,
 )

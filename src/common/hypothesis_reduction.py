@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List
 
 import numpy as np
+
 from src.common.gaussian_density import GaussianDensity
 
 
@@ -63,9 +64,7 @@ class HypothesisReduction:
         )
 
     @staticmethod
-    def merge(
-        hypotheses_weights: List[float], multi_hypotheses: List, threshold: float
-    ):
+    def merge(hypotheses_weights: List[float], multi_hypotheses: List, threshold: float):
         """Merges hypotheses with small Mahalanobis distance
 
         Parameters
@@ -89,7 +88,5 @@ class HypothesisReduction:
         (
             new_hypotheses_weights,
             new_multi_hypotheses,
-        ) = GaussianDensity.mixture_reduction(
-            weights=hypotheses_weights, states=multi_hypotheses, threshold=threshold
-        )
+        ) = GaussianDensity.mixture_reduction(weights=hypotheses_weights, states=multi_hypotheses, threshold=threshold)
         return new_hypotheses_weights, new_multi_hypotheses

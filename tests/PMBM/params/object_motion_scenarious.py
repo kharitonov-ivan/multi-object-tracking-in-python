@@ -1,4 +1,5 @@
 import numpy as np
+
 from src.common import Gaussian
 from src.configs import Object
 

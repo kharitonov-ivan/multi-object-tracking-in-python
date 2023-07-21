@@ -1,4 +1,7 @@
+import logging
+
 import numpy as np
+
 from src.common.gaussian_density import GaussianDensity
 from src.configs import SensorModelConfig
 from src.measurement_models import MeasurementModel
@@ -21,6 +24,7 @@ class NearestNeighbourTracker(SingleObjectTracker):
         self.motion_model = motion_model
         self.gating_size = gating_size
         self.state: GaussianDensity = initial_state
+        self.timestep = 0
         super().__init__()
 
     @property
@@ -49,7 +53,9 @@ class NearestNeighbourTracker(SingleObjectTracker):
         6) extract object state estimate
 
         """
+        self.timestep += 1
         self.predict()
+        logging.error(self.state.means[..., :2])
         self.update(measurements)
         return self.estimate()
 
@@ -89,7 +95,5 @@ class NearestNeighbourTracker(SingleObjectTracker):
             return  # nothing update because missdetection hypothesis has the highest weight
 
         # Update state with nearest neighbour measurement
-        next_means, next_covs, _ = GaussianDensity.update(
-            self.state, measurements[max_weight_idx], self.meas_model
-        )
+        next_means, next_covs, _ = GaussianDensity.update(self.state, measurements[max_weight_idx], self.meas_model)
         self.state = GaussianDensity(means=next_means[0], covs=next_covs[0])

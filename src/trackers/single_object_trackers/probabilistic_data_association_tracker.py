@@ -1,11 +1,11 @@
 import numpy as np
+
 from src.common.gaussian_density import GaussianDensity
 from src.common.hypothesis_reduction import HypothesisReduction
 from src.common.normalize_log_weights import normalize_log_weights
 from src.configs import SensorModelConfig
 from src.measurement_models import MeasurementModel
 from src.motion_models import BaseMotionModel
-
 from src.trackers.single_object_trackers.base_single_object_tracker import (
     SingleObjectTracker,
 )
@@ -55,14 +55,10 @@ class ProbabilisticDataAssociationTracker(SingleObjectTracker):
                 predicted_state=prev_state,
                 current_measurements=np.array(measurements_in_scene),
             )
-            prev_state = GaussianDensity.predict(
-                state=estimations[timestep], motion_model=self.motion_model
-            )
+            prev_state = GaussianDensity.predict(state=estimations[timestep], motion_model=self.motion_model)
         return tuple(estimations)
 
-    def estimation_step(
-        self, predicted_state: GaussianDensity, current_measurements: np.ndarray
-    ):
+    def estimation_step(self, predicted_state: GaussianDensity, current_measurements: np.ndarray):
         # 1. Gating
         (meas_in_gate, _) = GaussianDensity.ellipsoidal_gating(
             predicted_state,
@@ -93,9 +89,7 @@ class ProbabilisticDataAssociationTracker(SingleObjectTracker):
 
             # Hypothesis evaluation
             # detection
-            w_theta_factor = np.log(
-                self.sensor_model.P_D / self.sensor_model.intensity_c
-            )
+            w_theta_factor = np.log(self.sensor_model.P_D / self.sensor_model.intensity_c)
             w_theta_k = predicted_likelihood + w_theta_factor
             # misdetection
             w_theta_0 = 1 - self.sensor_model.P_D
@@ -110,9 +104,7 @@ class ProbabilisticDataAssociationTracker(SingleObjectTracker):
 
             log_w, log_sum_ = normalize_log_weights(hypotheses_weights_log)
             # def moment_matching(weights: List[float], states: List[ GaussianDensity]) ->  GaussianDensity:
-            current_step_state = GaussianDensity.moment_matching(
-                weights=log_w, states=multi_hypotheses
-            )
+            current_step_state = GaussianDensity.moment_matching(weights=log_w, states=multi_hypotheses)
 
         estimation = current_step_state
         return estimation

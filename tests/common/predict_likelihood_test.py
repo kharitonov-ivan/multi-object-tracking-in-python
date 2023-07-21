@@ -1,4 +1,5 @@
 import numpy as np
+
 from src.common.gaussian_density import GaussianDensity
 from src.measurement_models import ConstantVelocityMeasurementModel
 

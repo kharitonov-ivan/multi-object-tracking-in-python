@@ -1,10 +1,11 @@
 import numpy as np
+from tqdm import tqdm as tqdm
+
 from src.common.gaussian_density import GaussianDensity
 from src.common.hypothesis_reduction import HypothesisReduction
 from src.configs import SensorModelConfig
 from src.measurement_models import MeasurementModel
 from src.motion_models import BaseMotionModel
-from tqdm import tqdm as tqdm
 
 
 class GMPHD:
@@ -95,17 +96,11 @@ class GMPHD:
     def predict_step(self, dt):
         # surviving process - predict and store the components that survived
         if len(self.gmm_components) > 0:
-            self.gmm_components = GaussianDensity.predict(
-                self.gmm_components, self.motion_model, dt
-            )
+            self.gmm_components = GaussianDensity.predict(self.gmm_components, self.motion_model, dt)
             self.gmm_components.weights += np.log(self.P_S)
 
         # birth process - copy birth weight and birth states
-        self.gmm_components = (
-            self.gmm_components + self.birth_model
-            if self.gmm_components
-            else self.birth_model
-        )
+        self.gmm_components = self.gmm_components + self.birth_model if self.gmm_components else self.birth_model
 
     def update(self, measurements):
         """Performs PPP update step and PPP approximation"""
@@ -132,22 +127,12 @@ class GMPHD:
             self.meas_model,
         )
 
-        predicted_likelihood = GaussianDensity.predict_loglikelihood(
-            self.gmm_components, measurements, self.meas_model
-        )
-        new_weights = (
-            np.log(self.P_D)
-            + predicted_likelihood
-            + self.gmm_components.weights[..., None]
-        )
-        detection_hypotheses += GaussianDensity(
-            new_means[mask], new_covs[mask], new_weights[mask]
-        )
+        predicted_likelihood = GaussianDensity.predict_loglikelihood(self.gmm_components, measurements, self.meas_model)
+        new_weights = np.log(self.P_D) + predicted_likelihood + self.gmm_components.weights[..., None]
+        detection_hypotheses += GaussianDensity(new_means[mask], new_covs[mask], new_weights[mask])
 
         W_sum = np.sum(detection_hypotheses.weights)
-        detection_hypotheses.weights = np.log(
-            detection_hypotheses.weights / (self.sensor_model.intensity_c + W_sum)
-        )
+        detection_hypotheses.weights = np.log(detection_hypotheses.weights / (self.sensor_model.intensity_c + W_sum))
         self.gmm_components = detection_hypotheses + missdetection_hypotheses
 
     def components_reduction(self):
@@ -155,9 +140,7 @@ class GMPHD:
             return  # nothing to reduce
 
         # Delete components with weight less than w_min
-        self.gmm_components = HypothesisReduction.prune(
-            self.gmm_components, threshold=self.w_min
-        )
+        self.gmm_components = HypothesisReduction.prune(self.gmm_components, threshold=self.w_min)
 
         # Hypotheses merging
         # if len(self.gmm_components) > 1:

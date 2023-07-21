@@ -3,13 +3,13 @@ from dataclasses import asdict
 
 import numpy as np
 import pytest
+
 from src.common.gaussian_density import GaussianDensity
 from src.configs import GroundTruthConfig, SensorModelConfig
 from src.measurement_models import ConstantVelocityMeasurementModel
 from src.motion_models import ConstantVelocityMotionModel
 from src.scenarios.scenario_configs import linear_full_mot
 from src.simulator import MeasurementsGenerator, ObjectData
-
 from src.trackers.multiple_object_trackers.PHD.gm_phd import GMPHD
 
 
@@ -29,12 +29,8 @@ def generate_environment(config, motion_model, meas_model, *args, **kwargs):
     motion_model = motion_model(**config)
     sensor_model = SensorModelConfig(**config)
     meas_model = meas_model(**config)
-    object_data = ObjectData(
-        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
-    )
-    meas_data = MeasurementsGenerator(
-        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
-    )
+    object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
+    meas_data = MeasurementsGenerator(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
     meas_data = [next(meas_data) for _ in range(ground_truth.total_time)]
 
     env = namedtuple(
@@ -70,13 +66,9 @@ def test_generate_environment(config, motion_model, meas_model, name, *args, **k
 
 
 @pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
-def test_components_list_operations(
-    config, motion_model, meas_model, name, *args, **kwargs
-):
+def test_components_list_operations(config, motion_model, meas_model, name, *args, **kwargs):
     birth_model = GaussianDensity(
-        np.array(
-            [[0, 0, 0, 0], [400, -600, 0, 0], [-800, -200, 0, 0], [-200, 800, 0, 0]]
-        ),
+        np.array([[0, 0, 0, 0], [400, -600, 0, 0], [-800, -200, 0, 0], [-200, 800, 0, 0]]),
         np.full((4, 4, 4), 400 * np.eye(4)),
         np.full(4, np.log(0.03)),
     )
@@ -94,9 +86,7 @@ def test_tracker_predict_step(config, motion_model, meas_model, name, *args, **k
     M = 100  # maximum number of hypotheses kept in MHT
 
     birth_model = GaussianDensity(
-        np.array(
-            [[0, 0, 0, 0], [400, -600, 0, 0], [-800, -200, 0, 0], [-200, 800, 0, 0]]
-        ),
+        np.array([[0, 0, 0, 0], [400, -600, 0, 0], [-800, -200, 0, 0], [-200, 800, 0, 0]]),
         np.full((4, 4, 4), 400 * np.eye(4)),
         np.full(4, np.log(0.03)),
     )
@@ -119,9 +109,7 @@ def test_tracker_predict_step(config, motion_model, meas_model, name, *args, **k
 
 
 @pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
-def test_tracker_predict_and_update_step(
-    config, motion_model, meas_model, name, *args, **kwargs
-):
+def test_tracker_predict_and_update_step(config, motion_model, meas_model, name, *args, **kwargs):
     env = generate_environment(config, motion_model, meas_model)
 
     # Single object tracker parameter setting
@@ -131,9 +119,7 @@ def test_tracker_predict_and_update_step(
     M = 100  # maximum number of hypotheses kept in MHT
 
     birth_model = GaussianDensity(
-        np.array(
-            [[0, 0, 0, 0], [400, -600, 0, 0], [-800, -200, 0, 0], [-200, 800, 0, 0]]
-        ),
+        np.array([[0, 0, 0, 0], [400, -600, 0, 0], [-800, -200, 0, 0], [-200, 800, 0, 0]]),
         np.full((4, 4, 4), 400 * np.eye(4)),
         np.full(4, np.log(0.03)),
     )
@@ -170,9 +156,7 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwarg
     P_D = 0.9
 
     birth_model = GaussianDensity(
-        np.array(
-            [[0, 0, 0, 0], [400, -600, 0, 0], [-800, -200, 0, 0], [-200, 800, 0, 0]]
-        ),
+        np.array([[0, 0, 0, 0], [400, -600, 0, 0], [-800, -200, 0, 0], [-200, 800, 0, 0]]),
         np.full((4, 4, 4), 400 * np.eye(4)),
         np.full(4, np.log(0.03)),
     )
@@ -202,9 +186,7 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwarg
 @pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
 def test_tracker_normal(config, motion_model, meas_model, name, *args, **kwargs):
     birth_model = GaussianDensity(
-        np.array(
-            [[0, 0, 0, 0], [400, -600, 0, 0], [-800, -200, 0, 0], [-200, 800, 0, 0]]
-        ),
+        np.array([[0, 0, 0, 0], [400, -600, 0, 0], [-800, -200, 0, 0], [-200, 800, 0, 0]]),
         np.full((4, 4, 4), 400 * np.eye(4)),
         np.full(4, np.log(0.03)),
     )

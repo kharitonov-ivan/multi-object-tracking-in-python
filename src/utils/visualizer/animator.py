@@ -13,9 +13,7 @@ logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 class Animator:
     @staticmethod
-    def animate(
-        timeseries_list, ax=None, title=None, filename=None, show=False, **kwargs
-    ):
+    def animate(timeseries_list, ax=None, title=None, filename=None, show=False, **kwargs):
         if ax is None:
             fig, ax = create_figure(title=title)
 

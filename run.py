@@ -1,15 +1,14 @@
 from typing import Optional, Tuple
 
 import hydra
+from omegaconf import DictConfig
+
 from mot.configs import GroundTruthConfig
 from mot.simulator import MeasurementsGenerator, ObjectData
-from omegaconf import DictConfig
 from src.common.gaussian_density import GaussianDensity as GaussianDensity
 
 
-def train(cfg: DictConfig) -> Tuple[dict, dict]:
-    # set seed for random number generators in pytorch, numpy and python.random
-
+def execute(cfg: DictConfig) -> Tuple[dict, dict]:
     scenario_motion_model = hydra.utils.instantiate(cfg.scenario_motion_model)
     scenario_sensor_model = hydra.utils.instantiate(cfg.scenario_sensor_model)
     scenario_measurement_model = hydra.utils.instantiate(cfg.scenario_measurement_model)
@@ -20,9 +19,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
         motion_model=scenario_motion_model,
         if_noisy=False,
     )
-    meas_gen = MeasurementsGenerator(
-        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
-    )
+    meas_gen = MeasurementsGenerator(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
     GroundTruthConfig(object_motion_fixture, total_time=simulation_steps)
 
     tracker = hydra.utils.instantiate(cfg.tracker)
@@ -30,6 +27,8 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     for timestep, measurements, sources in meas_data:
         estimations = tracker.step(measurements)
         tracker_estimations.append(estimations)
+        print(estimations)
+
     import pdb
 
     pdb.set_trace()
@@ -44,7 +43,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 @hydra.main(version_base="1.3", config_path="./configs", config_name="default.yaml")
 def main(cfg: DictConfig) -> Optional[float]:
     # train the model
-    metric_dict, _ = train(cfg)
+    metric_dict, _ = execute(cfg)
 
     return None
 

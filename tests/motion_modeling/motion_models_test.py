@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+
 from src.common.gaussian_density import GaussianDensity as GaussianDensity
 from src.motion_models import ConstantVelocityMotionModel
 
@@ -13,9 +14,7 @@ class Test_BaseMotionModels(unittest.TestCase):
 
         initial_state = np.array([0.0, 0.0, 5.0, 5.0])
         expected_predicted_array = np.array([[5.0, 5.0, 5.0, 5.0]])
-        predicted_state = CV_motion_model.move(
-            state=GaussianDensity(means=initial_state, covs=np.eye(4))
-        )
+        predicted_state = CV_motion_model.move(state=GaussianDensity(means=initial_state, covs=np.eye(4)))
 
         np.testing.assert_array_equal(
             predicted_state.means,

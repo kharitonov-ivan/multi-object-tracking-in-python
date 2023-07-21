@@ -1,19 +1,21 @@
 import operator
 from dataclasses import asdict
 from functools import reduce
+from re import I
 
+import matplotlib.pyplot as plt
 import pytest
-from src.configs.ground_truth_config import GroundTruthConfig
-from src.configs.sensor_model_config import SensorModelConfig
+
+from src.configs import GroundTruthConfig, SensorModelConfig
 from src.measurement_models import ConstantVelocityMeasurementModel
 from src.motion_models import ConstantVelocityMotionModel
-from src.run import run
+from src.run import animate, plot, run
 from src.scenarios.initial_conditions import linear_n_mot_object_life_params
 from src.scenarios.scenario_configs import linear_n_mot
 from src.simulator import MeasurementsGenerator
 from src.simulator.object_data_generator import ObjectData
-
 from src.trackers.n_object_trackers import GlobalNearestNeighboursTracker
+from src.utils.get_path import get_images_dir
 
 
 @pytest.mark.parametrize(
@@ -31,28 +33,20 @@ from src.trackers.n_object_trackers import GlobalNearestNeighboursTracker
             ConstantVelocityMotionModel,
             ConstantVelocityMeasurementModel,
             "n MOT linear (CV)",
-            reduce(
-                operator.add, [x.initial_state for x in linear_n_mot_object_life_params]
-            ),
+            reduce(operator.add, [x.initial_state for x in linear_n_mot_object_life_params]),
         ),
     ],
 )
 @pytest.mark.parametrize("tracker", [(GlobalNearestNeighboursTracker)])
-def test_tracker(
-    config, motion_model, meas_model, name, tracker, tracker_initial_states
-):
+def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initial_states):
     config = asdict(config)
     ground_truth = GroundTruthConfig(**config)
     motion_model = motion_model(**config)
     sensor_model = SensorModelConfig(**config)
     meas_model = meas_model(**config)
 
-    object_data = ObjectData(
-        ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False
-    )
-    meas_data_gen = MeasurementsGenerator(
-        object_data=object_data, sensor_model=sensor_model, meas_model=meas_model
-    )
+    object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
+    meas_data_gen = MeasurementsGenerator(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
 
     # Single object tracker parameter setting
     P_G = 0.99  # gating size in percentage
@@ -71,7 +65,18 @@ def test_tracker(
         intensity=tracker_initial_states,
     )
     meas_data = [next(meas_data_gen) for _ in range(ground_truth.total_time)]
-    run(object_data, meas_data, tracker)
+    tracker_estimations = run(object_data, meas_data, tracker)
+    experiment_name = name
+    timestep = -1
+    plot(object_data, meas_data, tracker_estimations, meas_model=meas_model)
+    plt.savefig(f"{get_images_dir(__file__)}" + "/" + f"{experiment_name}" + ".png")
+
+    animate(
+        object_data,
+        meas_data,
+        tracker_estimations,
+        f"{get_images_dir(__file__)}" + "/" + f"{experiment_name}" + ".gif",
+    )
 
     # tracker_estimations = []
     # meas_data = [next(meas_data_gen) for _ in range(ground_truth.total_time)]

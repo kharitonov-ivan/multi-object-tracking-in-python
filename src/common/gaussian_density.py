@@ -9,6 +9,7 @@ import numpy.typing as npt
 from matplotlib.patches import Ellipse
 from scipy.linalg import cholesky
 from scipy.stats import chi2
+
 from src.common.normalize_log_weights import normalize_log_weights
 
 
@@ -59,12 +60,8 @@ def invert_pd_matrix(A):
 class GaussianDensity:
     def __init__(
         self,
-        means: tp.Optional[
-            tp.Annotated[np.ndarray, "(n_components, state_dim)"]
-        ] = None,
-        covs: tp.Optional[
-            tp.Annotated[np.ndarray, "(n_components, state_dim, state_dim)"]
-        ] = None,
+        means: tp.Optional[tp.Annotated[np.ndarray, "(n_components, state_dim)"]] = None,
+        covs: tp.Optional[tp.Annotated[np.ndarray, "(n_components, state_dim, state_dim)"]] = None,
         weights: tp.Optional[tp.Annotated[np.ndarray, "(n_components)"]] = None,
     ):
         if means is not None and covs is not None:
@@ -80,15 +77,9 @@ class GaussianDensity:
                 weights = np.array([weights])
             assert means.shape[0] == covs.shape[0], "Number of components must be equal"
             if weights is not None:
-                assert (
-                    means.shape[0] == weights.shape[0]
-                ), "Number of components must be equal"
-            assert (
-                means.shape[-1] == covs.shape[-1]
-            ), "State dim in means and covs must be equal"
-            assert (
-                covs.shape[-1] == covs.shape[-2]
-            ), "Covariance matrix should be square!"
+                assert means.shape[0] == weights.shape[0], "Number of components must be equal"
+            assert means.shape[-1] == covs.shape[-1], "State dim in means and covs must be equal"
+            assert covs.shape[-1] == covs.shape[-2], "Covariance matrix should be square!"
         self.means = means.copy() if means is not None else None
         self.covs = covs.copy() if covs is not None else None
         self.weights = weights.copy() if weights is not None else None
@@ -105,11 +96,7 @@ class GaussianDensity:
         else:
             means = np.concatenate((self.means, other.means), axis=0)
             covs = np.concatenate((self.covs, other.covs), axis=0)
-            weights = (
-                np.concatenate((self.weights, other.weights), axis=0)
-                if self.weights is not None and other.weights is not None
-                else None
-            )
+            weights = np.concatenate((self.weights, other.weights), axis=0) if self.weights is not None and other.weights is not None else None
             assert means.shape[0] == covs.shape[0]
             if weights is not None:
                 assert means.shape[0] == weights.shape[0]
@@ -126,9 +113,7 @@ class GaussianDensity:
             return GaussianDensity(
                 means=self.means[idx][None, ...],
                 covs=self.covs[idx][None, ...],
-                weights=self.weights[idx][None, ...]
-                if self.weights is not None
-                else None,
+                weights=self.weights[idx][None, ...] if self.weights is not None else None,
             )
 
     def __setitem__(self, idx, value):
@@ -156,6 +141,8 @@ class GaussianDensity:
                 edgecolors="k",
             )
             eigenvalues, eigenvectors = np.linalg.eig(curr_gaussian.covs[0, :2, :2])
+            if np.any(np.iscomplex(eigenvalues)):
+                return
             angle = np.degrees(np.arctan2(*eigenvectors[:, 0][::-1]))
             width = 2 * np.sqrt(eigenvalues[0])
             height = 2 * np.sqrt(eigenvalues[1])
@@ -180,9 +167,7 @@ class GaussianDensity:
         return self.size
 
     @staticmethod
-    def predict(
-        gaussians: GaussianDensity, motion_model: BaseMotionModel, dt: float
-    ) -> GaussianDensity:
+    def predict(gaussians: GaussianDensity, motion_model: BaseMotionModel, dt: float) -> GaussianDensity:
         """Performs linear/nonlinear (Extended) Kalman prediction step
 
         Args:
@@ -194,7 +179,7 @@ class GaussianDensity:
         """
         next_x = motion_model.f(gaussians.means, dt)
         next_F = motion_model.F(gaussians.means, dt)
-        next_P = next_F @ gaussians.covs @ next_F.T + motion_model.Q(dt)
+        next_P = motion_model.Q(dt) + next_F @ gaussians.covs @ next_F.swapaxes(-1, -2)  # +
         return GaussianDensity(next_x, next_P, gaussians.weights)
 
     # @staticmethod
@@ -215,16 +200,10 @@ class GaussianDensity:
     @staticmethod
     def get_Kalman_gain(
         initial_states: GaussianDensity, measurement_model: MeasurementModel
-    ) -> tuple[
-        tp.Annotated[np.ndarray, "N, 2, State_dim"],
-        tp.Annotated[np.ndarray, "N, 2, 2"],
-        tp.Annotated[np.ndarray, "N, State_dim, 2"],
-    ]:
+    ) -> tuple[tp.Annotated[np.ndarray, "N, 2, State_dim"], tp.Annotated[np.ndarray, "N, 2, 2"], tp.Annotated[np.ndarray, "N, State_dim, 2"],]:
         H_x = measurement_model.H(initial_states.means)  # Measurement model Jacobian
         H_x_T = np.swapaxes(H_x, -1, -2)
-        S = (
-            H_x @ initial_states.covs @ H_x_T + measurement_model.R
-        )  # Innovation covariance
+        S = H_x @ initial_states.covs @ H_x_T + measurement_model.R  # Innovation covariance
         S = make_SPD(S)  # Make sure matrix S is positive definite
 
         S_inv = np.linalg.inv(S)  # invert_pd_matrix_np_torch(S)
@@ -239,40 +218,23 @@ class GaussianDensity:
         initial_state: GaussianDensity,
         measurements: tp.Annotated[np.ndarray, "N, Measurement_dim"],
         model_measurement: MeasurementModel,
-        H_x: tp.Optional[
-            tp.Annotated[np.ndarray, "N, Measurement_dim, State_dim"]
-        ] = None,
-    ) -> tuple[
-        tp.Annotated[np.ndarray, "n_gaussians, n_measurements, state_dim"],
-        tp.Annotated[np.ndarray, "n_gaussians, n_measurements, state_dim, state_dim"],
-    ]:
+        H_x: tp.Optional[tp.Annotated[np.ndarray, "N, Measurement_dim, State_dim"]] = None,
+    ) -> tuple[tp.Annotated[np.ndarray, "n_gaussians, n_measurements, state_dim"], tp.Annotated[np.ndarray, "n_gaussians, n_measurements, state_dim, state_dim"],]:
         """
         Performs linear/nonlinear (Extended) Kalman update step
         """
 
         if not H_x:
-            H_x, S, K, z_bar = GaussianDensity.get_Kalman_gain(
-                initial_state, model_measurement
-            )
+            H_x, S, K, z_bar = GaussianDensity.get_Kalman_gain(initial_state, model_measurement)
 
-        measurement_by_states: tp.Annotated[
-            np.ndarray, "N_gaussians, N_measurements, Dim_measurement"
-        ] = np.repeat(np.expand_dims(measurements, 0), initial_state.size, axis=0)
+        measurement_by_states: tp.Annotated[np.ndarray, "N_gaussians, N_measurements, Dim_measurement"] = np.repeat(np.expand_dims(measurements, 0), initial_state.size, axis=0)
 
-        fraction: tp.Annotated[
-            np.ndarray, "N_gaussians, N_measurements, Dim_measurement"
-        ] = (
-            measurement_by_states - model_measurement.h(initial_state.means)[:, None, :]
-        )
+        fraction: tp.Annotated[np.ndarray, "N_gaussians, N_measurements, Dim_measurement"] = measurement_by_states - model_measurement.h(initial_state.means)[:, None, :]
 
-        next_means = initial_state.means[:, None, ...] + np.einsum(
-            "ijkl, ijl -> ijk", K[:, None, ...], fraction
-        )
+        next_means = initial_state.means[:, None, ...] + np.einsum("ijkl, ijl -> ijk", K[:, None, ...], fraction)
         state_vector_size = initial_state.means.shape[-1]
         next_covariances = (np.eye(state_vector_size) - K @ H_x) @ initial_state.covs
-        next_covariances = np.repeat(
-            next_covariances[:, None, ...], len(measurements), axis=1
-        )  # TODO: check if it is correct
+        next_covariances = np.repeat(next_covariances[:, None, ...], len(measurements), axis=1)  # TODO: check if it is correct
 
         return next_means, next_covariances, (H_x, S, K, z_bar)
 
@@ -305,11 +267,7 @@ class GaussianDensity:
                                                                         for each measurement
         """
         # Jacobian
-        (H_x, S, K, z_bar) = (
-            H_X_S
-            if H_X_S
-            else GaussianDensity.get_Kalman_gain(state_pred, measurement_model)
-        )
+        (H_x, S, K, z_bar) = H_X_S if H_X_S else GaussianDensity.get_Kalman_gain(state_pred, measurement_model)
 
         # Difference between measurement and predicted measurement using inovation of current state
         log_likelihood = vectorized_gaussian_logpdf(measurements, z_bar, S)
@@ -343,9 +301,7 @@ class GaussianDensity:
         if len(measurements) == 0:
             return np.array([]), None
 
-        assert (
-            measurements.shape[-1] == measurement_model.dim
-        ), "Measurement dimension must be equal to the dimension of the measurement model"
+        assert measurements.shape[-1] == measurement_model.dim, "Measurement dimension must be equal to the dimension of the measurement model"
 
         assert 0.0 < confidence_level < 1.0, "Confidence level must be in (0, 1)"
         gating_size = chi2.ppf(confidence_level, df=measurement_model.dim)
@@ -353,9 +309,7 @@ class GaussianDensity:
         if H_x is None or S_inv is None:
             H_x = measurement_model.H(gaussians.means)  # Measurement model Jacobian
             H_x_T = np.swapaxes(H_x, -1, -2)
-            S = (
-                H_x @ gaussians.covs @ H_x_T + measurement_model.R
-            )  # Innovation covariance
+            S = H_x @ gaussians.covs @ H_x_T + measurement_model.R  # Innovation covariance
             S = make_SPD(S)  # Make sure matrix S is positive definite
             S_inv = np.linalg.inv(S)
 
@@ -363,27 +317,19 @@ class GaussianDensity:
         z_bar = (H_x @ gaussians.means[..., None])[..., 0]
 
         # Difference between measurement and prediction
-        z_diff = (
-            np.repeat(np.expand_dims(measurements, 0), z_bar.shape[0], axis=0)
-            - z_bar[:, None, :]
-        )
+        z_diff = np.repeat(np.expand_dims(measurements, 0), z_bar.shape[0], axis=0) - z_bar[:, None, :]
 
         n_gaussians, n_measurements = len(gaussians), len(measurements)
 
         mahalanobis_dist = np.empty((n_gaussians, n_measurements))
         for i in range(n_gaussians):
-            mahalanobis_dist[i, :] = [
-                z_diff[i, j, :] @ S_inv[i] @ z_diff[i, j, :].T
-                for j in range(n_measurements)
-            ]
+            mahalanobis_dist[i, :] = [z_diff[i, j, :] @ S_inv[i] @ z_diff[i, j, :].T for j in range(n_measurements)]
 
         mask = mahalanobis_dist < gating_size
         return mask, mahalanobis_dist
 
     @staticmethod
-    def moment_matching(
-        log_weights: np.ndarray, states: GaussianDensity
-    ) -> GaussianDensity:
+    def moment_matching(log_weights: np.ndarray, states: GaussianDensity) -> GaussianDensity:
         """Aproximates a Gaussian mixture density as a single Gaussian using moment matching
 
         Args:
@@ -399,9 +345,7 @@ class GaussianDensity:
         P_avg_cov = np.average(states.covs, axis=0, weights=weights)  # aka P_bar
         delta = mean_mixture - states.means
         ps = np.einsum("ij, ji -> i", delta, delta.T)
-        mean_spread = np.average(
-            ps, axis=0, weights=weights
-        )  # weight.*((mean_mixture - mean)*(mean_mixture - mean)');
+        mean_spread = np.average(ps, axis=0, weights=weights)  # weight.*((mean_mixture - mean)*(mean_mixture - mean)');
         return GaussianDensity(means=mean_mixture, covs=(P_avg_cov + mean_spread))
 
     @staticmethod
@@ -444,12 +388,8 @@ class GaussianDensity:
                     idx_to_merge.append(idx)
 
             # perform moment matching for states that close to state with max weights
-            normalized_weights, log_sum_w = normalize_log_weights(
-                [weights[idx] for idx in idx_to_merge]
-            )
-            merged_state = GaussianDensity.moment_matching(
-                weights=normalized_weights, states=[states[idx] for idx in idx_to_merge]
-            )
+            normalized_weights, log_sum_w = normalize_log_weights([weights[idx] for idx in idx_to_merge])
+            merged_state = GaussianDensity.moment_matching(weights=normalized_weights, states=[states[idx] for idx in idx_to_merge])
 
             # Remove merged states from original list of states
             for idx in reversed(idx_to_merge):

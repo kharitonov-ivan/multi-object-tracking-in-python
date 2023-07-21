@@ -63,17 +63,8 @@ class MeasurementsGenerator:
         objects_in_scene = self.object_data[self.timestep]
         if len(objects_in_scene) > 0:
             # Generate misses
-            detection_mask = (
-                self._generator.uniform(size=len(objects_in_scene))
-                < self.sensor_model.P_D
-            )
-            observed_objects = [
-                (obj_id, obj)
-                for is_observed, (obj_id, obj) in zip(
-                    detection_mask, self.object_data[self.timestep].items()
-                )
-                if is_observed
-            ]
+            detection_mask = self._generator.uniform(size=len(objects_in_scene)) < self.sensor_model.P_D
+            observed_objects = [(obj_id, obj) for is_observed, (obj_id, obj) in zip(detection_mask, self.object_data[self.timestep].items()) if is_observed]
 
             # Generate measurement
             if not observed_objects:
@@ -89,9 +80,7 @@ class MeasurementsGenerator:
         # Generate clutter
         # TODO keep in mind that pos of object can be vary
         clutter_min_coord, clutter_max_coord = np.diag(self.sensor_model.range_c)
-        clutter_observations = np.random.uniform(
-            clutter_min_coord, clutter_max_coord, [N_c, self.meas_model.dim]
-        )
+        clutter_observations = np.random.uniform(clutter_min_coord, clutter_max_coord, [N_c, self.meas_model.dim])
         clutter_sources = [-1] * N_c
         return clutter_observations, clutter_sources
 

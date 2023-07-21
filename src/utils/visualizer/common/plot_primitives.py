@@ -25,9 +25,7 @@ class BasicPlotter:
         color="b",
         marker_size=50,
     ):
-        ax.scatter(
-            x, y, marker=marker, color=color, label=label, s=marker_size, edgecolors="k"
-        )
+        ax.scatter(x, y, marker=marker, color=color, label=label, s=marker_size, edgecolors="k")
 
     @staticmethod
     def plot_covariance_ellipse(ax, mean, covariance, color="b"):
@@ -62,9 +60,7 @@ class BasicPlotter:
         pos_x, pos_y = state.means[0, 0], state.means[0, 1]
 
         # draw position
-        point = BasicPlotter.plot_point(
-            ax, x=pos_x, y=pos_y, color=color, marker=center_marker, label=label
-        )
+        point = BasicPlotter.plot_point(ax, x=pos_x, y=pos_y, color=color, marker=center_marker, label=label)
 
         # plot velocity vector
         if state.means.size > 2:
@@ -79,6 +75,4 @@ class BasicPlotter:
             )
 
         # plot covariance ellipse
-        BasicPlotter.plot_covariance_ellipse(
-            ax=ax, mean=np.array([pos_x, pos_y]), covariance=state.covs[0], color=color
-        )
+        BasicPlotter.plot_covariance_ellipse(ax=ax, mean=np.array([pos_x, pos_y]), covariance=state.covs[0], color=color)

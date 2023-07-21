@@ -35,16 +35,9 @@ class SensorModelConfig:
         self.range_c = range_c
         self.V = np.prod(np.diff(self.range_c))  # Volume
         self.pdf_c = 1 / self.V  # Spatial PDF
-        self.intensity_c = (
-            self.lambda_c / self.V
-        )  # expected number of clutter detections per unit volume
+        self.intensity_c = self.lambda_c / self.V  # expected number of clutter detections per unit volume
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
-            f"(P_D={self.P_D}, "
-            f"lambda_c={self.lambda_c}, "
-            f"range_c={self.range_c}, "
-            f"V={self.V}, "
-            f"pdf_c = {self.pdf_c} "
-            f"intensity_c = {self.intensity_c}"
+            f"(P_D={self.P_D}, " f"lambda_c={self.lambda_c}, " f"range_c={self.range_c}, " f"V={self.V}, " f"pdf_c = {self.pdf_c} " f"intensity_c = {self.intensity_c}"
         )

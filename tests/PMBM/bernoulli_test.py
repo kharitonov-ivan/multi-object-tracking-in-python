@@ -2,10 +2,10 @@ from copy import deepcopy
 
 import numpy as np
 import pytest
+
 from src.common.gaussian_density import GaussianDensity
 from src.measurement_models import ConstantVelocityMeasurementModel
 from src.motion_models import ConstantVelocityMotionModel
-
 from src.trackers.multiple_object_trackers.PMBM.common.bernoulli import Bernoulli
 
 
@@ -69,12 +69,8 @@ def test_bern_predict(initial_bernoulli: Bernoulli, cv_motion_model, P_S):
             ]
         ),
     )
-    np.testing.assert_allclose(
-        r_ref, initial_bernoulli.existence_probability, rtol=0.05
-    )
-    np.testing.assert_allclose(
-        state_ref.means, initial_bernoulli.state.means, atol=1e-4
-    )
+    np.testing.assert_allclose(r_ref, initial_bernoulli.existence_probability, rtol=0.05)
+    np.testing.assert_allclose(state_ref.means, initial_bernoulli.state.means, atol=1e-4)
     np.testing.assert_allclose(state_ref.covs, initial_bernoulli.state.covs, atol=1e-4)
 
 
@@ -90,36 +86,22 @@ def test_bern_undetected_update(initial_bernoulli, P_D):
     np.testing.assert_allclose(log_likelihood_undetected, ref_lik_undetected, rtol=0.05)
 
 
-def test_bern_detected_update_likelihood_outlier(
-    initial_bernoulli, P_D, cv_measurement_model, outlier_measurement
-):
-    likelihood_detected = initial_bernoulli.detected_update_loglikelihood(
-        outlier_measurement, cv_measurement_model, P_D
-    )
+def test_bern_detected_update_likelihood_outlier(initial_bernoulli, P_D, cv_measurement_model, outlier_measurement):
+    likelihood_detected = initial_bernoulli.detected_update_loglikelihood(outlier_measurement, cv_measurement_model, P_D)
     likelihood_detected_ref = np.array([-105.7914])
     np.testing.assert_allclose(likelihood_detected, likelihood_detected_ref, rtol=0.05)
 
 
-def test_bern_detected_update_likelihood_target(
-    initial_bernoulli, P_D, cv_measurement_model, neighbour_measurement
-):
-    log_likelihood_detected = initial_bernoulli.detected_update_loglikelihood(
-        neighbour_measurement, cv_measurement_model, P_D
-    )
+def test_bern_detected_update_likelihood_target(initial_bernoulli, P_D, cv_measurement_model, neighbour_measurement):
+    log_likelihood_detected = initial_bernoulli.detected_update_loglikelihood(neighbour_measurement, cv_measurement_model, P_D)
 
     log_likelihood_detected_ref = np.array([-7.3304])
-    np.testing.assert_allclose(
-        log_likelihood_detected, log_likelihood_detected_ref, rtol=0.05
-    )
+    np.testing.assert_allclose(log_likelihood_detected, log_likelihood_detected_ref, rtol=0.05)
 
 
-def test_bern_update_state(
-    initial_bernoulli, neighbour_measurement, cv_measurement_model
-):
+def test_bern_update_state(initial_bernoulli, neighbour_measurement, cv_measurement_model):
     # Perform the update
-    new_bernoulli = Bernoulli.detected_update_state(
-        initial_bernoulli, neighbour_measurement, cv_measurement_model
-    )
+    new_bernoulli = Bernoulli.detected_update_state(initial_bernoulli, neighbour_measurement, cv_measurement_model)
 
     # Check the existence probability
     ref_r = 1.0

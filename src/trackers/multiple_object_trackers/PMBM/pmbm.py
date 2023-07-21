@@ -1,13 +1,14 @@
 import itertools
+import logging
 import typing as tp
 from multiprocessing import Pool
 
 import numpy as np
+
 from src.common.gaussian_density import GaussianDensity
 from src.configs import SensorModelConfig
 from src.measurement_models import MeasurementModel
 from src.motion_models import BaseMotionModel
-
 from src.trackers.multiple_object_trackers.PMBM.common import (
     AssignmentSolver,
     Association,
@@ -16,7 +17,9 @@ from src.trackers.multiple_object_trackers.PMBM.common import (
     MultiBernouilliMixture,
     PoissonRFS,
 )
-from src.trackers.multiple_object_trackers.PMBM.common.track import Track
+from src.trackers.multiple_object_trackers.PMBM.common.multi_bernoulli_mixture import (
+    Track,
+)
 
 
 def solve(f):
@@ -42,8 +45,6 @@ class PMBM:
         track_history_length_threshold: int,
         density: GaussianDensity,
         initial_PPP_intensity: GaussianDensity,
-        *args,
-        **kwargs,
     ):
         assert isinstance(meas_model, MeasurementModel)
         assert isinstance(sensor_model, SensorModelConfig)
@@ -61,12 +62,8 @@ class PMBM:
         self.motion_model = motion_model
         self.birth_model = birth_model
         self.meas_model = meas_model
-
-        # models death of an object (aka P_S)
-        self.survival_probability = survival_probability
-
-        # models detection (and missdetection) of an object (aka P_D)
-        self.detection_probability = detection_probability
+        self.survival_probability = survival_probability  # models death of an object (aka P_S)
+        self.detection_probability = detection_probability  # models detection (and missdetection) of an object (aka P_D)
 
         # Interval for ellipsoidal gating (aka P_G)
         self.gating_percentage = gating_percentage
@@ -78,7 +75,6 @@ class PMBM:
 
         self.PPP = PoissonRFS(intensity=initial_PPP_intensity)
         self.MBM = MultiBernouilliMixture()
-        self.pool = Pool(4)
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + (
@@ -90,17 +86,19 @@ class PMBM:
 
     def step(self, measurements: np.ndarray):
         self.timestep += 1  # increment_timestep
-
+        logging.debug(f"step = {self.step}")
         self.predict(
             self.birth_model.get_born_objects_intensity(measurements=measurements),
             self.motion_model,
             self.survival_probability,
             self.density,
+            1.0
         )
         if len(measurements) > 0:
             self.update(measurements)
         estimates = self.estimate()
         self.reduction()
+        print(f"len of global = {len(self.MBM.global_hypotheses)}")
         return estimates
 
     def predict(
@@ -116,25 +114,18 @@ class PMBM:
         self.PPP.birth(birth_model)
 
     def update(self, measurements: np.ndarray) -> None:
-        new_tracks: tp.Mapping[
-            int, Track
-        ] = self.PPP.get_targets_detected_for_first_time(
+        new_tracks: tp.Mapping[int, Track] = self.PPP.get_targets_detected_for_first_time(
             measurements,
             self.sensor_model.intensity_c,
             self.meas_model,
             self.detection_probability,
             self.gating_size,
         )
+        logging.debug(f"new Bernoullies from PPP: {new_tracks}")
 
-        self.MBM.update(
-            self.detection_probability,
-            measurements,
-            self.meas_model,
-            self.density,
-        )
+        self.MBM.update(self.detection_probability, measurements, self.meas_model, self.density)
 
-        # Update of PPP intensity for undetected objects that remain undetected
-        self.PPP.undetected_update(self.detection_probability)
+        self.PPP.undetected_update(self.detection_probability)  # Update of PPP intensity for undetected objects that remain undetected
 
         if not self.MBM.global_hypotheses or not self.MBM.tracks:
             self.MBM.tracks.update(new_tracks)
@@ -143,9 +134,7 @@ class PMBM:
                 for sth_id, _sth in track.single_target_hypotheses.items():
                     hypo_list.append(Association(track_id, sth_id))
             if hypo_list:
-                self.MBM.global_hypotheses.append(
-                    GlobalHypothesis(log_weight=0.0, associations=hypo_list)
-                )
+                self.MBM.global_hypotheses.append(GlobalHypothesis(log_weight=0.0, associations=hypo_list))
             return
 
         new_global_hypotheses = list(
@@ -181,7 +170,7 @@ class PMBM:
         )
 
     def reduction(self) -> None:
-        self.PPP.prune(threshold=-15)
+        self.PPP.prune(threshold=-10)
         self.MBM.prune_global_hypotheses(log_threshold=np.log(0.01))
         self.MBM.cap_global_hypothesis(self.max_number_of_hypotheses)
         self.MBM.remove_unused_tracks()

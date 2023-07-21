@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 import pytest
+
 from src.common.gaussian_density import GaussianDensity as GaussianDensity
 from src.configs import Object
 

@@ -1,4 +1,5 @@
 import numpy as np
+
 from src.common.gaussian_density import GaussianDensity
 
 
@@ -12,9 +13,7 @@ class StaticBirthModel(BirthModel):
         super(StaticBirthModel, self).__init__()
         self.birth_model_density = birth_model_density
 
-    def get_born_objects_intensity(
-        self, measurements=None, ego_pose=None
-    ) -> GaussianDensity:
+    def get_born_objects_intensity(self, measurements=None, ego_pose=None) -> GaussianDensity:
         return self.birth_model_density
 
 
@@ -36,12 +35,8 @@ class MeasurementDrivenBirthModel(BirthModel):
 
         random_width = 10
         for measurement in measurements:
-            delta_x = np.random.uniform(
-                -random_width, random_width, num_of_born_components_per_measurement
-            )
-            delta_y = np.random.uniform(
-                -random_width, random_width, num_of_born_components_per_measurement
-            )
+            delta_x = np.random.uniform(-random_width, random_width, num_of_born_components_per_measurement)
+            delta_y = np.random.uniform(-random_width, random_width, num_of_born_components_per_measurement)
 
             for d_x, d_y in zip(delta_x, delta_y):
                 state = np.array(
@@ -53,9 +48,5 @@ class MeasurementDrivenBirthModel(BirthModel):
                     ]
                 )
                 sample_gaussian = GaussianDensity(means=state, covs=100 * np.eye(4))
-                generated_intensity.append(
-                    GaussianDensity(
-                        log_weight=np.log(0.03), GaussianDensity=sample_gaussian
-                    )
-                )
+                generated_intensity.append(GaussianDensity(log_weight=np.log(0.03), GaussianDensity=sample_gaussian))
         return GaussianDensity(generated_intensity)
