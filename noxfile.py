@@ -10,8 +10,8 @@ nox.options.sessions = "lint", "black", "tests"
 @nox.session
 def lint(session):
     args = session.posargs or locations
-    session.install("flake8")
-    session.run("flake8", *args)
+    session.install("ruff")
+    session.run("ruff", *args)
 
 
 @nox.session(reuse_venv=True)

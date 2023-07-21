@@ -3,21 +3,22 @@ from dataclasses import asdict
 
 import pytest
 
-from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import (
+from src.configs import GroundTruthConfig, SensorModelConfig
+from src.measurement_models import (
     ConstantVelocityMeasurementModel,
     RangeBearingMeasurementModel,
 )
-from mot.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
-from mot.scenarios.scenario_configs import (
+from src.motion_models import ConstantVelocityMotionModel, CoordinateTurnMotionModel
+from src.run import animate, visulaize
+from src.scenarios.scenario_configs import (
     linear_n_mot,
     linear_sot,
     nonlinear_n_mot,
     nonlinear_sot,
 )
-from mot.simulator import MeasurementData
-from mot.simulator.object_data_generator import ObjectData
-from mot.utils.visualizer import Animator, Plotter
+from src.simulator import MeasurementData
+from src.simulator.object_data_generator import ObjectData
+from src.utils.get_path import delete_images_dir, get_images_dir
 
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -50,10 +51,16 @@ test_data = [
 ]
 
 
+@pytest.fixture(scope="session", autouse=True)
+def do_something_before_all_tests():
+    # prepare something ahead of all tests
+    delete_images_dir(__file__)
+
+
 @pytest.mark.parametrize("config, motion_model, output_image_name, meas_model", test_data)
 def test_linear_model_without_noise(config, motion_model, output_image_name, meas_model):
     config = asdict(config)
-    ground_truth = GroundTruthConfig(**config)
+    ground_truth = GroundTruthConfig(config["object_configs"], config["total_time"])
     motion_model = motion_model(**config)
 
     object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
@@ -61,18 +68,9 @@ def test_linear_model_without_noise(config, motion_model, output_image_name, mea
     sensor_model = SensorModelConfig(**config)
 
     meas_model = meas_model(**config)
-    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
-
-    Plotter.plot([meas_data[0]], title=output_image_name, out_path="meas_" + output_image_name)
-
-    Plotter.plot(
-        [meas_data[0], object_data],
-        title=output_image_name,
-        out_path="meas_" + output_image_name,
-    )
-
-    Animator.animate(
-        [object_data, meas_data],
-        title=output_image_name,
-        filename=output_image_name + ".gif",
-    )
+    meas_data_gen = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+    meas_data = [next(meas_data_gen) for _ in range(len(object_data))]
+    output_image_name = get_images_dir(__file__) + "/" + output_image_name
+    visulaize(object_data, meas_data, None, output_image_name)
+    if os.getenv("ANIMATE", "False") == "True":
+        animate(object_data, meas_data, None, output_image_name)

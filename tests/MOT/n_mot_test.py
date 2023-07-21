@@ -1,27 +1,29 @@
+import os
 from dataclasses import asdict
 
+import numpy as np
 import pytest
 
-from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import ConstantVelocityMotionModel
-from mot.scenarios.initial_conditions import linear_n_mot_object_life_params
-from mot.scenarios.scenario_configs import linear_n_mot
-from mot.simulator import MeasurementData
-from mot.simulator.object_data_generator import ObjectData
-from mot.trackers.n_object_trackers import GlobalNearestNeighboursTracker
+from src.configs import GroundTruthConfig, SensorModelConfig
+from src.measurement_models import ConstantVelocityMeasurementModel
+from src.motion_models import ConstantVelocityMotionModel
+from src.run import animate, get_gospa, get_motmetrics, track, visulaize
+from src.scenarios.initial_conditions import linear_n_mot_object_life_params
+from src.scenarios.scenario_configs import linear_n_mot
+from src.simulator import MeasurementData, ObjectData
+from src.trackers.n_object_trackers import GlobalNearestNeighboursTracker
+from src.utils.get_path import delete_images_dir, get_images_dir
+
+
+@pytest.fixture(scope="session", autouse=True)
+def do_something_before_all_tests():
+    # prepare something ahead of all tests
+    delete_images_dir(__file__)
 
 
 @pytest.mark.parametrize(
     "config, motion_model, meas_model, name, tracker_initial_states",
     [
-        # (
-        #     linear_sot,
-        #     ConstantVelocityMotionModel,
-        #     ConstantVelocityMeasurementModel,
-        #     "SOT linear case (CV)",
-        #     Gaussian(x=np.array([0.0, 0.0, 10.0, 0.0]), P=1.0 * np.eye(4)),
-        # ),
         (
             linear_n_mot,
             ConstantVelocityMotionModel,
@@ -40,15 +42,15 @@ def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initia
     meas_model = meas_model(**config)
 
     object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
-    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
-
+    meas_data_gen = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+    meas_data = [next(meas_data_gen) for _ in range(99)]
     # Single object tracker parameter setting
     P_G = 0.99  # gating size in percentage
     w_minw = 1e-4  # hypothesis pruning threshold
     merging_threshold = 2  # hypothesis merging threshold
     M = 100  # maximum number of hypotheses kept in MHT
 
-    tracker = GlobalNearestNeighboursTracker(
+    tracker_mot = GlobalNearestNeighboursTracker(
         meas_model=meas_model,
         sensor_model=sensor_model,
         motion_model=motion_model,
@@ -56,17 +58,15 @@ def test_tracker(config, motion_model, meas_model, name, tracker, tracker_initia
         w_min=w_minw,
         merging_threshold=merging_threshold,
         M=M,
+        initial_state=tracker_initial_states,
     )
+    filepath = get_images_dir(__file__) + "/" + tracker_mot.__class__.__name__ + "-" + name
 
-    tracker_estimations = tracker.estimate(initial_states=tracker_initial_states, measurements=meas_data)  # noqa F841
+    tracker_estimations = track(object_data, meas_data, tracker_mot)
+    visulaize(object_data, meas_data, tracker_estimations, filepath)
+    gospa = get_gospa(object_data, tracker_estimations)
+    motmetrics = get_motmetrics(object_data, tracker_estimations)  # noqa F841
+    assert np.mean(gospa) < 300
 
-    # Plotter.plot(
-    #     [meas_data, object_data],
-    #     out_path=get_images_dir(__file__) + "/" + name + tracker.method + ".png",
-    # )
-
-    # Animator.animate(
-    #     [meas_data, object_data],
-    #     title=name,
-    #     filename=get_images_dir(__file__) + "/" + name + tracker.method + ".gif",
-    # )
+    if os.getenv("ANIMATE", "False") == "True":
+        animate(object_data, meas_data, tracker_estimations, filepath)
