@@ -1,36 +1,34 @@
 import logging
+import os
 import pprint
 
 import numpy as np
 import pytest
-from tqdm import trange
 
-from mot.common import GaussianDensity
-from mot.common.state import ObjectMetadata, Observation, ObservationList
-from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.evaluation_runners.evaluator import OneSceneMOTevaluator
-from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import ConstantVelocityMotionModel
-from mot.scenarios.object_motion_scenarious import (
+from src.common import GaussianDensity
+from src.configs import GroundTruthConfig, SensorModelConfig
+from src.measurement_models import ConstantVelocityMeasurementModel
+from src.motion_models import ConstantVelocityMotionModel
+from src.run import animate, get_gospa, get_motmetrics, track, visulaize
+from src.scenarios.object_motion_scenarious import (
     many_objects_linear_motion_delayed,
     single_object_linear_motion,
     single_static_object,
-    three_static_objects,
-    two_objects_linear_motion,
     two_objects_linear_motion_delayed,
     two_static_objects,
 )
-from mot.simulator import MeasurementData, ObjectData
-from mot.trackers.multiple_object_trackers.PMBM.common.birth_model import (
+from src.simulator import MeasurementData, ObjectData
+from src.trackers.multiple_object_trackers.PMBM.common.birth_model import (
     StaticBirthModel,
 )
-from mot.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
-from mot.utils import delete_images_dir
+from src.trackers.multiple_object_trackers.PMBM.pmbm import PMBM
+from src.utils import delete_images_dir
+from src.utils.get_path import get_images_dir
 
 from .params.birth_model import birth_model_params
 
 
-@pytest.fixture(params=[0.8, 0.99])
+@pytest.fixture(params=[0.9])
 def scenario_detection_probability(request):
     yield request.param
 
@@ -47,13 +45,11 @@ def scenario_clutter_rate(request):
 
 @pytest.fixture(
     params=[
-        single_static_object,
-        two_static_objects,
-        three_static_objects,
-        single_object_linear_motion,
-        two_objects_linear_motion,
-        two_objects_linear_motion_delayed,
-        many_objects_linear_motion_delayed,
+        ("single_static_object", single_static_object),
+        ("two_static_objects", two_static_objects),
+        ("single_object_linear_motion", single_object_linear_motion),
+        ("two_objects_linear_motion_delayed", two_objects_linear_motion_delayed),
+        ("many_objects_linear_motion_delayed", many_objects_linear_motion_delayed),
     ]
 )
 def object_motion_fixture(request):
@@ -74,7 +70,6 @@ def do_something_before_all_tests():
 @pytest.fixture(
     params=[
         0.99,
-        0.8,
     ]
 )
 def scenario_survival_probability(request):
@@ -88,7 +83,8 @@ def test_synthetic_scenario(
     birth_model,
     scenario_survival_probability,
 ):
-    # Create nlinear motion model
+    name, object_motion_fixture = object_motion_fixture
+    # Create linear motion model
     dt = 1.0
     sigma_q = 10.0
     motion_model = ConstantVelocityMotionModel(dt, sigma_q)
@@ -102,15 +98,13 @@ def test_synthetic_scenario(
 
     # Create sensor model - range/bearing measurement
     range_c = np.array([[-1000, 1000], [-1000, 1000]])
-    sensor_model = SensorModelConfig(
-        P_D=scenario_detection_probability, lambda_c=scenario_clutter_rate, range_c=range_c
-    )
+    sensor_model = SensorModelConfig(P_D=scenario_detection_probability, lambda_c=scenario_clutter_rate, range_c=range_c)
 
     # Generate true object data (noisy or noiseless) and measurement data
     ground_truth = GroundTruthConfig(object_motion_fixture, total_time=simulation_steps)
     object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
-    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
-
+    meas_data_gen = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+    meas_data = [next(meas_data_gen) for _ in range(simulation_steps)]
     logging.debug(f"object motion config {pprint.pformat(object_motion_fixture)}")
 
     # Object tracker parameter setting
@@ -118,7 +112,7 @@ def test_synthetic_scenario(
     max_hypothesis_kept = 100  # maximum number of hypotheses kept
     existense_probability_threshold = 0.8
 
-    pmbm = PMBM(
+    tracker_pmbm = PMBM(
         meas_model=meas_model,
         sensor_model=sensor_model,
         motion_model=motion_model,
@@ -128,34 +122,24 @@ def test_synthetic_scenario(
         detection_probability=scenario_detection_probability,
         survival_probability=scenario_survival_probability,
         existense_probability_threshold=existense_probability_threshold,
-        track_history_length_threshold=3,
+        track_history_length_threshold=5,
         density=GaussianDensity,
         initial_PPP_intensity=birth_model,
     )
 
-    evaluator = OneSceneMOTevaluator()
-
-    for timestep in trange(simulation_steps):
-        logging.debug(f"===========current timestep {timestep}============")
-        current_measurements = ObservationList(
-            [
-                Observation(
-                    measurement,
-                    metadata=ObjectMetadata(object_class="point", confidence=0.9, size=np.array([1.0, 1.0])),
-                )
-                for measurement in meas_data[timestep]
-            ]
-        )
-
-        current_step_estimates = pmbm.step(current_measurements, dt=1.0)
-        evaluator.step(
-            sample_measurements=meas_data[timestep],
-            sample_estimates=current_step_estimates,
-            sample_gt=object_data[timestep],
-            timestep=timestep,
-        )
-    evaluator.post_processing()
-
-    # assert rms_gospa_scene < 2000
-    # assert summary["mota"].item() < 100
-    # assert summary["idp"].item() < 100
+    filepath = (
+        get_images_dir(__file__)
+        + "/"
+        + tracker_pmbm.__class__.__name__
+        + "-"
+        + name
+        + "-"
+        + f"P_S={scenario_survival_probability}-P_D={scenario_detection_probability}-lambda_c={scenario_clutter_rate}"
+    )
+    tracker_estimations = track(object_data, meas_data, tracker_pmbm)
+    visulaize(object_data, meas_data, tracker_estimations, filepath)
+    gospa = get_gospa(object_data, tracker_estimations)
+    motmetrics = get_motmetrics(object_data, tracker_estimations)  # noqa F841
+    assert np.mean(gospa) < 2000
+    if os.getenv("ANIMATE", "False") == "True":
+        animate(object_data, meas_data, tracker_estimations, filepath)

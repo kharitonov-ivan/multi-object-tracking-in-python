@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import pytest
 
-from mot.common.state import Gaussian
+from src.common.state import Gaussian
 
 
 TOL = 1e-4

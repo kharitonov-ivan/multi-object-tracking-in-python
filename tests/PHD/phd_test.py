@@ -1,18 +1,19 @@
+import os
 from collections import namedtuple
 from dataclasses import asdict
 
 import numpy as np
 import pytest
 
-from mot.common.state import Gaussian, GaussianMixture, WeightedGaussian
-from mot.configs import GroundTruthConfig, SensorModelConfig
-from mot.measurement_models import ConstantVelocityMeasurementModel
-from mot.motion_models import ConstantVelocityMotionModel
-from mot.scenarios.scenario_configs import linear_full_mot
-from mot.simulator import MeasurementData, ObjectData
-from mot.trackers.multiple_object_trackers.PHD import GMPHD
-from mot.utils.get_path import get_images_dir
-from mot.utils.visualizer import Plotter
+from src.common import Gaussian, GaussianMixture, WeightedGaussian
+from src.configs import GroundTruthConfig, SensorModelConfig
+from src.measurement_models import ConstantVelocityMeasurementModel
+from src.motion_models import ConstantVelocityMotionModel
+from src.run import animate, get_gospa, get_motmetrics, track, visulaize
+from src.scenarios.scenario_configs import linear_full_mot
+from src.simulator import MeasurementData, ObjectData
+from src.trackers.multiple_object_trackers.PHD import GMPHD
+from src.utils.get_path import delete_images_dir, get_images_dir
 
 
 test_env_cases = [
@@ -20,9 +21,15 @@ test_env_cases = [
         linear_full_mot,
         ConstantVelocityMotionModel,
         ConstantVelocityMeasurementModel,
-        "n MOT linear (CV)",
+        "n_MOT_linear_CV",
     ),
 ]
+
+
+@pytest.fixture(scope="session", autouse=True)
+def do_something_before_all_tests():
+    # prepare something ahead of all tests
+    delete_images_dir(__file__)
 
 
 def generate_environment(config, motion_model, meas_model, *args, **kwargs):
@@ -32,7 +39,8 @@ def generate_environment(config, motion_model, meas_model, *args, **kwargs):
     sensor_model = SensorModelConfig(**config)
     meas_model = meas_model(**config)
     object_data = ObjectData(ground_truth_config=ground_truth, motion_model=motion_model, if_noisy=False)
-    meas_data = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+    meas_data_gen = MeasurementData(object_data=object_data, sensor_model=sensor_model, meas_model=meas_model)
+    meas_data = [next(meas_data_gen) for _ in range(len(object_data))]
     env = namedtuple(
         "env",
         [
@@ -78,7 +86,7 @@ def test_components_list_operations(config, motion_model, meas_model, name, *arg
             ]
         ]
     )
-    gmm_components = GaussianMixture()
+    gmm_components = GaussianMixture([])
     gmm_components.extend(birth_model)
 
 
@@ -94,7 +102,7 @@ def test_tracker_predict_step(config, motion_model, meas_model, name, *args, **k
 
     birth_model = GaussianMixture(
         [
-            WeightedGaussian(weight=np.log(0.03), gm=Gaussian(x=pos, P=400 * np.eye(4)))
+            WeightedGaussian(log_weight=np.log(0.03), gaussian=Gaussian(x=pos, P=400 * np.eye(4)))
             for pos in [
                 np.array([0, 0, 0, 0]),
                 np.array([400, -600, 0, 0]),
@@ -113,10 +121,11 @@ def test_tracker_predict_step(config, motion_model, meas_model, name, *args, **k
         w_min=w_minw,
         merging_threshold=merging_threshold,
         M=M,
+        P_D=env.sensor_model.P_D,
     )
 
     # One step predict
-    tracker.predict_step()
+    tracker.predict_step(1.0)
 
 
 @pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
@@ -209,7 +218,6 @@ def test_tracker_estimate(config, motion_model, meas_model, name, *args, **kwarg
 
 @pytest.mark.parametrize("config, motion_model, meas_model, name", test_env_cases)
 def test_tracker_normal(config, motion_model, meas_model, name, *args, **kwargs):
-
     birth_model = GaussianMixture(
         [
             WeightedGaussian(log_weight=np.log(0.03), gaussian=Gaussian(x=pos, P=400 * np.eye(4)))
@@ -230,7 +238,7 @@ def test_tracker_normal(config, motion_model, meas_model, name, *args, **kwargs)
     M = 100  # maximum number of hypotheses kept in MHT
     P_D = 0.99
 
-    tracker = GMPHD(
+    tracker_phd = GMPHD(
         meas_model=env.meas_model,
         sensor_model=env.sensor_model,
         motion_model=env.motion_model,
@@ -242,21 +250,11 @@ def test_tracker_normal(config, motion_model, meas_model, name, *args, **kwargs)
         merging_threshold=merging_threshold,
         M=M,
     )
-
-    estimations = tracker.estimate(env.meas_data)
-
-    # Animator.animate(
-    #     [env.meas_data, env.object_data, list(estimations)],
-    #     title=name,
-    #     filename=get_images_dir(__file__) + "/" + "meas_data_and_obj_data" + ".gif",
-    # )
-
-    Plotter.plot_several(
-        [env.meas_data, env.object_data, list(estimations)],
-        out_path=get_images_dir(__file__) + "/" + "meas_data_and_obj_data_and_estimations" + ".png",
-    )
-
-    Plotter.plot_several(
-        [list(estimations)],
-        out_path=get_images_dir(__file__) + "/" + "estimations" + ".png",
-    )
+    filepath = get_images_dir(__file__) + "/" + tracker_phd.__class__.__name__ + "-" + name
+    tracker_estimations = track(env.object_data, env.meas_data, tracker_phd)
+    visulaize(env.object_data, env.meas_data, tracker_estimations, filepath)
+    gospa = get_gospa(env.object_data, tracker_estimations)
+    motmetrics = get_motmetrics(env.object_data, tracker_estimations)  # noqa F841
+    assert np.mean(gospa) < 2000
+    if os.getenv("ANIMATE", "False") == "True":
+        animate(env.object_data, env.meas_data, tracker_estimations, filepath)

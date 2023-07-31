@@ -1,78 +1,28 @@
 import numpy as np
-import scipy
-import scipy.io
 
-from mot.common.gaussian_density import GaussianDensity
-from mot.common.state import Gaussian
+from src.common.gaussian_density import GaussianDensity
+from src.common.state import Gaussian
 
 
-TOL = 1e-4
-
-
-def test_moment_matching_small():
-    # TODO
-    """
-        w =
-
-        1.0000
-        0.0000
-
-        K>> states.x
-
-    ans =
-
-       24.3498
-        5.7689
-        5.0000
-             0
-        0.0175
-
-
-    ans =
-
-        4.7970
-       14.7449
-      -10.0000
-             0
-        0.0087
-
-        P
-        ans =
-
-        0.9779   -0.0122         0         0         0
-       -0.0122    0.9707         0         0         0
-             0         0    1.0000         0         0
-             0         0         0    1.0000         0
-             0         0         0         0    1.0000
-
-
-    ans =
-
-        0.9769   -0.0126         0         0         0
-       -0.0126    0.9719         0         0         0
-             0         0    1.0000         0         0
-             0         0         0    1.0000         0
-             0         0         0         0    1.0000
-    """
-    raise NotImplementedError
-
-
-def test_moment_matching_big():
-    num_gaussians = 5  # noqa F841
-    n_dim = 4  # noqa F841
-    states = []  # noqa F841
-    raise NotImplementedError
-    expected_vars = scipy.io.loadmat("tests/data/SA2Ex2Test3.mat")
-
-    test_w = np.array(expected_vars["w"]).squeeze()
-    test_states = [
-        Gaussian(x=np.array(test_x[0]).squeeze(), P=np.array(test_P)[0])
-        for test_x, test_P in zip(expected_vars["states"]["x"], expected_vars["states"]["P"])
+def test_moment_matching():
+    # Setup data
+    weights = np.log(np.array([0.3, 0.7], dtype=float))  # now in log form and float
+    states = [
+        Gaussian(x=np.array([1, 2], dtype=float), P=np.array([[1, 0], [0, 1]], dtype=float)),
+        Gaussian(x=np.array([3, 4], dtype=float), P=np.array([[2, 1], [1, 2]], dtype=float)),
     ]
-    got_state = GaussianDensity.moment_matching(test_w, test_states)
-    expected_state = Gaussian(
-        x=expected_vars["state_ref"]["x"][0][0].squeeze(),
-        P=expected_vars["state_ref"]["P"][0][0],
-    )
-    assert np.linalg.norm(got_state.x).all() > TOL, "check calculation of mean"
-    assert np.linalg.norm(got_state.P - expected_state.P).all() > TOL, "check calculation of covariance"
+
+    # Run the method
+    result = GaussianDensity.moment_matching(weights, states)
+
+    # Check the result's mean
+    log_weights_exp = np.exp(weights)
+    expected_mean = log_weights_exp[0] * states[0].x + log_weights_exp[1] * states[1].x
+    np.testing.assert_array_almost_equal(result.x, expected_mean)
+
+    # Check the result's covariance
+    expected_cov = np.zeros_like(states[0].P, dtype=float)
+    for idx in range(len(log_weights_exp)):
+        d = result.x - states[idx].x
+        expected_cov += (states[idx].P + d @ d.T) * log_weights_exp[idx]
+    np.testing.assert_array_almost_equal(result.P, expected_cov)
