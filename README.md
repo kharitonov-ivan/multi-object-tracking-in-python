@@ -1,8 +1,9 @@
 
 # Multi-Object-Tracking-in-python
 
-Python implementation of this course [youtube 📺](https://www.youtube.com/channel/UCa2-fpj6AV8T6JK1uTRuFpw/featured):
+This repository contains implementation of various multi-object trackers. Main goal is to demonstrate principles of work this trackers in educational proposes. This project is built upon this course [youtube 📺](https://www.youtube.com/channel/UCa2-fpj6AV8T6JK1uTRuFpw/featured) and MATLAB open sourced implementations.
 
+You can dive into in tutorial notebook (locally or in colab). Or explore code explicitly.
 
 # Installation in virtualenv
 
